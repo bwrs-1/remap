@@ -229,15 +229,18 @@ export const storageActionsThunk = {
 
   // eslint-disable-next-line no-undef
   uploadKeyboardDefinition:
-    (keyboardDefinition: KeyboardDefinitionSchema): ThunkPromiseAction<void> =>
+    (
+      keyboardDefinition: KeyboardDefinitionSchema,
+      remember: boolean = true
+    ): ThunkPromiseAction<void> =>
     async (
       dispatch: ThunkDispatch<RootState, undefined, ActionTypes>,
       getState: () => RootState
     ) => {
-      // Remember the definition in this browser so that the next connection
-      // of the same keyboard does not ask for the JSON file again.
+      // Remember an uploaded definition in this browser so that the next
+      // connection of the same keyboard does not ask for the JSON file again.
       const info = getState().entities.keyboard?.getInformation();
-      if (info) {
+      if (remember && info) {
         saveLocalDefinition(info.vendorId, info.productId, keyboardDefinition);
       }
       dispatch(StorageActions.updateKeyboardDefinition(keyboardDefinition));
@@ -446,7 +449,7 @@ export const storageActionsThunk = {
           validateKeyboardDefinitionSchema(localDefinition);
         if (localValidateResult.valid) {
           await dispatch(
-            storageActionsThunk.uploadKeyboardDefinition(localDefinition)
+            storageActionsThunk.uploadKeyboardDefinition(localDefinition, false)
           );
           return;
         }

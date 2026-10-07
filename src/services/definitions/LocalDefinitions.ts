@@ -1,4 +1,5 @@
 import { KeyboardDefinitionSchema } from '../../gen/types/KeyboardDefinition';
+import dilemma from '../../../keyboards/dilemma/dilemma_afc6_bfc6.json';
 
 // Keyboard definitions that do not need Firebase:
 // 1. definitions the user uploaded once, remembered in this browser per
@@ -7,10 +8,16 @@ import { KeyboardDefinitionSchema } from '../../gen/types/KeyboardDefinition';
 
 const STORAGE_KEY = 'matrix.keyboardDefinitions';
 
-// Add definitions shipped with the app here (import the JSON file).
+// Definitions shipped with the app (JSON files under /keyboards).
 // Do not bundle templates with placeholder IDs: VID 0xFEED is shared by many
 // QMK keyboards and would match the wrong device.
-export const BUNDLED_DEFINITIONS: KeyboardDefinitionSchema[] = [];
+export const BUILT_IN_DEFINITIONS: readonly KeyboardDefinitionSchema[] = [
+  dilemma as KeyboardDefinitionSchema, // Dilemma (VID 0xAFC6 / PID 0xBFC6)
+];
+
+export const BUNDLED_DEFINITIONS: KeyboardDefinitionSchema[] = [
+  ...BUILT_IN_DEFINITIONS,
+];
 
 const deviceKey = (vendorId: number, productId: number): string =>
   `${vendorId}:${productId}`;
