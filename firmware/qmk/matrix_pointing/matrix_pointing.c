@@ -122,6 +122,13 @@ static const mp_config_t mp_defaults = {
 static mp_config_t mp_config;
 static bool        mp_loaded = false;
 
+// Writing any value to 0x7F reboots into the bootloader (RP2040: BOOTSEL),
+// so the editor can flash new firmware over WebUSB.
+#define MP_BOOTLOADER_VALUE_ID 0x7F
+#define MP_BOOTLOADER_DELAY_MS 100
+static bool     mp_bootloader_requested = false;
+static uint16_t mp_bootloader_time      = 0;
+
 // Value IDs on the VIA custom channel. Must match the editor
 // (src/services/pointing/PointingSettings.ts).
 typedef struct {
@@ -285,6 +292,13 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
             return;
         }
         case id_custom_set_value: {
+            if (*value_id == MP_BOOTLOADER_VALUE_ID) {
+                // Reply first; the reboot happens shortly after in
+                // matrix_pointing_task() so the editor gets the echo.
+                mp_bootloader_requested = true;
+                mp_bootloader_time      = timer_read();
+                return;
+            }
             const mp_field_t *field = mp_find_field(*value_id);
             if (field == NULL) {
                 *command_id = id_unhandled;
@@ -308,6 +322,13 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
 // ---------------------------------------------------------------------------
 // Pointing report transform (rotation, inversion, acceleration, scroll)
 
+static void mp_bootloader_check(void) {
+    if (mp_bootloader_requested && timer_elapsed(mp_bootloader_time) > MP_BOOTLOADER_DELAY_MS) {
+        mp_bootloader_requested = false;
+        reset_keyboard(); // enters the bootloader (BOOTSEL on RP2040)
+    }
+}
+
 #ifdef POINTING_DEVICE_ENABLE
 static mouse_xy_report_t mp_clamp_xy(int32_t v) {
     if (v < MOUSE_REPORT_XY_MIN) return MOUSE_REPORT_XY_MIN;
@@ -325,6 +346,7 @@ static mouse_hv_report_t mp_clamp_hv(int32_t v) {
 
 report_mouse_t matrix_pointing_task(report_mouse_t r) {
     mp_ensure_loaded();
+    mp_bootloader_check();
     int32_t x = r.x;
     int32_t y = r.y;
 
@@ -366,6 +388,7 @@ report_mouse_t matrix_pointing_task(report_mouse_t r) {
 }
 #else
 report_mouse_t matrix_pointing_task(report_mouse_t r) {
+    mp_bootloader_check();
     return r;
 }
 #endif // POINTING_DEVICE_ENABLE

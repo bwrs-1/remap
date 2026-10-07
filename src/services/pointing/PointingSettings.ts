@@ -24,6 +24,19 @@ export async function probeProtocol(
   return 'supported';
 }
 
+// Writing any value to 0x7F asks the firmware to reboot into its bootloader
+// (RP2040: BOOTSEL), so new firmware can be written over WebUSB.
+export const BOOTLOADER_VALUE_ID = 0x7f;
+
+export async function requestBootloader(
+  keyboard: IKeyboard
+): Promise<ProtocolSupport> {
+  const support = await probeProtocol(keyboard);
+  if (support !== 'supported') return support;
+  const result = await keyboard.updateCustomValue(BOOTLOADER_VALUE_ID, 1, 1);
+  return result.success ? 'supported' : 'error';
+}
+
 export type PointingSettingKind = 'switch' | 'range' | 'choice';
 
 export interface IPointingSettingDef<K extends string = string> {

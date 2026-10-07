@@ -19,6 +19,7 @@ import Footer from '../common/footer/Footer.container';
 import { Button, CssBaseline } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { APPLICATION_NAME } from '../../utils/Brand';
+import FirmwareFlasherDialog from './firmware/FirmwareFlasherDialog';
 
 type OwnProps = {};
 type ConfigureProps = OwnProps &
@@ -147,6 +148,7 @@ function Configure(props: ConfigureProps) {
           <UnsupportedBrowser />
         </main>
         <Footer />
+        <FirmwareFlasherDialog />
       </React.Fragment>
     );
   }
@@ -162,6 +164,7 @@ function Configure(props: ConfigureProps) {
           <div className="dragMask fill-blank"></div>
         )}
         <Footer />
+        <FirmwareFlasherDialog />
       </div>
     </React.Fragment>
   );

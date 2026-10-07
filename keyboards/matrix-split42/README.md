@@ -41,9 +41,10 @@ All values use the standard VIA custom value commands on **channel 0**
 The editor sends `set_value` only for changed values, then one `save` to
 persist them (e.g. to EEPROM / `eeconfig_update_kb_datablock`).
 
-| ID     | Key     | Size | Meaning                                  |
-| ------ | ------- | ---- | ---------------------------------------- |
-| `0x00` | `magic` | 2    | Read-only. Must return `0x4D58` (`'MX'`) |
+| ID     | Key          | Size | Meaning                                                                            |
+| ------ | ------------ | ---- | ---------------------------------------------------------------------------------- |
+| `0x00` | `magic`      | 2    | Read-only. Must return `0x4D58` (`'MX'`)                                           |
+| `0x7F` | `bootloader` | 1    | Write-only. Any value reboots into the bootloader (RP2040: BOOTSEL) after replying |
 
 ### Touchpad (`matrix_touchpad`)
 

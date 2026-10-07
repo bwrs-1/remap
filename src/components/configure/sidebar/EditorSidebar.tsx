@@ -1,6 +1,7 @@
 import React from 'react';
 import './EditorSidebar.scss';
 import { t } from 'i18next';
+import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 import {
   hasSavedLocalDefinition,
   removeLocalDefinition,
@@ -98,6 +99,13 @@ export default function EditorSidebar(props: EditorSidebarProps) {
               <span className="layer-name">{viewLabels[view]}</span>
             </button>
           ))}
+          <button
+            type="button"
+            className="editor-sidebar-item"
+            onClick={() => firmwareFlasherStore.open(props.keyboard || null)}
+          >
+            <span className="layer-name">{t('Write firmware')}</span>
+          </button>
         </section>
       )}
       <SavedDefinition keyboard={props.keyboard} />

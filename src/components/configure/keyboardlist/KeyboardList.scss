@@ -93,3 +93,13 @@
     }
   }
 }
+
+.keyboardlist-firmware {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+  font-size: 13px;
+  color: #6b6c70;
+}

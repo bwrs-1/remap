@@ -10,6 +10,8 @@ import KeyboardIcon from '@mui/icons-material/Keyboard';
 import ForwardIcon from '@mui/icons-material/Forward';
 import LaptopChromebookIcon from '@mui/icons-material/LaptopChromebook';
 import { t } from 'i18next';
+import { Button } from '@mui/material';
+import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 
 type OwnProps = {};
 type KeyboardListProps = OwnProps &
@@ -63,6 +65,16 @@ export default class KeyboardList extends React.Component<
               {t('Add a Web HID access permitted device')}
             </div>
           </div>
+        </div>
+        <div className="keyboardlist-firmware">
+          <span>{t('Need to update the keyboard firmware?')}</span>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => firmwareFlasherStore.open(null)}
+          >
+            {t('Write firmware')}
+          </Button>
         </div>
       </div>
     );
