@@ -1,4 +1,4 @@
-From 4342784b10b205d6eceb4baff85c0ad7e1c58c3e Mon Sep 17 00:00:00 2001
+From 297f4116a6644beb0cf8c0269a4171dc7dc2b155 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
 Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
@@ -19,22 +19,22 @@ Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- keyboards/corne_procyon36/config.h            |  24 +
+ keyboards/corne_procyon36/config.h            |  36 ++
  keyboards/corne_procyon36/digitizer_user.c    |   7 +-
  keyboards/corne_procyon36/keyboard.json       |   2 +-
  .../corne_procyon36/keymaps/default/keymap.c  |  19 +-
- keyboards/corne_procyon36/matrix_pointing.c   | 467 ++++++++++++++++++
- keyboards/corne_procyon36/matrix_pointing.h   |  41 ++
+ keyboards/corne_procyon36/matrix_pointing.c   | 566 ++++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.h   |  59 ++
  keyboards/corne_procyon36/rules.mk            |  10 +-
- 7 files changed, 556 insertions(+), 14 deletions(-)
+ 7 files changed, 685 insertions(+), 14 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
 diff --git a/keyboards/corne_procyon36/config.h b/keyboards/corne_procyon36/config.h
-index e074887..b426053 100644
+index e074887..95fb1dd 100644
 --- a/keyboards/corne_procyon36/config.h
 +++ b/keyboards/corne_procyon36/config.h
-@@ -81,3 +81,27 @@
+@@ -81,3 +81,39 @@
   * Auto Mouse Layer 設定
   * ============================================================================ */
  #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -48,7 +48,7 @@ index e074887..b426053 100644
 +#define DYNAMIC_KEYMAP_LAYER_COUNT 5
 +
 +/* Matrix エディタからのタッチパッド/マウスレイヤー設定（matrix_pointing.c） */
-+#define EECONFIG_USER_DATA_SIZE 32               // 設定の保存領域
++#define EECONFIG_USER_DATA_SIZE 64               // 設定の保存領域（MATRIX_POINTING_EEPROM_SIZE）
 +#define MATRIX_POINTING_DEFAULT_AM_LAYER 4       // オートマウスの初期レイヤー = _MOUSE
 +#define MATRIX_POINTING_DEFAULT_ACCELERATION 0   // 既存の操作感を保つため加速は初期オフ
 +
@@ -62,6 +62,18 @@ index e074887..b426053 100644
 +uint16_t matrix_pointing_tap_term(void);
 +#endif
 +#define DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT matrix_pointing_tap_term()  // タップ判定時間を Matrix から変更
++
++/* タップ/ホールドキー（LT・MT）の判定時間とモードを Matrix から変更 */
++#define TAPPING_TERM_PER_KEY
++#define PERMISSIVE_HOLD_PER_KEY
++#define HOLD_ON_OTHER_KEY_PRESS_PER_KEY
++
++/* 3 本指スワイプで送るキーを Matrix から変更（フォークの digitizer マウス処理） */
++#define MATRIX_POINTING_SWIPE_KC(dir) ({ extern uint8_t matrix_pointing_swipe(uint8_t); matrix_pointing_swipe(dir); })
++#define DIGITIZER_SWIPE_LEFT_KC MATRIX_POINTING_SWIPE_KC(0)
++#define DIGITIZER_SWIPE_RIGHT_KC MATRIX_POINTING_SWIPE_KC(1)
++#define DIGITIZER_SWIPE_UP_KC MATRIX_POINTING_SWIPE_KC(2)
++#define DIGITIZER_SWIPE_DOWN_KC MATRIX_POINTING_SWIPE_KC(3)
 diff --git a/keyboards/corne_procyon36/digitizer_user.c b/keyboards/corne_procyon36/digitizer_user.c
 index d827269..bf2bf19 100644
 --- a/keyboards/corne_procyon36/digitizer_user.c
@@ -163,10 +175,10 @@ index 2784405..92f1ff0 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..6dd00fd
+index 0000000..c71ae8a
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
-@@ -0,0 +1,467 @@
+@@ -0,0 +1,566 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +// See matrix_pointing.h and README.md next to this file.
 +//
@@ -217,7 +229,9 @@ index 0000000..6dd00fd
 +#endif
 +
 +#define MP_MAGIC 0x4D58 // 'MX'
-+#define MP_VERSION 1
++#define MP_VERSION 2
++// Bytes of mp_config_t that version 1 stored (fields up to am_hold_with_modifiers).
++#define MP_V1_SIZE 28
 +
 +// Layout of the persisted settings. Append new fields at the end and bump
 +// MP_VERSION; never reorder (values stored in EEPROM would be misread).
@@ -248,7 +262,15 @@ index 0000000..6dd00fd
 +    uint8_t  am_debounce;
 +    uint8_t  am_exit_on_other_key;
 +    uint8_t  am_hold_with_modifiers;
++    // --- version 2 ---
++    // Tap-hold keys (LT / MT)
++    uint16_t tapping_term;
++    uint8_t  hold_mode; // 0: hold preferred, 1: balanced, 2: tap preferred
++    // 3-finger swipe keycodes: left, right, up, down
++    uint16_t swipe_kc[4];
 +} mp_config_t;
++
++_Static_assert(offsetof(mp_config_t, tapping_term) == MP_V1_SIZE, "version 1 layout changed");
 +
 +_Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t does not fit MATRIX_POINTING_EEPROM_SIZE");
 +
@@ -271,6 +293,32 @@ index 0000000..6dd00fd
 +#endif
 +#ifndef MATRIX_POINTING_DEFAULT_AM_LAYER
 +#    define MATRIX_POINTING_DEFAULT_AM_LAYER 3
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_TAPPING_TERM
++#    ifdef TAPPING_TERM
++#        define MATRIX_POINTING_DEFAULT_TAPPING_TERM TAPPING_TERM
++#    else
++#        define MATRIX_POINTING_DEFAULT_TAPPING_TERM 200
++#    endif
++#endif
++#define MP_HOLD_PREFERRED 0
++#define MP_HOLD_BALANCED 1
++#define MP_HOLD_TAP_PREFERRED 2
++#ifndef MATRIX_POINTING_DEFAULT_HOLD_MODE
++#    define MATRIX_POINTING_DEFAULT_HOLD_MODE MP_HOLD_TAP_PREFERRED // QMK's default
++#endif
++// Same defaults as the multitouch fork's DIGITIZER_SWIPE_*_KC.
++#ifndef MATRIX_POINTING_DEFAULT_SWIPE_LEFT
++#    define MATRIX_POINTING_DEFAULT_SWIPE_LEFT QK_MOUSE_BUTTON_3
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_SWIPE_RIGHT
++#    define MATRIX_POINTING_DEFAULT_SWIPE_RIGHT QK_MOUSE_BUTTON_4
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_SWIPE_UP
++#    define MATRIX_POINTING_DEFAULT_SWIPE_UP KC_LEFT_GUI
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_SWIPE_DOWN
++#    define MATRIX_POINTING_DEFAULT_SWIPE_DOWN KC_ESC
 +#endif
 +
 +// Defaults match the Matrix editor's defaults (the auto mouse layer can be
@@ -300,6 +348,9 @@ index 0000000..6dd00fd
 +    .am_debounce            = 25,
 +    .am_exit_on_other_key   = 1,
 +    .am_hold_with_modifiers = 1,
++    .tapping_term           = MATRIX_POINTING_DEFAULT_TAPPING_TERM,
++    .hold_mode              = MATRIX_POINTING_DEFAULT_HOLD_MODE,
++    .swipe_kc               = {MATRIX_POINTING_DEFAULT_SWIPE_LEFT, MATRIX_POINTING_DEFAULT_SWIPE_RIGHT, MATRIX_POINTING_DEFAULT_SWIPE_UP, MATRIX_POINTING_DEFAULT_SWIPE_DOWN},
 +};
 +
 +static mp_config_t mp_config;
@@ -349,6 +400,12 @@ index 0000000..6dd00fd
 +    MP_FIELD(0x25, am_debounce, 0, 100),
 +    MP_FIELD(0x26, am_exit_on_other_key, 0, 1),
 +    MP_FIELD(0x27, am_hold_with_modifiers, 0, 1),
++    MP_FIELD(0x30, tapping_term, 100, 400),
++    MP_FIELD(0x31, hold_mode, 0, 2),
++    MP_FIELD(0x40, swipe_kc[0], 0, 0xFFFF),
++    MP_FIELD(0x41, swipe_kc[1], 0, 0xFFFF),
++    MP_FIELD(0x42, swipe_kc[2], 0, 0xFFFF),
++    MP_FIELD(0x43, swipe_kc[3], 0, 0xFFFF),
 +};
 +
 +static const mp_field_t *mp_find_field(uint8_t id) {
@@ -419,7 +476,14 @@ index 0000000..6dd00fd
 +static void mp_load(void) {
 +    mp_loaded = true;
 +    MP_EEPROM_READ(mp_config);
-+    if (mp_config.version != MP_VERSION) {
++    if (mp_config.version == 1) {
++        // Keep the version 1 settings; new fields get their defaults.
++        mp_config_t migrated = mp_defaults;
++        memcpy(&migrated, &mp_config, MP_V1_SIZE);
++        migrated.version = MP_VERSION;
++        mp_config        = migrated;
++        MP_EEPROM_WRITE(mp_config);
++    } else if (mp_config.version != MP_VERSION) {
 +        mp_config = mp_defaults;
 +        MP_EEPROM_WRITE(mp_config);
 +    }
@@ -447,6 +511,53 @@ index 0000000..6dd00fd
 +void matrix_pointing_init(void) {
 +    mp_load();
 +    mp_apply();
++}
++
++// ---------------------------------------------------------------------------
++// Tap-hold timing (LT / MT keys)
++
++uint16_t matrix_pointing_tapping_term(void) {
++    mp_ensure_loaded();
++    return mp_config.tapping_term;
++}
++
++uint8_t matrix_pointing_hold_mode(void) {
++    mp_ensure_loaded();
++    return mp_config.hold_mode;
++}
++
++#ifndef MATRIX_POINTING_NO_TAPPING_HOOKS
++#    ifdef TAPPING_TERM_PER_KEY
++uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
++    return matrix_pointing_tapping_term();
++}
++#    endif
++#    ifdef PERMISSIVE_HOLD_PER_KEY
++// "Balanced": a key pressed and released while the tap-hold key is held
++// makes it a hold.
++bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
++    return matrix_pointing_hold_mode() == MP_HOLD_BALANCED;
++}
++#    endif
++#    ifdef HOLD_ON_OTHER_KEY_PRESS_PER_KEY
++// "Hold preferred": any other key press makes it a hold right away.
++bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
++    return matrix_pointing_hold_mode() == MP_HOLD_PREFERRED;
++}
++#    endif
++#endif // MATRIX_POINTING_NO_TAPPING_HOOKS
++
++// ---------------------------------------------------------------------------
++// 3-finger swipes (multitouch fork): see MATRIX_POINTING_SWIPE_KC in the
++// header. Sends the configured keycode (basic keycode with modifiers) and
++// returns KC_NO, so the fork's own tap_code() does nothing.
++
++uint8_t matrix_pointing_swipe(uint8_t direction) {
++    mp_ensure_loaded();
++    if (direction >= ARRAY_SIZE(mp_config.swipe_kc)) return KC_NO;
++    const uint16_t keycode = mp_config.swipe_kc[direction];
++    if (keycode != KC_NO && keycode <= QK_MODS_MAX) tap_code16(keycode);
++    return KC_NO;
 +}
 +
 +// ---------------------------------------------------------------------------
@@ -636,10 +747,10 @@ index 0000000..6dd00fd
 +#endif // POINTING_DEVICE_AUTO_MOUSE_ENABLE
 diff --git a/keyboards/corne_procyon36/matrix_pointing.h b/keyboards/corne_procyon36/matrix_pointing.h
 new file mode 100644
-index 0000000..c1ceb6b
+index 0000000..8b0fb43
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.h
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,59 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +//
 +// Implements the protocol the Matrix editor uses on the VIA custom channel
@@ -655,7 +766,7 @@ index 0000000..c1ceb6b
 +//   #define EECONFIG_USER_DATA_SIZE MATRIX_POINTING_EEPROM_SIZE
 +// (or a larger value if your keymap stores its own data after it; see
 +// MATRIX_POINTING_EEPROM_OFFSET).
-+#define MATRIX_POINTING_EEPROM_SIZE 32
++#define MATRIX_POINTING_EEPROM_SIZE 64
 +
 +#ifndef MATRIX_POINTING_EEPROM_OFFSET
 +#    define MATRIX_POINTING_EEPROM_OFFSET 0
@@ -681,6 +792,24 @@ index 0000000..c1ceb6b
 +// Call from is_mouse_record_user() if you define it yourself; otherwise this
 +// module defines is_mouse_record_user() (see MATRIX_POINTING_NO_MOUSE_RECORD).
 +bool matrix_pointing_is_mouse_record(uint16_t keycode, keyrecord_t *record);
++
++// Tapping term (ms) and hold mode (0: hold preferred, 1: balanced,
++// 2: tap preferred) for LT / MT keys. With TAPPING_TERM_PER_KEY,
++// PERMISSIVE_HOLD_PER_KEY and HOLD_ON_OTHER_KEY_PRESS_PER_KEY in config.h this
++// module defines get_tapping_term() / get_permissive_hold() /
++// get_hold_on_other_key_press() (define MATRIX_POINTING_NO_TAPPING_HOOKS to
++// write your own and call these instead).
++uint16_t matrix_pointing_tapping_term(void);
++uint8_t  matrix_pointing_hold_mode(void);
++
++// 3-finger swipe (0: left, 1: right, 2: up, 3: down) for the multitouch QMK
++// fork. config.h cannot include this header, so declare it there:
++//   #define MATRIX_POINTING_SWIPE_KC(dir) ({ extern uint8_t matrix_pointing_swipe(uint8_t); matrix_pointing_swipe(dir); })
++//   #define DIGITIZER_SWIPE_LEFT_KC  MATRIX_POINTING_SWIPE_KC(0)
++//   #define DIGITIZER_SWIPE_RIGHT_KC MATRIX_POINTING_SWIPE_KC(1)
++//   #define DIGITIZER_SWIPE_UP_KC    MATRIX_POINTING_SWIPE_KC(2)
++//   #define DIGITIZER_SWIPE_DOWN_KC  MATRIX_POINTING_SWIPE_KC(3)
++uint8_t matrix_pointing_swipe(uint8_t direction);
 diff --git a/keyboards/corne_procyon36/rules.mk b/keyboards/corne_procyon36/rules.mk
 index b8c04b6..a48f630 100644
 --- a/keyboards/corne_procyon36/rules.mk

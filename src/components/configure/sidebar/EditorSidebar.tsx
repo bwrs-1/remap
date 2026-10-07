@@ -19,7 +19,7 @@ import {
   EditorSidebarStateType,
 } from './EditorSidebar.container';
 
-export type EditorView = 'keymap' | 'touchpad' | 'autoMouse';
+export type EditorView = 'keymap' | 'touchpad' | 'autoMouse' | 'timing';
 
 type OwnProps = {
   views: EditorView[];
@@ -39,6 +39,7 @@ export default function EditorSidebar(props: EditorSidebarProps) {
     keymap: t('Keymap'),
     touchpad: t('Touchpad'),
     autoMouse: t('Mouse Layer'),
+    timing: t('Timing & gestures'),
   };
   const device = props.keyboard?.getInformation();
   const meta = useLayerMeta(device);

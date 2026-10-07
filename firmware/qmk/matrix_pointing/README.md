@@ -1,13 +1,14 @@
 # Matrix pointing — QMK 側の実装
 
-Matrix エディタの「タッチパッド」「マウスレイヤー」画面から設定を読み書き・保存するための
+Matrix エディタの「タッチパッド」「マウスレイヤー」「タイミング・ジェスチャー」画面から設定を読み書き・保存するための
 QMK モジュールです。VIA のカスタム値（チャンネル 0）でエディタとやり取りし、設定は
 EEPROM のユーザー用データブロックに保存します。プロトコルの詳細は
 [`keyboards/matrix-split42/README.md`](../../../keyboards/matrix-split42/README.md) を参照してください。
 
 > 確認済みの範囲: QMK `master`（2026-10-02 時点）の API 名・シグネチャと照合し、
-> ホスト環境でのコンパイル確認と動作テスト（VIA 応答、保存、座標変換、オートマウス判定）を実施済み。
-> **実機でのビルド・書き込み・動作は未確認**です。
+> ホスト環境でのコンパイル確認と動作テスト（VIA 応答、保存、座標変換、オートマウス判定、
+> 設定のバージョン 1→2 移行、タップ/ホールド判定、スワイプ）を実施済み。
+> マルチタッチ版 QMK フォークでの Corne Procyon36 向けビルドも確認済み。**実機での動作は未確認**です。
 
 ## 組み込み手順（キーマップに追加する場合）
 
@@ -23,9 +24,14 @@ EEPROM のユーザー用データブロックに保存します。プロトコ�
 3. `config.h` に追加:
 
    ```c
-   #define EECONFIG_USER_DATA_SIZE 32        // 設定の保存領域（MATRIX_POINTING_EEPROM_SIZE 以上）
+   #define EECONFIG_USER_DATA_SIZE 64        // 設定の保存領域（MATRIX_POINTING_EEPROM_SIZE 以上）
    #define POINTING_DEVICE_AUTO_MOUSE_ENABLE  // オートマウスレイヤー
    #define AUTO_MOUSE_DELAY 0                 // 「キー入力後の待機」はエディタの設定値で制御するため 0 に
+
+   // タップ/ホールドキー（LT・MT）の判定時間とモードを画面から変更（任意）
+   #define TAPPING_TERM_PER_KEY
+   #define PERMISSIVE_HOLD_PER_KEY
+   #define HOLD_ON_OTHER_KEY_PRESS_PER_KEY
 
    // Cirque タッチパッドで次の設定も画面から切り替えたい場合（任意）
    // #define POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE  // 慣性（グライド）
@@ -66,6 +72,25 @@ EEPROM のユーザー用データブロックに保存します。プロトコ�
 - EEPROM のユーザー領域を他でも使っている: `MATRIX_POINTING_EEPROM_OFFSET` で開始位置をずらし、
   `EECONFIG_USER_DATA_SIZE` を合計サイズ以上にしてください。
 
+### 3 本指スワイプ（マルチタッチ版 QMK フォーク）
+
+フォークの `digitizer_mouse_fallback.c` は `DIGITIZER_SWIPE_*_KC` を `tap_code()` に渡します。
+次のように定義すると、画面で選んだキー（修飾キー付きの基本キーコード）が送られます。
+
+```c
+#define MATRIX_POINTING_SWIPE_KC(dir) ({ extern uint8_t matrix_pointing_swipe(uint8_t); matrix_pointing_swipe(dir); })
+#define DIGITIZER_SWIPE_LEFT_KC MATRIX_POINTING_SWIPE_KC(0)
+#define DIGITIZER_SWIPE_RIGHT_KC MATRIX_POINTING_SWIPE_KC(1)
+#define DIGITIZER_SWIPE_UP_KC MATRIX_POINTING_SWIPE_KC(2)
+#define DIGITIZER_SWIPE_DOWN_KC MATRIX_POINTING_SWIPE_KC(3)
+```
+
+### 設定の保存形式のバージョン
+
+保存形式はバージョン 2 です（バージョン 1 にタイミングとスワイプを追加）。バージョン 1 で
+保存された設定は起動時にそのまま引き継ぎ、追加分は初期値で補います。なお
+`EECONFIG_USER_DATA_SIZE` を変えると QMK がユーザー領域を初期化するため、その場合は初期値に戻ります。
+
 ## ブラウザからのファームウェア書き込み
 
 このモジュールを組み込むと、Matrix の「ファームウェアを書き込む」で
@@ -87,3 +112,5 @@ RP2040 では BOOTSEL で再起動）。再起動は応答を返した約 100ms 
 | 起動する移動量・キー入力後の待機                                                  | `auto_mouse_activation()` を上書き         |                                                                                                         |
 | マウス用以外のキーで即解除・修飾キー中は維持                                      | `is_mouse_record_user()` で判定            |                                                                                                         |
 | 2 本指タップ・タップ＆ドラッグ・タップ判定時間・2 本指/端スクロール・センサー感度 | **保存のみ**                               | QMK の Cirque ドライバに実行時に変更する API がないため、値は保存・表示されますが動作には反映されません |
+| 長押し判定時間・ホールド判定モード                                                | `get_tapping_term()` などを定義            | `TAPPING_TERM_PER_KEY` / `PERMISSIVE_HOLD_PER_KEY` / `HOLD_ON_OTHER_KEY_PRESS_PER_KEY` が必要           |
+| 3 本指スワイプのキー                                                              | `matrix_pointing_swipe()`                  | マルチタッチ版 QMK フォークのみ。修飾キー付きの基本キーコードのみ送信                                   |

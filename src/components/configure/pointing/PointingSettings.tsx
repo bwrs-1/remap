@@ -21,10 +21,15 @@ import {
   IPointingSettingDef,
   probeProtocol,
   ProtocolSupport,
+  TAPPING_TERM_PRESETS,
+  TIMING_SETTINGS,
   TOUCHPAD_SETTINGS,
 } from '../../../services/pointing/PointingSettings';
+import { SWIPE_KEYCODE_OPTIONS } from '../../../services/pointing/SwipeKeycodes';
+import { hexadecimal } from '../../../utils/StringUtils';
+import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 
-export type PointingSettingsMode = 'touchpad' | 'autoMouse';
+export type PointingSettingsMode = 'touchpad' | 'autoMouse' | 'timing';
 
 type OwnProps = {
   mode: PointingSettingsMode;
@@ -44,6 +49,8 @@ type RowSpec = {
   help: string;
   format?: (value: number) => string;
   choices?: { value: number; label: string }[];
+  // Quick values shown under a slider.
+  presets?: number[];
 };
 
 type SectionSpec = {
@@ -212,15 +219,60 @@ const autoMouseSections = (): SectionSpec[] => [
   },
 ];
 
+const timingSections = (): SectionSpec[] => [
+  {
+    title: t('Tap-hold keys'),
+    desc: t('Applies to every layer-tap (LT) and mod-tap (MT) key'),
+    rows: [
+      {
+        key: 'tappingTerm',
+        label: t('Tapping term'),
+        help: t(
+          'Holding a key longer than this makes it a hold (layer / modifier)'
+        ),
+        format: (v) => `${v} ms`,
+        presets: TAPPING_TERM_PRESETS,
+      },
+      {
+        key: 'holdMode',
+        label: t('Hold decision'),
+        help: t(
+          'Hold preferred: another key press makes it a hold at once. Balanced: also a hold when another key is pressed and released while it is held. Tap preferred: a tap until the tapping term passes.'
+        ),
+        choices: [
+          { value: 0, label: t('Hold preferred') },
+          { value: 1, label: t('Balanced') },
+          { value: 2, label: t('Tap preferred') },
+        ],
+      },
+    ],
+  },
+  {
+    title: t('3-finger swipe'),
+    desc: t('Key sent when you swipe with three fingers on the touchpad'),
+    rows: [
+      { key: 'swipeLeft', label: t('Swipe left'), help: '' },
+      { key: 'swipeRight', label: t('Swipe right'), help: '' },
+      { key: 'swipeUp', label: t('Swipe up'), help: '' },
+      { key: 'swipeDown', label: t('Swipe down'), help: '' },
+    ],
+  },
+];
+
+const MODE_DEFS: Record<PointingSettingsMode, readonly IPointingSettingDef[]> =
+  {
+    touchpad: TOUCHPAD_SETTINGS,
+    autoMouse: AUTO_MOUSE_SETTINGS,
+    timing: TIMING_SETTINGS,
+  };
+
 export default function PointingSettings(props: PointingSettingsProps) {
   const isTouchpad = props.mode === 'touchpad';
-  const defs: readonly IPointingSettingDef[] = isTouchpad
-    ? TOUCHPAD_SETTINGS
-    : AUTO_MOUSE_SETTINGS;
+  const defs = MODE_DEFS[props.mode];
 
-  const [support, setSupport] = useState<ProtocolSupport | 'checking'>(
-    'checking'
-  );
+  const [support, setSupport] = useState<
+    ProtocolSupport | 'checking' | 'outdated'
+  >('checking');
   // Shows the settings UI with default values without talking to the
   // keyboard, so the screen can be checked on any firmware.
   const [preview, setPreview] = useState<boolean>(false);
@@ -248,6 +300,8 @@ export default function PointingSettings(props: PointingSettingsProps) {
       if (result.success) {
         setStored(result.values!);
         setValues(result.values!);
+      } else if (result.outdated) {
+        setSupport('outdated');
       } else {
         props.notifyError!(
           t('Failed to read the settings from the keyboard'),
@@ -260,7 +314,19 @@ export default function PointingSettings(props: PointingSettingsProps) {
     };
   }, [props.keyboard, props.mode, retry]);
 
-  const title = isTouchpad ? t('Touchpad') : t('Auto mouse layer');
+  const titles: Record<PointingSettingsMode, string> = {
+    touchpad: t('Touchpad'),
+    autoMouse: t('Auto mouse layer'),
+    timing: t('Timing & gestures'),
+  };
+  const descs: Record<PointingSettingsMode, string> = {
+    touchpad: t('Mounted on the top of the right half'),
+    autoMouse: t(
+      'Turns on the selected layer automatically while you are using the touchpad'
+    ),
+    timing: t('Tap-hold key timing and touchpad swipe shortcuts'),
+  };
+  const title = titles[props.mode];
   const live = support === 'supported';
 
   if (!live && !preview) {
@@ -291,8 +357,27 @@ export default function PointingSettings(props: PointingSettingsProps) {
           {support === 'error' && (
             <p>{t('Could not communicate with the keyboard.')}</p>
           )}
+          {support === 'outdated' && (
+            <p>
+              {t(
+                'The firmware on this keyboard is an older Matrix version without these settings. Write the latest Matrix-ready firmware to use them.'
+              )}
+            </p>
+          )}
           {support !== 'checking' && (
             <div className="pointing-actions">
+              {support === 'outdated' && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  disableElevation
+                  onClick={() =>
+                    firmwareFlasherStore.open(props.keyboard || null)
+                  }
+                >
+                  {t('Write firmware')}
+                </Button>
+              )}
               <Button
                 variant="contained"
                 size="small"
@@ -340,20 +425,19 @@ export default function PointingSettings(props: PointingSettingsProps) {
     }
   };
 
-  const sections = isTouchpad ? touchpadSections() : autoMouseSections();
+  const sections =
+    props.mode === 'touchpad'
+      ? touchpadSections()
+      : props.mode === 'autoMouse'
+        ? autoMouseSections()
+        : timingSections();
 
   return (
     <div className="pointing-settings">
       <div className="pointing-title">
         <div className="pointing-title-text">
-          <h1>{isTouchpad ? t('Touchpad') : t('Auto mouse layer')}</h1>
-          <span>
-            {isTouchpad
-              ? t('Mounted on the top of the right half')
-              : t(
-                  'Turns on the selected layer automatically while you are using the touchpad'
-                )}
-          </span>
+          <h1>{title}</h1>
+          <span>{descs[props.mode]}</span>
         </div>
         {loading && <CircularProgress size={20} />}
         <div className="pointing-actions">
@@ -389,7 +473,7 @@ export default function PointingSettings(props: PointingSettingsProps) {
         </div>
       )}
 
-      {!isTouchpad && (
+      {props.mode === 'autoMouse' && (
         <AutoMouseOverview
           values={values}
           layerCount={props.layerCount!}
@@ -440,7 +524,7 @@ function SettingRow(props: SettingRowProps) {
     <div className="pointing-row">
       <div className="pointing-row-label">
         <span className="label">{row.label}</span>
-        <span className="help">{row.help}</span>
+        {row.help && <span className="help">{row.help}</span>}
       </div>
       <div className="pointing-row-control">
         {def.kind === 'switch' && (
@@ -466,7 +550,30 @@ function SettingRow(props: SettingRowProps) {
             <span className="pointing-value">
               {row.format ? row.format(value) : value}
             </span>
+            {row.presets && (
+              <div className="pointing-presets">
+                {row.presets.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    aria-pressed={value === p}
+                    disabled={props.disabled}
+                    onClick={() => props.onChange(p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+        )}
+        {def.kind === 'keycode' && (
+          <KeycodeSelect
+            label={row.label}
+            value={value}
+            disabled={props.disabled}
+            onChange={props.onChange}
+          />
         )}
         {def.kind === 'choice' && row.choices && (
           <ToggleButtonGroup
@@ -486,6 +593,47 @@ function SettingRow(props: SettingRowProps) {
         )}
       </div>
     </div>
+  );
+}
+
+type KeycodeSelectProps = {
+  label: string;
+  value: number;
+  disabled: boolean;
+  // eslint-disable-next-line no-unused-vars
+  onChange: (value: number) => void;
+};
+
+function KeycodeSelect(props: KeycodeSelectProps) {
+  const known = SWIPE_KEYCODE_OPTIONS.some((o) => o.code === props.value);
+  const groups: { id: 'common' | 'mac' | 'win'; label: string }[] = [
+    { id: 'common', label: t('Common') },
+    { id: 'mac', label: 'Mac' },
+    { id: 'win', label: 'Windows' },
+  ];
+  return (
+    <select
+      className="pointing-select"
+      value={props.value}
+      disabled={props.disabled}
+      aria-label={props.label}
+      onChange={(e) => props.onChange(Number(e.target.value))}
+    >
+      {!known && (
+        <option value={props.value}>
+          {t('Custom')} ({hexadecimal(props.value, 4)})
+        </option>
+      )}
+      {groups.map((g) => (
+        <optgroup key={g.id} label={g.label}>
+          {SWIPE_KEYCODE_OPTIONS.filter((o) => o.group === g.id).map((o) => (
+            <option key={`${g.id}-${o.code}`} value={o.code}>
+              {t(o.label)}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
   );
 }
 

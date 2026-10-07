@@ -48,7 +48,9 @@
 #endif
 
 #define MP_MAGIC 0x4D58 // 'MX'
-#define MP_VERSION 1
+#define MP_VERSION 2
+// Bytes of mp_config_t that version 1 stored (fields up to am_hold_with_modifiers).
+#define MP_V1_SIZE 28
 
 // Layout of the persisted settings. Append new fields at the end and bump
 // MP_VERSION; never reorder (values stored in EEPROM would be misread).
@@ -79,7 +81,15 @@ typedef struct __attribute__((packed)) {
     uint8_t  am_debounce;
     uint8_t  am_exit_on_other_key;
     uint8_t  am_hold_with_modifiers;
+    // --- version 2 ---
+    // Tap-hold keys (LT / MT)
+    uint16_t tapping_term;
+    uint8_t  hold_mode; // 0: hold preferred, 1: balanced, 2: tap preferred
+    // 3-finger swipe keycodes: left, right, up, down
+    uint16_t swipe_kc[4];
 } mp_config_t;
+
+_Static_assert(offsetof(mp_config_t, tapping_term) == MP_V1_SIZE, "version 1 layout changed");
 
 _Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t does not fit MATRIX_POINTING_EEPROM_SIZE");
 
@@ -102,6 +112,32 @@ _Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t 
 #endif
 #ifndef MATRIX_POINTING_DEFAULT_AM_LAYER
 #    define MATRIX_POINTING_DEFAULT_AM_LAYER 3
+#endif
+#ifndef MATRIX_POINTING_DEFAULT_TAPPING_TERM
+#    ifdef TAPPING_TERM
+#        define MATRIX_POINTING_DEFAULT_TAPPING_TERM TAPPING_TERM
+#    else
+#        define MATRIX_POINTING_DEFAULT_TAPPING_TERM 200
+#    endif
+#endif
+#define MP_HOLD_PREFERRED 0
+#define MP_HOLD_BALANCED 1
+#define MP_HOLD_TAP_PREFERRED 2
+#ifndef MATRIX_POINTING_DEFAULT_HOLD_MODE
+#    define MATRIX_POINTING_DEFAULT_HOLD_MODE MP_HOLD_TAP_PREFERRED // QMK's default
+#endif
+// Same defaults as the multitouch fork's DIGITIZER_SWIPE_*_KC.
+#ifndef MATRIX_POINTING_DEFAULT_SWIPE_LEFT
+#    define MATRIX_POINTING_DEFAULT_SWIPE_LEFT QK_MOUSE_BUTTON_3
+#endif
+#ifndef MATRIX_POINTING_DEFAULT_SWIPE_RIGHT
+#    define MATRIX_POINTING_DEFAULT_SWIPE_RIGHT QK_MOUSE_BUTTON_4
+#endif
+#ifndef MATRIX_POINTING_DEFAULT_SWIPE_UP
+#    define MATRIX_POINTING_DEFAULT_SWIPE_UP KC_LEFT_GUI
+#endif
+#ifndef MATRIX_POINTING_DEFAULT_SWIPE_DOWN
+#    define MATRIX_POINTING_DEFAULT_SWIPE_DOWN KC_ESC
 #endif
 
 // Defaults match the Matrix editor's defaults (the auto mouse layer can be
@@ -131,6 +167,9 @@ static const mp_config_t mp_defaults = {
     .am_debounce            = 25,
     .am_exit_on_other_key   = 1,
     .am_hold_with_modifiers = 1,
+    .tapping_term           = MATRIX_POINTING_DEFAULT_TAPPING_TERM,
+    .hold_mode              = MATRIX_POINTING_DEFAULT_HOLD_MODE,
+    .swipe_kc               = {MATRIX_POINTING_DEFAULT_SWIPE_LEFT, MATRIX_POINTING_DEFAULT_SWIPE_RIGHT, MATRIX_POINTING_DEFAULT_SWIPE_UP, MATRIX_POINTING_DEFAULT_SWIPE_DOWN},
 };
 
 static mp_config_t mp_config;
@@ -180,6 +219,12 @@ static const mp_field_t mp_fields[] = {
     MP_FIELD(0x25, am_debounce, 0, 100),
     MP_FIELD(0x26, am_exit_on_other_key, 0, 1),
     MP_FIELD(0x27, am_hold_with_modifiers, 0, 1),
+    MP_FIELD(0x30, tapping_term, 100, 400),
+    MP_FIELD(0x31, hold_mode, 0, 2),
+    MP_FIELD(0x40, swipe_kc[0], 0, 0xFFFF),
+    MP_FIELD(0x41, swipe_kc[1], 0, 0xFFFF),
+    MP_FIELD(0x42, swipe_kc[2], 0, 0xFFFF),
+    MP_FIELD(0x43, swipe_kc[3], 0, 0xFFFF),
 };
 
 static const mp_field_t *mp_find_field(uint8_t id) {
@@ -250,7 +295,14 @@ static void mp_apply(void) {
 static void mp_load(void) {
     mp_loaded = true;
     MP_EEPROM_READ(mp_config);
-    if (mp_config.version != MP_VERSION) {
+    if (mp_config.version == 1) {
+        // Keep the version 1 settings; new fields get their defaults.
+        mp_config_t migrated = mp_defaults;
+        memcpy(&migrated, &mp_config, MP_V1_SIZE);
+        migrated.version = MP_VERSION;
+        mp_config        = migrated;
+        MP_EEPROM_WRITE(mp_config);
+    } else if (mp_config.version != MP_VERSION) {
         mp_config = mp_defaults;
         MP_EEPROM_WRITE(mp_config);
     }
@@ -278,6 +330,53 @@ uint16_t matrix_pointing_get_cpi(void) {
 void matrix_pointing_init(void) {
     mp_load();
     mp_apply();
+}
+
+// ---------------------------------------------------------------------------
+// Tap-hold timing (LT / MT keys)
+
+uint16_t matrix_pointing_tapping_term(void) {
+    mp_ensure_loaded();
+    return mp_config.tapping_term;
+}
+
+uint8_t matrix_pointing_hold_mode(void) {
+    mp_ensure_loaded();
+    return mp_config.hold_mode;
+}
+
+#ifndef MATRIX_POINTING_NO_TAPPING_HOOKS
+#    ifdef TAPPING_TERM_PER_KEY
+uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
+    return matrix_pointing_tapping_term();
+}
+#    endif
+#    ifdef PERMISSIVE_HOLD_PER_KEY
+// "Balanced": a key pressed and released while the tap-hold key is held
+// makes it a hold.
+bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
+    return matrix_pointing_hold_mode() == MP_HOLD_BALANCED;
+}
+#    endif
+#    ifdef HOLD_ON_OTHER_KEY_PRESS_PER_KEY
+// "Hold preferred": any other key press makes it a hold right away.
+bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
+    return matrix_pointing_hold_mode() == MP_HOLD_PREFERRED;
+}
+#    endif
+#endif // MATRIX_POINTING_NO_TAPPING_HOOKS
+
+// ---------------------------------------------------------------------------
+// 3-finger swipes (multitouch fork): see MATRIX_POINTING_SWIPE_KC in the
+// header. Sends the configured keycode (basic keycode with modifiers) and
+// returns KC_NO, so the fork's own tap_code() does nothing.
+
+uint8_t matrix_pointing_swipe(uint8_t direction) {
+    mp_ensure_loaded();
+    if (direction >= ARRAY_SIZE(mp_config.swipe_kc)) return KC_NO;
+    const uint16_t keycode = mp_config.swipe_kc[direction];
+    if (keycode != KC_NO && keycode <= QK_MODS_MAX) tap_code16(keycode);
+    return KC_NO;
 }
 
 // ---------------------------------------------------------------------------

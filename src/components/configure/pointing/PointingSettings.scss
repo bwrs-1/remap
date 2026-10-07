@@ -114,8 +114,9 @@
 
   .pointing-range {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
+    gap: 4px 16px;
     width: 300px;
     max-width: 100%;
   }
@@ -278,5 +279,37 @@
       font-family: variables.$cfg-font-mono;
       font-size: 12px;
     }
+  }
+}
+
+.pointing-settings {
+  .pointing-presets {
+    display: flex;
+    margin-left: auto;
+    gap: 4px;
+    button {
+      padding: 2px 8px;
+      border: 1px solid variables.$cfg-panel-border;
+      border-radius: 999px;
+      background: #fff;
+      font-family: variables.$cfg-font-mono;
+      font-size: 11px;
+      cursor: pointer;
+      &[aria-pressed='true'] {
+        background: variables.$cfg-accent;
+        border-color: variables.$cfg-accent;
+        color: variables.$cfg-accent-text;
+      }
+    }
+  }
+  .pointing-select {
+    min-width: 200px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 8px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
   }
 }

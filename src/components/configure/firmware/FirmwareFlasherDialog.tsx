@@ -30,7 +30,8 @@ type BundledFirmware = { keyboard: string; url: string; fileName: string };
 const BUNDLED_FIRMWARES: BundledFirmware[] = [
   {
     keyboard: 'Dilemma_3X6 (Corne Procyon36)',
-    url: '/firmware/corne_procyon36_matrix.uf2',
+    // Bump ?v= when the bundled file changes so browsers do not use a cached copy.
+    url: '/firmware/corne_procyon36_matrix.uf2?v=2',
     fileName: 'corne_procyon36_matrix.uf2',
   },
 ];
@@ -173,6 +174,12 @@ export default function FirmwareFlasherDialog() {
             )}
           </p>
         )}
+
+        <p className="firmware-flasher-note">
+          {t(
+            'Writing new firmware resets the keymap stored in the keyboard to the firmware defaults. Export your keymap from the header first and import it again afterwards. For a split keyboard, write both halves.'
+          )}
+        </p>
 
         <ol className="firmware-flasher-steps">
           <li>

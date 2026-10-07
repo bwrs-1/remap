@@ -79,6 +79,20 @@ persist them (e.g. to EEPROM / `eeconfig_update_kb_datablock`).
 | `0x26` | `exitOnOtherKey`    | 1    | 0 / 1 — release when a non-mouse key is pressed    | 1       |
 | `0x27` | `holdWithModifiers` | 1    | 0 / 1 — keep the layer while modifiers are held    | 1       |
 
+### Timing & gestures (protocol version 2)
+
+Firmware made before these values answers `id_unhandled` for them; the
+editor then asks for a firmware update instead of showing defaults.
+
+| ID     | Key           | Size | Range / meaning                                                           | Default            |
+| ------ | ------------- | ---- | ------------------------------------------------------------------------- | ------------------ |
+| `0x30` | `tappingTerm` | 2    | 100 – 400 ms, tapping term of LT / MT keys                                | 200                |
+| `0x31` | `holdMode`    | 1    | 0: hold preferred, 1: balanced (permissive hold), 2: tap preferred        | 2                  |
+| `0x40` | `swipeLeft`   | 2    | QMK keycode sent on a 3-finger swipe (basic keycode with modifiers, or 0) | `0x00D3` (MS_BTN3) |
+| `0x41` | `swipeRight`  | 2    | as above                                                                  | `0x00D4` (MS_BTN4) |
+| `0x42` | `swipeUp`     | 2    | as above                                                                  | `0x00E3` (LGUI)    |
+| `0x43` | `swipeDown`   | 2    | as above                                                                  | `0x0029` (ESC)     |
+
 Values outside a range are clamped by the editor when read. The editor's
 defaults are its own starting values; the firmware's stored values win once
 they are read.

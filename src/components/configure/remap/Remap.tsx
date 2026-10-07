@@ -54,7 +54,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
   // Touchpad / Mouse Layer are always listed; each screen checks whether
   // the firmware supports them and offers a preview otherwise.
   private availableViews(): ConfigureView[] {
-    return ['keymap', 'touchpad', 'autoMouse'];
+    return ['keymap', 'touchpad', 'autoMouse', 'timing'];
   }
 
   private onEditLayer(layer: number) {

@@ -37,7 +37,8 @@ export async function requestBootloader(
   return result.success ? 'supported' : 'error';
 }
 
-export type PointingSettingKind = 'switch' | 'range' | 'choice';
+// 'keycode': a 16-bit QMK keycode (basic keycode with modifiers).
+export type PointingSettingKind = 'switch' | 'range' | 'choice' | 'keycode';
 
 export interface IPointingSettingDef<K extends string = string> {
   key: K;
@@ -104,6 +105,20 @@ export const AUTO_MOUSE_SETTINGS = [
   def('holdWithModifiers', 0x27, 'switch', 0, 1, 1),
 ] as const;
 
+// Firmware protocol version 2 (matrix_pointing MP_VERSION 2): tap-hold
+// timing for LT / MT keys and 3-finger swipe keycodes.
+export const TIMING_SETTINGS = [
+  def('tappingTerm', 0x30, 'range', 100, 400, 200, 2, 5),
+  // 0: hold preferred, 1: balanced, 2: tap preferred (QMK default)
+  def('holdMode', 0x31, 'choice', 0, 2, 2),
+  def('swipeLeft', 0x40, 'keycode', 0, 0xffff, 0x00d3, 2),
+  def('swipeRight', 0x41, 'keycode', 0, 0xffff, 0x00d4, 2),
+  def('swipeUp', 0x42, 'keycode', 0, 0xffff, 0x00e3, 2),
+  def('swipeDown', 0x43, 'keycode', 0, 0xffff, 0x0029, 2),
+] as const;
+
+export const TAPPING_TERM_PRESETS = [150, 175, 200, 250, 300];
+
 export type TouchpadSettingKey = (typeof TOUCHPAD_SETTINGS)[number]['key'];
 export type AutoMouseSettingKey = (typeof AUTO_MOUSE_SETTINGS)[number]['key'];
 export type TouchpadSettings = Record<TouchpadSettingKey, number>;
@@ -135,6 +150,8 @@ export function clampValue(d: IPointingSettingDef, value: number): number {
 
 export interface IFetchSettingsResult<K extends string> extends IResult {
   values?: Record<K, number>;
+  // The firmware answered id_unhandled: it predates these values.
+  outdated?: boolean;
 }
 
 export async function fetchSettings<K extends string>(
@@ -146,6 +163,13 @@ export async function fetchSettings<K extends string>(
     const result = await keyboard.fetchCustomValue(d.valueId, d.size);
     if (!result.success) {
       return { success: false, error: result.error, cause: result.cause };
+    }
+    if (result.unhandled) {
+      return {
+        success: false,
+        outdated: true,
+        error: 'The firmware does not support this setting',
+      };
     }
     values[d.key] = clampValue(d, result.value!);
   }
