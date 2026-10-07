@@ -47,14 +47,15 @@ interface IActionOptions {
   product_name?: string;
 }
 
-let analytics: firebase.analytics.Analytics | null;
-try {
-  analytics = firebase.analytics();
-} catch (cause) {
-  if (import.meta.env.NODE_ENV === 'production') {
-    throw cause;
-  } else {
-    analytics = null;
+let analytics: firebase.analytics.Analytics | null = null;
+// Skip analytics when Firebase is not initialized (no Firebase settings).
+if (firebase.apps.length > 0) {
+  try {
+    analytics = firebase.analytics();
+  } catch (cause) {
+    if (import.meta.env.NODE_ENV === 'production') {
+      throw cause;
+    }
   }
 }
 
