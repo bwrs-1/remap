@@ -28,7 +28,6 @@
   "Many Pre-defined keycodes to remap your keyboard easily.": "多くの定義済みキーコードを使用してキーボードを簡単にリマップできます。",
   "Compare Changes": "変更の比較",
   "Easy-to-understand ui to highlight changes made to the keymap.": "キーマップの変更点を強調表示する分かりやすいUI。",
-
   "Keyboard Name": "キーボード名",
   "Organization": "組織",
   "Build Firmware Support": "ファームウェア作成対応",
@@ -54,31 +53,25 @@
   "Wireless": "ワイヤレス",
   "Clear": "クリア",
   "Search": "検索",
-
   "No Image": "画像なし",
   "Designed by": "作者:",
-
   "Stores": "取扱店",
   "Keyboard Website": "キーボードウェブサイト",
-
   "Overview": "概要",
   "Keymap": "キーマップ",
   "Firmware": "ファームウェア",
   "Build": "ビルド",
-
   "Default": "標準",
   "Features": "機能",
   "Not specified by the owner of this keyboard.": "キーボード作者が入力されていません。",
   "Created by Same Designer": "同じ作者のキーボード",
   "A description is not specified by the owner of this keyboard.": "このキーボード作者が入力していません。",
-
   "Get keymap cheat sheet (PDF)": "キーマップチートシートを得る (PDF)",
   "Layout Options": "レイアウトオプション",
   "Shared Keymaps": "共有されたキーマップ",
   "There is no Layout Option.": "レイアウトオプションはありません",
   "by": "登録者:",
   "There is no shared keymap.": "共有されたキーマップはありません",
-
   "Device Information": "デバイス情報",
   "Total Download Count:": "総ダウンロード数:",
   "Total Flash Count:": "総書き込み数:",
@@ -86,7 +79,6 @@
   "Flash": "書き込み",
   "Source Code": "ソースコード",
   "Download": "ダウンロード",
-
   "The firmware building feature can&quot;t be used because firmware files for this keyboard are not registered by the owner yet.": "このキーボードのファームウェアファイルがまだ登録されていないため、ファームウェアビルド機能を使用できません",
   "Auto": "自動",
   "Reload": "再読み込み",
@@ -114,12 +106,10 @@
   "By selecting and filling in each parameter": "各パラメータを選択または入力する",
   "By editing a code": "コードを編集する",
   "No parameters available.": "利用できるパラメータがありません",
-
   "Connect your keyboard supporting the VIA feature to this PC.": "VIA機能をサポートするキーボードをこのPCに接続してください",
   "Then, press the '+KEYBOARD' below.": "次に、下の「+キーボード」を押してください",
   "+ KEYBOARD": "+ キーボード",
   "Add a Web HID access permitted device": "Web HIDアクセス許可デバイスを追加",
-
   "Keyboard Info": "キーボード情報",
   "CONNECTED DEVICE": "接続されたデバイス",
   "KEYBOARD DEFINITION": "キーボード定義",
@@ -130,7 +120,6 @@
   "The keyboard definition is currently applied for only you. Please submit a review request of this keyboard definition for all users from": "このキーボード定義は現在あなたのみに適用されています。このキーボード定義をすべてのユーザーに適用するためのレビューリクエストを提出してください。",
   "If you think that the person above does not have any rights for the keyboard and the keyboard definition (in the case of the person is not original keyboard designer or etc.), please report it to the Remap team from this form:": "もし上記のキーボード登録者がそのキーボードの権利保持者ではないとき（その人がオリジナルのキーボード設計者ではない等）は、このフォームからRemapチームに報告してください:",
   "Here": "こちら",
-
   "LAYERS": "レイヤー",
   "Clear all changes": "すべての変更を元に戻す",
   "Layout Option": "レイアウトオプション",
@@ -142,7 +131,6 @@
   "Current keymap will be discarded and an initial keymap will be applied immediately. If you want to reuse current keymap, please save it before resetting.": "現在のキーマップは破棄され、初期キーマップが即座に適用されます。現在のキーマップを再利用する場合は、リセットする前に保存してください。",
   "No": "いいえ",
   "Yes": "はい",
-
   "KEY": "キー",
   "HOLD/TAP": "ホールド/タップ",
   "CUSTOM": "カスタム",
@@ -156,7 +144,6 @@
   "Keycode": "キーコード",
   "Hold": "ホールド",
   "Tap": "タップ",
-
   "You can save/restore the current keymap. Using this feature, you can manage many kinds of keymaps.": "現在のキーマップを保存/復元できます。この機能を使用すると、さまざまな種類のキーマップを管理できます。",
   "*You need to sign in to use this feature.": "*この機能を使用するにはサインインする必要があります。",
   "SignIn": "サインイン",
@@ -175,7 +162,6 @@
   "Share this keymap for other users": "他のユーザーとこのキーマップを共有",
   "Your name will be displayed for other users.": "他のユーザーにはあなたの名前が表示されます。",
   "Save": "保存",
-
   "UNDERGLOW": "アンダーグロー",
   "Effect Mode": "エフェクトモード",
   "Color": "色",
@@ -183,7 +169,6 @@
   "Brightness": "明るさ",
   "BACKLIGHT": "バックライト",
   "Breathing Mode": "ブリージングモード",
-
   "Import Keyboard Definition File": "キーボード定義ファイルのインポート",
   "Please import the definition file for": "キーボード定義ファイルをインポートしてください:",
   "Specification": "仕様",
@@ -196,18 +181,13 @@
   "Other possibilities": "その他の可能性",
   "Invalid": "無効",
   "at": "場所",
-
   "Cancel": "キャンセル",
-
   "You can confirm that your keyboard's key switches work fine.": "キーボードのキースイッチが正常に動作することを確認できます。",
-
   "Logout": "ログアウト",
   "Login": "ログイン",
-
   "+Keyboard": "+ キーボード",
   "You don't have any registered keyboards. Please register your own keyboard from right-top button.": "登録されたキーボードがありません。右上のボタンから自分のキーボードを登録してください。",
   "Details": "詳細",
-
   "Keyboard List": "キーボードリスト",
   "Please import your file": "ファイルをインポートしてください",
   "JSON Filename": "JSONファイル名",
@@ -240,11 +220,9 @@
   "The author type of this keyboard is": "このキーボードの作者タイプ",
   "Individual": "個人",
   "I agree the policy:": "ポリシーに同意します:",
-
   "Definition": "定義",
   "Catalog": "カタログ",
   "Statistics": "統計",
-
   "Are you sure to update the JSON file?": "JSONファイルを更新してもよろしいですか?",
   "Are you sure to delete?": "削除してもよろしいですか?",
   "Are you sure to change the status to draft? A review is necessary to publish this keyboard again.": "下書きに変更してもよろしいですか? このキーボードを再度公開するにはレビューが必要です。",
@@ -255,7 +233,6 @@
   "Firmware source location:": "ファームウェアのソースコードの場所:",
   "Back to Draft": "下書きに戻す",
   "Update JSON file": "JSONファイルを更新",
-
   "Drop Main Image here": "メイン画像をここにドロップ",
   "Drop Sub Image here": "サブ画像をここにドロップ",
   "Description (Default)": "説明（標準）",
@@ -268,7 +245,6 @@
   "Backlight LED": "バックライトLED",
   "Underglow LED": "アンダーグローLED",
   "Add Store": "取扱店を追加",
-
   "Drop Firmware here (.hex .bin and etc.)": "ファームウェアをここにドロップ(.hex .bin など)",
   "Firmware File": "ファームウェアファイル",
   "Firmware Name": "ファームウェア名",
@@ -284,7 +260,6 @@
   "Edit Firmware": "ファームウェアを編集",
   "Firmware Description": "ファームウェアの説明",
   "Update": "更新",
-
   "Support building QMK Firmware": "QMK Firmwareのビルドをサポート",
   "QMK Firmware Version": "QMK Firmwareバージョン",
   "Support Code Editing": "コード編集をサポート",
@@ -299,12 +274,10 @@
   "Type": "タイプ",
   "Options": "オプション",
   "Firmware File Deletion": "ファームウェアファイルの削除",
-
   "Counts of opening a keyboard per day": "1日あたりのキーボードのオープン回数",
   "* This statistics will be shown after logs are collected by enough users because of avoiding a privacy issue.": "* プライバシー問題を避けるため、十分なユーザーによるログの収集後にこの統計が表示されます。",
   "Counts of flashing a keymap to MCU": "MCUへのキーマップの書き込み回数",
   "Download JSON": "JSONをダウンロード",
-
   "If you want to create a new organization in Remap, please send a request from:": "Remapで新しい組織を作成したい場合は、次のリンクからリクエストを送信してください:",
   "Organization List": "組織リスト",
   "Icon Image URL": "アイコン画像のURL",
@@ -316,7 +289,6 @@
   "Email Address": "メールアドレス",
   "Are you sure to delete the member from this organization?": "この組織からメンバーを削除してもよろしいですか?",
   "Confirmation": "確認",
-
   "Bootloader": "ブートローダー",
   "Three Steps to Flash": "書き込みの3ステップ",
   "1. Push the FLASH button and the dialog to list the serial ports up.": "1. FLASHボタンを押すと、シリアルポートの一覧を表示するダイアログが表示されます。",
@@ -327,7 +299,6 @@
   "Frequently Asked Questions": "よくある質問",
   "Now loading the firmware...": "ファームウェアを読み込んでいます...",
   "Close": "閉じる",
-
   "Upload Firmware": "ファームウェアをアップロード",
   "Drag and drop your firmware file (hex, bin and so on) into the area below. Then, the next page is shown automatically.": "ファームウェアファイル（hex、binなど）を以下のエリアにドラッグアンドドロップしてください。次のページが自動的に表示されます。",
   "Drop Firmware File here": "ファームウェアファイルをここにドロップ",
@@ -336,16 +307,13 @@
   "This is a management feature for registered organizations such as keyboard shops.": "キーボードショップなどの組織の登録者向けの管理機能です。",
   "Flash a Firmware": "ファームウェアを書き込む",
   "Let's flash the firmware to the microcontroller of your assembled keyboard.": "組み立てたキーボードのマイコンにファームウェアを書き込もう。",
-
   "Type at least 2 characters to search for a keyboard.": "キーボードを検索するには、2文字以上入力してください。",
-
   "Projects": "プロジェクト",
   "File Generation": "ファイル生成",
   "Generate": "生成",
   "Generate keyboard.json and keymap.c files for QMK Firmware": "QMK Firmware用のkeyboard.jsonとkeymap.cファイルを生成",
   "Manufacturer Name": "製造元の名前",
   "Maintainer Name": "メンテナーの名前",
-  "Keyboard Name": "キーボード名",
   "MCU Type": "MCUの種別",
   "MCU": "MCU",
   "Vendor ID": "ベンダーID",
@@ -395,7 +363,6 @@
   "Confirm File Overwrite": "ファイル上書きの確認",
   "The following files already exist: {{files}}. Do you want to overwrite them?": "以下のファイルが既に存在します：{{files}}。上書きしますか？",
   "Keyboard Layout": "キーボードレイアウト",
-
   "Acceleration": "加速",
   "Activation movement": "起動する移動量",
   "Adjust when touches are missed or misdetected": "誤反応が多い・反応が鈍いときに調整",
@@ -522,5 +489,40 @@
   "On Windows, the browser may need the WinUSB driver for the RP2 Boot interface (interface 1). It can be installed with a tool such as Zadig.": "Windows では、RP2 Boot のインターフェース1に WinUSB ドライバが必要な場合があります。Zadig などのツールでインストールできます。",
   "The keyboard stays in flash mode, so you can try again. The firmware on it is not started until writing succeeds.": "キーボードは書き込みモードのままなので、もう一度試せます。書き込みが成功するまでファームウェアは起動しません。",
   "Need to update the keyboard firmware?": "キーボードのファームウェアを更新しますか？",
-  "Use the Matrix-ready firmware for": "Matrix 対応ファームウェアを使う："
+  "Use the Matrix-ready firmware for": "Matrix 対応ファームウェアを使う：",
+  "Undo": "元に戻す",
+  "Redo": "やり直す",
+  "Import": "インポート",
+  "Export": "エクスポート",
+  "Imported": "インポートしました",
+  "changes": "件の変更",
+  "skipped": "件スキップ",
+  "Press Flash to write them to the keyboard.": "Flashでキーボードに書き込んでください。",
+  "Key labels": "キーラベル",
+  "Layer color": "レイヤーの色",
+  "Layer name": "レイヤー名",
+  "Rename": "名前を変更",
+  "Previous layer": "前のレイヤー",
+  "Next layer": "次のレイヤー",
+  "Diff": "差分",
+  "layers": "レイヤー",
+  "keys": "キー",
+  "changes not yet flashed": "件が未書き込み",
+  "In sync with the keyboard": "キーボードと同期済み",
+  "Presets": "プリセット",
+  "Copy": "コピー",
+  "Paste": "貼り付け",
+  "Cut": "切り取り",
+  "Select All": "すべて選択",
+  "Save As": "別名で保存",
+  "Find": "検索",
+  "New": "新規",
+  "New Tab": "新しいタブ",
+  "Close Tab": "タブを閉じる",
+  "Quit": "終了",
+  "App Switch": "アプリ切替",
+  "Spotlight": "Spotlight",
+  "IME Toggle": "IME切替",
+  "Screenshot": "スクリーンショット",
+  "Partial SS": "範囲スクショ"
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './KeyInspector.scss';
 import { t } from 'i18next';
 import { Button } from '@mui/material';
@@ -8,6 +8,24 @@ import {
 } from './KeyInspector.container';
 import { genKey } from '../keycodekey/KeyGen';
 import { hexadecimal } from '../../../utils/StringUtils';
+import { KeycodeList } from '../../../services/hid/KeycodeList';
+import {
+  SHORTCUT_PRESETS,
+  ShortcutOs,
+  shortcutText,
+} from '../../../services/presets/ShortcutPresets';
+
+const OS_STORAGE_KEY = 'matrix.shortcutOs';
+
+function initialOs(): ShortcutOs {
+  try {
+    const saved = window.localStorage.getItem(OS_STORAGE_KEY);
+    if (saved === 'mac' || saved === 'win') return saved;
+  } catch {
+    // ignore
+  }
+  return /Mac|iPhone|iPad/.test(navigator.platform) ? 'mac' : 'win';
+}
 
 type KeyInspectorProps = Partial<KeyInspectorStateType> &
   Partial<KeyInspectorActionsType>;
@@ -62,6 +80,23 @@ export default function KeyInspector(props: KeyInspectorProps) {
               {t('Revert this key')}
             </Button>
           )}
+          {original && (
+            <ShortcutPresetList
+              currentCode={current.code}
+              onApply={(code) =>
+                props.setKey!(
+                  layer,
+                  pos!,
+                  original,
+                  KeycodeList.getKeymap(
+                    code,
+                    props.labelLang!,
+                    props.customKeycodes
+                  )
+                )
+              }
+            />
+          )}
         </div>
       ) : (
         <p className="key-inspector-empty">
@@ -83,5 +118,77 @@ export default function KeyInspector(props: KeyInspectorProps) {
         </div>
       </dl>
     </aside>
+  );
+}
+
+type ShortcutPresetListProps = {
+  currentCode: number;
+  // eslint-disable-next-line no-unused-vars
+  onApply: (code: number) => void;
+};
+
+// Common shortcuts (Copy, Paste, ...) applied to the selected key in one
+// click. Mac uses Cmd, Windows uses Ctrl.
+function ShortcutPresetList(props: ShortcutPresetListProps) {
+  const [open, setOpen] = useState(false);
+  const [os, setOs] = useState<ShortcutOs>(initialOs);
+  const changeOs = (next: ShortcutOs) => {
+    setOs(next);
+    try {
+      window.localStorage.setItem(OS_STORAGE_KEY, next);
+    } catch {
+      // ignore
+    }
+  };
+  return (
+    <section className="key-inspector-presets">
+      <button
+        type="button"
+        className="key-inspector-presets-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span>{t('Presets')}</span>
+        <span aria-hidden="true">{open ? '−' : '+'}</span>
+      </button>
+      {open && (
+        <React.Fragment>
+          <div className="key-inspector-os" role="group" aria-label="OS">
+            {(
+              [
+                ['mac', 'Mac'],
+                ['win', 'Windows'],
+              ] as [ShortcutOs, string][]
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={os === value}
+                onClick={() => changeOs(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="key-inspector-preset-grid">
+            {SHORTCUT_PRESETS.filter((p) => p.code[os] !== null).map((p) => {
+              const code = p.code[os]!;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  className="key-inspector-preset"
+                  aria-pressed={props.currentCode === code}
+                  onClick={() => props.onApply(code)}
+                >
+                  <span className="mono">{shortcutText(code, os)}</span>
+                  <span className="dim">{t(p.label)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </React.Fragment>
+      )}
+    </section>
   );
 }

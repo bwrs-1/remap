@@ -114,3 +114,134 @@
     color: variables.$cfg-text-dim;
   }
 }
+
+.editor-sidebar {
+  .editor-sidebar-layer {
+    border: 1px solid transparent;
+    border-radius: variables.$cfg-radius-m;
+    &:hover {
+      background-color: #e9e9eb;
+    }
+    &.selected {
+      background-color: variables.$cfg-panel-bg;
+      border-color: variables.$cfg-panel-border;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      .layer-name {
+        font-weight: 600;
+        color: variables.$cfg-text;
+      }
+    }
+    &:hover .layer-rename,
+    &.selected .layer-rename {
+      opacity: 1;
+    }
+  }
+
+  .editor-sidebar-layer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 6px 0 10px;
+  }
+
+  .layer-dot {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+  }
+
+  .layer-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    line-height: 1;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: variables.$cfg-accent;
+    text-align: left;
+    cursor: pointer;
+    .layer-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .layer-index {
+    font-family: variables.$cfg-font-mono;
+    font-size: 10px;
+    color: variables.$cfg-text-dim;
+  }
+
+  .layer-name-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid variables.$cfg-accent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+  }
+
+  .layer-rename {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    opacity: 0;
+    cursor: pointer;
+    svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: variables.$cfg-text-dim;
+      stroke-width: 1.4;
+      stroke-linejoin: round;
+    }
+    &:hover {
+      background-color: #dcdcdf;
+    }
+    &:focus-visible {
+      opacity: 1;
+      outline: 2px solid variables.$cfg-accent;
+    }
+  }
+
+  .layer-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 10px 10px 30px;
+  }
+
+  .layer-palette-swatch {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    &[aria-pressed='true'] {
+      box-shadow:
+        0 0 0 2px #fff,
+        0 0 0 3px variables.$cfg-accent;
+    }
+  }
+}

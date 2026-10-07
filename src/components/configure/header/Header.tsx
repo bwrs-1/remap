@@ -8,6 +8,7 @@ import ConnectionModal from '../modals/connection/ConnectionModal';
 import { HeaderActionsType, HeaderStateType } from './Header.container';
 import { IKeyboard, IKeymap } from '../../../services/hid/Hid';
 import { APPLICATION_NAME } from '../../../utils/Brand';
+import HeaderActions from './HeaderActions';
 import InfoDialog from '../info/InfoDialog.container';
 import { InfoIcon } from '../../common/icons/InfoIcon';
 import {
@@ -224,6 +225,7 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
           </div>
 
           <div className="header-right">
+            <HeaderActions />
             <div
               className={['buttons', this.props.keyboard ? '' : 'hidden'].join(
                 ' '

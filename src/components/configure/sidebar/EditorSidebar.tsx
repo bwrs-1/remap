@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './EditorSidebar.scss';
 import { t } from 'i18next';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
@@ -6,6 +6,14 @@ import {
   hasSavedLocalDefinition,
   removeLocalDefinition,
 } from '../../../services/definitions/LocalDefinitions';
+import {
+  LAYER_ACCENT_COLORS,
+  layerColor,
+  layerName,
+  setLayerColor,
+  setLayerName,
+  useLayerMeta,
+} from '../../../services/layers/LayerMeta';
 import {
   EditorSidebarActionsType,
   EditorSidebarStateType,
@@ -32,6 +40,8 @@ export default function EditorSidebar(props: EditorSidebarProps) {
     touchpad: t('Touchpad'),
     autoMouse: t('Mouse Layer'),
   };
+  const device = props.keyboard?.getInformation();
+  const meta = useLayerMeta(device);
   const changedCount = (layer: number) => {
     const remap = props.remaps?.[layer];
     return remap ? Object.keys(remap).length : 0;
@@ -44,38 +54,25 @@ export default function EditorSidebar(props: EditorSidebarProps) {
           <h2>{t('Layers')}</h2>
           <span className="editor-sidebar-count">{layerCount} / 32</span>
         </div>
-        {layers.map((layer) => {
-          const selected =
-            props.view === 'keymap' && props.selectedLayer === layer;
-          const changed = changedCount(layer);
-          return (
-            <button
-              key={layer}
-              type="button"
-              className={['editor-sidebar-item', selected ? 'selected' : '']
-                .join(' ')
-                .trim()}
-              aria-current={selected ? 'true' : undefined}
-              onClick={() => {
-                props.onClickLayer!(layer);
-                props.onChangeView('keymap');
-              }}
-            >
-              <span className="layer-badge">{layer}</span>
-              <span className="layer-name">
-                {t('Layer')} {layer}
-              </span>
-              {changed > 0 && (
-                <span
-                  className="layer-changed"
-                  title={t('Changes not yet flashed')}
-                >
-                  {changed}
-                </span>
-              )}
-            </button>
-          );
-        })}
+        {layers.map((layer) => (
+          <LayerRow
+            key={layer}
+            layer={layer}
+            name={layerName(meta, layer)}
+            color={layerColor(meta, layer)}
+            colorIndex={LAYER_ACCENT_COLORS.indexOf(
+              layerColor(meta, layer) as (typeof LAYER_ACCENT_COLORS)[number]
+            )}
+            selected={props.view === 'keymap' && props.selectedLayer === layer}
+            changed={changedCount(layer)}
+            onSelect={() => {
+              props.onClickLayer!(layer);
+              props.onChangeView('keymap');
+            }}
+            onRename={(name) => setLayerName(device, layer, name)}
+            onColor={(color) => setLayerColor(device, layer, color)}
+          />
+        ))}
       </section>
 
       {props.views.length > 1 && (
@@ -110,6 +107,122 @@ export default function EditorSidebar(props: EditorSidebarProps) {
       )}
       <SavedDefinition keyboard={props.keyboard} />
     </nav>
+  );
+}
+
+type LayerRowProps = {
+  layer: number;
+  name: string;
+  color: string;
+  colorIndex: number;
+  selected: boolean;
+  changed: number;
+  onSelect: () => void;
+  // eslint-disable-next-line no-unused-vars
+  onRename: (name: string) => void;
+  // eslint-disable-next-line no-unused-vars
+  onColor: (color: number) => void;
+};
+
+// One layer: color dot (click to pick a color), name (double-click or the
+// pencil to rename), and the number of changes not yet flashed.
+function LayerRow(props: LayerRowProps) {
+  const [editing, setEditing] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [draft, setDraft] = useState(props.name);
+
+  const startEdit = () => {
+    setDraft(props.name);
+    setEditing(true);
+  };
+  const commit = () => {
+    setEditing(false);
+    if (draft.trim() !== props.name) props.onRename(draft);
+  };
+
+  return (
+    <div
+      className={['editor-sidebar-layer', props.selected ? 'selected' : '']
+        .join(' ')
+        .trim()}
+    >
+      <div className="editor-sidebar-layer-row">
+        <button
+          type="button"
+          className="layer-dot"
+          style={{ backgroundColor: props.color }}
+          aria-label={`${t('Layer color')}: ${props.name}`}
+          aria-expanded={picking}
+          onClick={() => setPicking((v) => !v)}
+        />
+        {editing ? (
+          <input
+            className="layer-name-input"
+            value={draft}
+            autoFocus
+            maxLength={24}
+            aria-label={t('Layer name')}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commit();
+              if (e.key === 'Escape') setEditing(false);
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            className="layer-select"
+            aria-current={props.selected ? 'true' : undefined}
+            onClick={props.onSelect}
+            onDoubleClick={startEdit}
+          >
+            <span className="layer-name">{props.name}</span>
+            <span className="layer-index">L{props.layer}</span>
+          </button>
+        )}
+        {props.changed > 0 && !editing && (
+          <span className="layer-changed" title={t('Changes not yet flashed')}>
+            {props.changed}
+          </span>
+        )}
+        {!editing && (
+          <button
+            type="button"
+            className="layer-rename"
+            aria-label={`${t('Rename')}: ${props.name}`}
+            title={t('Rename')}
+            onClick={startEdit}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z" />
+            </svg>
+          </button>
+        )}
+      </div>
+      {picking && (
+        <div
+          className="layer-palette"
+          role="group"
+          aria-label={t('Layer color')}
+        >
+          {LAYER_ACCENT_COLORS.map((c, i) => (
+            <button
+              key={c}
+              type="button"
+              className="layer-palette-swatch"
+              style={{ backgroundColor: c }}
+              aria-pressed={props.colorIndex === i}
+              aria-label={`${t('Color')} ${i + 1}`}
+              onClick={() => {
+                props.onColor(i);
+                setPicking(false);
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -431,3 +431,94 @@
     animation: hdr-hdr-button-success-label 0.3s forwards 0.275s;
   }
 }
+
+// Conductor Studio style header actions (US/JIS, Undo/Redo, Import/Export).
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+  font-family: variables.$cfg-font;
+
+  .header-segment {
+    display: flex;
+    padding: 2px;
+    border-radius: 999px;
+    background-color: variables.$cfg-muted;
+    button {
+      border: none;
+      background: transparent;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      color: variables.$cfg-text-dim;
+      cursor: pointer;
+      &[aria-pressed='true'] {
+        background-color: variables.$cfg-accent-dark;
+        color: variables.$cfg-accent-text;
+      }
+    }
+  }
+
+  .header-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: variables.$cfg-radius-m;
+    background: transparent;
+    color: variables.$cfg-accent;
+    cursor: pointer;
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    &:hover:not(:disabled) {
+      background-color: variables.$cfg-muted;
+    }
+    &:disabled {
+      color: #c4c4c8;
+      cursor: default;
+    }
+  }
+
+  .header-text-button {
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 999px;
+    background: variables.$cfg-panel-bg;
+    color: variables.$cfg-accent;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .header-pill-button {
+    height: 30px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 999px;
+    background-color: variables.$cfg-accent-dark;
+    color: variables.$cfg-accent-text;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button:focus-visible {
+    outline: 2px solid variables.$cfg-accent;
+    outline-offset: 2px;
+  }
+}

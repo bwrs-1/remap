@@ -12,6 +12,7 @@ import PointingSettings from '../pointing/PointingSettings.container';
 import { PointingSettingsMode } from '../pointing/PointingSettings';
 import EditorSidebar from '../sidebar/EditorSidebar.container';
 import KeyInspector from '../inspector/KeyInspector.container';
+import LayerBar, { EditorFooter } from '../layerbar/LayerBar';
 
 type OwnProp = {};
 type RemapPropType = OwnProp &
@@ -75,6 +76,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
           <div className="editor-main">
             {view === 'keymap' ? (
               <React.Fragment>
+                {!this.props.macroKey && <LayerBar />}
                 <div
                   className="keyboard-wrapper"
                   style={{ minWidth: this.state.minWidth }}
@@ -96,6 +98,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
                 onEditLayer={this.onEditLayer.bind(this)}
               />
             )}
+            <EditorFooter />
           </div>
           {view === 'keymap' && <KeyInspector />}
         </div>

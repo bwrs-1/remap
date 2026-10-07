@@ -1,0 +1,71 @@
+@use '../../../variables';
+
+.layer-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 12px 0;
+  font-family: variables.$cfg-font;
+  font-size: 13px;
+  color: variables.$cfg-text;
+
+  .layer-bar-step {
+    width: 28px;
+    height: 28px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 8px;
+    background: variables.$cfg-panel-bg;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+  .layer-bar-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .layer-bar-name {
+    font-weight: 600;
+  }
+  .layer-bar-index {
+    font-family: variables.$cfg-font-mono;
+    font-size: 11px;
+    color: variables.$cfg-text-dim;
+  }
+  .layer-bar-diff {
+    margin-left: auto;
+    padding: 3px 10px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 999px;
+    font-family: variables.$cfg-font-mono;
+    font-size: 11px;
+    color: variables.$cfg-text-dim;
+    &.active {
+      background: variables.$cfg-accent;
+      border-color: variables.$cfg-accent;
+      color: variables.$cfg-accent-text;
+    }
+  }
+}
+
+.editor-footer {
+  margin-top: auto;
+  display: flex;
+  gap: 16px;
+  padding: 6px 16px;
+  border-top: 1px solid variables.$cfg-panel-border;
+  font-family: variables.$cfg-font-mono;
+  font-size: 11px;
+  color: variables.$cfg-text-dim;
+  .pending {
+    margin-left: auto;
+    color: variables.$cfg-text;
+  }
+  .synced {
+    margin-left: auto;
+  }
+}
