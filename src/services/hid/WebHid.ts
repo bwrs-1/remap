@@ -1,5 +1,6 @@
 import {
   ICommand,
+  IFetchCustomValueResult,
   IConnectParams,
   IKeyboard,
   IHid,
@@ -32,6 +33,9 @@ import {
   BacklightSetValueCommand,
   BacklightValueId,
   BleMicroProStoreKeymapPersistentlyCommand,
+  CustomGetValueCommand,
+  CustomSaveCommand,
+  CustomSetValueCommand,
   DynamicKeymapGetEncoderCommand,
   DynamicKeymapGetLayerCountCommand,
   DynamicKeymapMacroGetBufferCommand,
@@ -431,6 +435,70 @@ export class Keyboard implements IKeyboard {
           }
         }
       );
+      return this.enqueue(command);
+    });
+  }
+
+  fetchCustomValue(
+    valueId: number,
+    size: 1 | 2
+  ): Promise<IFetchCustomValueResult> {
+    return new Promise<IFetchCustomValueResult>((resolve) => {
+      const command = new CustomGetValueCommand(
+        { valueId, size },
+        async (result) => {
+          if (result.success) {
+            resolve({ success: true, value: result.response!.value });
+          } else {
+            resolve({
+              success: false,
+              error: result.error,
+              cause: result.cause,
+            });
+          }
+        }
+      );
+      return this.enqueue(command);
+    });
+  }
+
+  updateCustomValue(
+    valueId: number,
+    value: number,
+    size: 1 | 2
+  ): Promise<IResult> {
+    return new Promise<IResult>((resolve) => {
+      const command = new CustomSetValueCommand(
+        { valueId, value, size },
+        async (result) => {
+          if (result.success) {
+            resolve({ success: true });
+          } else {
+            resolve({
+              success: false,
+              error: result.error,
+              cause: result.cause,
+            });
+          }
+        }
+      );
+      return this.enqueue(command);
+    });
+  }
+
+  saveCustomValues(): Promise<IResult> {
+    return new Promise<IResult>((resolve) => {
+      const command = new CustomSaveCommand({}, async (result) => {
+        if (result.success) {
+          resolve({ success: true });
+        } else {
+          resolve({
+            success: false,
+            error: result.error,
+            cause: result.cause,
+          });
+        }
+      });
       return this.enqueue(command);
     });
   }

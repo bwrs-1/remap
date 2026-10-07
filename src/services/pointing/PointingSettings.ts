@@ -1,0 +1,143 @@
+import { IKeyboard, IResult } from '../hid/Hid';
+
+// Feature flags declared in a keyboard definition's `customFeatures`.
+// The editor only talks to the custom channel when the definition declares
+// the feature, because a firmware without the handler answers `id_unhandled`
+// and the request would never be matched.
+export const FEATURE_TOUCHPAD = 'matrix_touchpad';
+export const FEATURE_AUTO_MOUSE_LAYER = 'matrix_auto_mouse_layer';
+
+export type PointingSettingKind = 'switch' | 'range' | 'choice';
+
+export interface IPointingSettingDef<K extends string = string> {
+  key: K;
+  // Value ID on the VIA custom channel (channel 0).
+  valueId: number;
+  // Byte size on the wire (big endian when 2).
+  size: 1 | 2;
+  kind: PointingSettingKind;
+  min: number;
+  max: number;
+  step?: number;
+  defaultValue: number;
+}
+
+const def = <K extends string>(
+  key: K,
+  valueId: number,
+  kind: PointingSettingKind,
+  min: number,
+  max: number,
+  defaultValue: number,
+  size: 1 | 2 = 1,
+  step?: number
+): IPointingSettingDef<K> => ({
+  key,
+  valueId,
+  size,
+  kind,
+  min,
+  max,
+  step,
+  defaultValue,
+});
+
+export const TOUCHPAD_SETTINGS = [
+  def('cpi', 0x01, 'range', 400, 3200, 1600, 2, 100),
+  def('acceleration', 0x02, 'switch', 0, 1, 1),
+  def('glide', 0x03, 'switch', 0, 1, 0),
+  // 0: 0deg, 1: 90deg, 2: 180deg, 3: 270deg
+  def('rotation', 0x04, 'choice', 0, 3, 0),
+  def('invertX', 0x05, 'switch', 0, 1, 0),
+  def('invertY', 0x06, 'switch', 0, 1, 0),
+  def('tapToClick', 0x07, 'switch', 0, 1, 1),
+  def('twoFingerTap', 0x08, 'switch', 0, 1, 1),
+  def('tapDrag', 0x09, 'switch', 0, 1, 0),
+  def('tapTerm', 0x0a, 'range', 100, 400, 200, 2, 10),
+  // 0: two finger, 1: circular, 2: edge
+  def('scrollMode', 0x0b, 'choice', 0, 2, 0),
+  def('scrollDivisor', 0x0c, 'range', 1, 32, 8, 1, 1),
+  def('naturalScroll', 0x0d, 'switch', 0, 1, 0),
+  def('horizontalScroll', 0x0e, 'switch', 0, 1, 1),
+  // 0: 1x, 1: 2x, 2: 3x, 3: 4x
+  def('sensitivity', 0x0f, 'choice', 0, 3, 1),
+] as const;
+
+export const AUTO_MOUSE_SETTINGS = [
+  def('enabled', 0x20, 'switch', 0, 1, 1),
+  def('layer', 0x21, 'choice', 1, 31, 3),
+  def('threshold', 0x22, 'range', 1, 50, 10, 1, 1),
+  def('timeout', 0x23, 'range', 200, 3000, 650, 2, 50),
+  def('activationDelay', 0x24, 'range', 0, 1000, 200, 2, 50),
+  def('debounce', 0x25, 'range', 0, 100, 25, 1, 5),
+  def('exitOnOtherKey', 0x26, 'switch', 0, 1, 1),
+  def('holdWithModifiers', 0x27, 'switch', 0, 1, 1),
+] as const;
+
+export type TouchpadSettingKey = (typeof TOUCHPAD_SETTINGS)[number]['key'];
+export type AutoMouseSettingKey = (typeof AUTO_MOUSE_SETTINGS)[number]['key'];
+export type TouchpadSettings = Record<TouchpadSettingKey, number>;
+export type AutoMouseSettings = Record<AutoMouseSettingKey, number>;
+
+export function hasFeature(
+  customFeatures: string[] | undefined | null,
+  feature: string
+): boolean {
+  return !!customFeatures && customFeatures.includes(feature);
+}
+
+export function defaultValues<K extends string>(
+  defs: readonly IPointingSettingDef<K>[]
+): Record<K, number> {
+  return defs.reduce(
+    (acc, d) => {
+      acc[d.key] = d.defaultValue;
+      return acc;
+    },
+    {} as Record<K, number>
+  );
+}
+
+export function clampValue(d: IPointingSettingDef, value: number): number {
+  if (Number.isNaN(value)) return d.defaultValue;
+  return Math.min(d.max, Math.max(d.min, Math.round(value)));
+}
+
+export interface IFetchSettingsResult<K extends string> extends IResult {
+  values?: Record<K, number>;
+}
+
+export async function fetchSettings<K extends string>(
+  keyboard: IKeyboard,
+  defs: readonly IPointingSettingDef<K>[]
+): Promise<IFetchSettingsResult<K>> {
+  const values = defaultValues(defs);
+  for (const d of defs) {
+    const result = await keyboard.fetchCustomValue(d.valueId, d.size);
+    if (!result.success) {
+      return { success: false, error: result.error, cause: result.cause };
+    }
+    values[d.key] = clampValue(d, result.value!);
+  }
+  return { success: true, values };
+}
+
+// Sends only the values that differ from `current`, then persists them
+// (id_custom_save) when anything was sent.
+export async function applySettings<K extends string>(
+  keyboard: IKeyboard,
+  defs: readonly IPointingSettingDef<K>[],
+  current: Record<K, number>,
+  next: Record<K, number>
+): Promise<IResult> {
+  let changed = false;
+  for (const d of defs) {
+    const value = clampValue(d, next[d.key]);
+    if (current[d.key] === value) continue;
+    const result = await keyboard.updateCustomValue(d.valueId, value, d.size);
+    if (!result.success) return result;
+    changed = true;
+  }
+  if (!changed) return { success: true };
+  return keyboard.saveCustomValues();
+}

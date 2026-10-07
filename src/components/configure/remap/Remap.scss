@@ -29,6 +29,14 @@
     background-color: variables.$cfg-canvas-bg;
   }
 }
+.configure-view-tabs-wrapper {
+  margin-top: calc(var(--key-height));
+  padding-bottom: 12px;
+  background-color: variables.$cfg-canvas-bg;
+}
+.keyboard-wrapper.with-view-tabs {
+  margin-top: 0;
+}
 .keycode {
   display: flex;
   position: relative;

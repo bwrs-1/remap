@@ -284,4 +284,19 @@ export const mockIKeyboad: IKeyboard = {
       resolve({ success: true, viaProtocolVersion: 0x0a });
     });
   },
+  fetchCustomValue: (_valueId: number, _size: 1 | 2) => {
+    return new Promise((resolve) => {
+      resolve({ success: true, value: 0 });
+    });
+  },
+  updateCustomValue: (_valueId: number, _value: number, _size: 1 | 2) => {
+    return new Promise((resolve) => {
+      resolve({ success: true });
+    });
+  },
+  saveCustomValues: () => {
+    return new Promise((resolve) => {
+      resolve({ success: true });
+    });
+  },
 };

@@ -120,7 +120,7 @@ const id_switch_matrix_state = 0x03;
 // const id_firmware_version = 0x04;
 // const id_device_indication = 0x05;
 
-// const id_custom_channel = 0;
+const id_custom_channel = 0;
 const id_qmk_backlight_channel = 1;
 const id_qmk_rgblight_channel = 2;
 // const id_qmk_rgb_matrix_channel = 3;
@@ -914,6 +914,105 @@ export class DynamicKeymapSetEncoderCommand extends AbstractCommand<
       resultArray[3] === (req.clockwise ? 0x01 : 0x00) &&
       resultArray[4] === req.code >> 8 &&
       resultArray[5] === (req.code & 0xff)
+    );
+  }
+}
+
+// Keyboard-level custom values on the VIA custom channel (channel 0).
+// Used by Matrix for pointing device (touchpad) and auto mouse layer
+// settings. Values are 1 or 2 bytes (big endian).
+export interface ICustomGetValueRequest extends ICommandRequest {
+  valueId: number;
+  size: 1 | 2;
+}
+
+export interface ICustomGetValueResponse extends ICommandResponse {
+  value: number;
+}
+
+export class CustomGetValueCommand extends AbstractCommand<
+  ICustomGetValueRequest,
+  ICustomGetValueResponse
+> {
+  createReport(): Uint8Array {
+    return new Uint8Array([
+      id_custom_get_value,
+      id_custom_channel,
+      this.getRequest().valueId,
+    ]);
+  }
+
+  createResponse(resultArray: Uint8Array): ICustomGetValueResponse {
+    const value =
+      this.getRequest().size === 2
+        ? (resultArray[3] << 8) | resultArray[4]
+        : resultArray[3];
+    return { value };
+  }
+
+  isSameRequest(resultArray: Uint8Array): boolean {
+    return (
+      resultArray[0] === id_custom_get_value &&
+      resultArray[1] === id_custom_channel &&
+      resultArray[2] === this.getRequest().valueId
+    );
+  }
+}
+
+export interface ICustomSetValueRequest extends ICommandRequest {
+  valueId: number;
+  value: number;
+  size: 1 | 2;
+}
+
+export class CustomSetValueCommand extends AbstractCommand<
+  ICustomSetValueRequest,
+  ICommandResponse
+> {
+  createReport(): Uint8Array {
+    const req = this.getRequest();
+    const data =
+      req.size === 2
+        ? [(req.value >> 8) & 0xff, req.value & 0xff]
+        : [req.value & 0xff];
+    return new Uint8Array([
+      id_custom_set_value,
+      id_custom_channel,
+      req.valueId,
+      ...data,
+    ]);
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  createResponse(_resultArray: Uint8Array): ICommandResponse {
+    return {};
+  }
+
+  isSameRequest(resultArray: Uint8Array): boolean {
+    return (
+      resultArray[0] === id_custom_set_value &&
+      resultArray[1] === id_custom_channel &&
+      resultArray[2] === this.getRequest().valueId
+    );
+  }
+}
+
+export class CustomSaveCommand extends AbstractCommand<
+  ICommandRequest,
+  ICommandResponse
+> {
+  createReport(): Uint8Array {
+    return new Uint8Array([id_custom_save, id_custom_channel]);
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  createResponse(_resultArray: Uint8Array): ICommandResponse {
+    return {};
+  }
+
+  isSameRequest(resultArray: Uint8Array): boolean {
+    return (
+      resultArray[0] === id_custom_save && resultArray[1] === id_custom_channel
     );
   }
 }

@@ -158,6 +158,10 @@ export interface IFetchViaProtocolVersionResult extends IResult {
   viaProtocolVersion?: number;
 }
 
+export interface IFetchCustomValueResult extends IResult {
+  value?: number;
+}
+
 export interface IKeyboard {
   getDevice(): HIDDevice;
   getHid(): IHid;
@@ -218,6 +222,16 @@ export interface IKeyboard {
   fetchMacroBuffer(bufferSize: number): Promise<IFetchMacroBufferResult>;
   updateMacroBuffer(offset: number, buffer: Uint8Array): Promise<IResult>;
   fetchViaProtocolVersion(): Promise<IFetchViaProtocolVersionResult>;
+  fetchCustomValue(
+    valueId: number,
+    size: 1 | 2
+  ): Promise<IFetchCustomValueResult>;
+  updateCustomValue(
+    valueId: number,
+    value: number,
+    size: 1 | 2
+  ): Promise<IResult>;
+  saveCustomValues(): Promise<IResult>;
 }
 
 export interface ICommand {

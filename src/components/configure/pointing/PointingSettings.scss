@@ -1,0 +1,295 @@
+@use '../../../variables';
+
+.pointing-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: variables.$cfg-font;
+  color: variables.$cfg-text;
+
+  h1,
+  h2 {
+    margin: 0;
+  }
+
+  .pointing-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    .pointing-title-text {
+      flex: 1 1 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      h1 {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      span {
+        font-size: 13px;
+        color: variables.$cfg-text-dim;
+      }
+    }
+    .pointing-actions {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .pointing-card {
+    background-color: variables.$cfg-panel-bg;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: variables.$cfg-radius-l;
+  }
+
+  .pointing-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 18px;
+    border-bottom: 1px solid variables.$cfg-panel-border;
+    h2 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    span {
+      font-size: 12px;
+      color: variables.$cfg-text-dim;
+    }
+  }
+
+  .pointing-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .pointing-sections {
+    flex: 999 1 480px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pointing-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    & + .pointing-row {
+      border-top: 1px solid #f0f0f2;
+    }
+  }
+
+  .pointing-row-label {
+    flex: 1 1 220px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    .label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .help {
+      font-size: 12px;
+      color: variables.$cfg-text-dim;
+    }
+  }
+
+  .pointing-row-control {
+    flex: 0 1 auto;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .pointing-range {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 300px;
+    max-width: 100%;
+  }
+
+  .pointing-value {
+    min-width: 72px;
+    text-align: right;
+    font-family: variables.$cfg-font-mono;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .pointing-preview {
+    flex: 1 1 260px;
+    max-width: 340px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pointing-caption {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: variables.$cfg-text-dim;
+  }
+
+  .pointing-pad {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background-color: variables.$cfg-sidebar-bg;
+    border: 1px solid variables.$cfg-panel-border;
+    color: variables.$cfg-accent;
+  }
+
+  .pointing-pad-ring {
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    border: 6px solid #d4d4d8;
+  }
+
+  .pointing-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+    div {
+      padding: 10px;
+      border-radius: variables.$cfg-radius-m;
+      background-color: variables.$cfg-canvas-bg;
+    }
+    dt {
+      font-size: 11px;
+      color: variables.$cfg-text-dim;
+    }
+    dd {
+      margin: 0;
+      font-family: variables.$cfg-font-mono;
+      font-weight: 600;
+    }
+  }
+
+  .pointing-enable {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+  }
+
+  .pointing-flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 14px 18px;
+    li {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      border-radius: 10px;
+      background-color: variables.$cfg-canvas-bg;
+      border: 1px solid variables.$cfg-panel-border;
+      font-size: 12px;
+      color: variables.$cfg-text-dim;
+      strong {
+        font-size: 13px;
+        color: variables.$cfg-text;
+      }
+      &.active {
+        background-color: variables.$cfg-accent;
+        border-color: variables.$cfg-accent;
+        color: #d4d4d8;
+        strong {
+          color: variables.$cfg-accent-text;
+        }
+      }
+    }
+    .step {
+      font-family: variables.$cfg-font-mono;
+      font-size: 11px;
+    }
+  }
+
+  .pointing-layers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+  }
+
+  .pointing-unsupported {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    p {
+      margin: 0;
+      font-size: 13px;
+      color: variables.$cfg-text-dim;
+    }
+    code {
+      align-self: flex-start;
+      padding: 4px 8px;
+      border-radius: variables.$cfg-radius-s;
+      background-color: variables.$cfg-muted;
+      font-family: variables.$cfg-font-mono;
+      font-size: 12px;
+    }
+  }
+}
+
+.configure-view-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin: 12px auto 0;
+  padding: 3px;
+  width: max-content;
+  border-radius: 10px;
+  background-color: variables.$cfg-muted;
+  font-family: variables.$cfg-font;
+  button {
+    height: 32px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: variables.$cfg-text-dim;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    &[aria-selected='true'] {
+      background-color: variables.$cfg-panel-bg;
+      color: variables.$cfg-text;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    &:focus-visible {
+      outline: 2px solid variables.$cfg-accent;
+      outline-offset: 2px;
+    }
+  }
+}
