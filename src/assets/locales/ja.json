@@ -481,5 +481,13 @@
   "idle": "何もしない",
   "This keyboard definition does not declare this feature. Add the following value to customFeatures in the keyboard definition and use a firmware that implements it.": "このキーボード定義はこの機能に対応していません。キーボード定義の customFeatures に次の値を追加し、対応したファームウェアを使用してください。",
   "Turns on the selected layer automatically while you are using the touchpad": "タッチパッドを操作している間だけ、指定したレイヤーを自動で有効にします",
-  "The touchpad is operated with the right hand, so placing click keys on the left half is recommended": "タッチパッドは右手で操作するため、クリック類は左手側に置くのがおすすめです"
+  "The touchpad is operated with the right hand, so placing click keys on the left half is recommended": "タッチパッドは右手で操作するため、クリック類は左手側に置くのがおすすめです",
+  "Connected": "接続中",
+  "Layers": "レイヤー",
+  "Keyboard": "キーボード",
+  "Changes not yet flashed": "未書き込みの変更",
+  "Selected key": "選択中のキー",
+  "Before": "変更前",
+  "Revert this key": "このキーを元に戻す",
+  "Select a key on the keyboard to see its details here.": "キーボード上のキーを選択すると、ここに詳細が表示されます。"
 }

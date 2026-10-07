@@ -1,14 +1,15 @@
 @use '../../../_variables.scss';
 
 .header {
-  display: grid;
+  display: flex;
   position: fixed;
   height: calc(var(--key-height));
   width: 100%;
-  grid-template-columns: 1fr 1fr 1fr;
+  box-sizing: border-box;
   align-items: center;
+  gap: 12px;
   margin: 0;
-  padding: 0 variables.$space-m;
+  padding: 0 20px;
   background: variables.$cfg-header-bg;
   color: variables.$cfg-header-text;
   font-family: variables.$cfg-font;
@@ -17,6 +18,27 @@
   .kbd-device {
     display: flex;
     flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    .connection-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background-color: variables.$cfg-muted;
+      color: variables.$cfg-accent;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .connection-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #16a34a;
+    }
     .kbd-select {
       display: flex;
       flex-direction: row;
@@ -65,9 +87,13 @@
 
   .header-logo {
     display: flex;
-    justify-content: center;
     align-items: center;
+    gap: 12px;
     height: 100%;
+    &::after {
+      content: '/';
+      color: #c4c4c8;
+    }
     a {
       display: flex;
       align-items: center;
@@ -102,9 +128,8 @@
   .buttons {
     display: flex;
     margin-left: auto;
-    width: 120px;
     justify-content: center;
-    height: 40px;
+    height: 36px;
     .flash-btn {
       min-width: 80px !important;
     }
@@ -122,6 +147,8 @@
   }
 
   &-right {
+    margin-left: auto;
+    gap: 8px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -174,7 +201,7 @@
 }
 
 /*==== FLASH BUTTON ====*/
-@keyframes button-disable-intro {
+@keyframes hdr-button-disable-intro {
   0% {
     opacity: 0.5;
   }
@@ -182,7 +209,7 @@
     opacity: 1;
   }
 }
-@keyframes button-enable-intro {
+@keyframes hdr-button-enable-intro {
   0% {
     opacity: 0.5;
   }
@@ -192,7 +219,7 @@
     opacity: 1;
   }
 }
-@keyframes button-flashing {
+@keyframes hdr-button-flashing {
   0% {
   }
 
@@ -230,7 +257,7 @@
   }
 }
 
-@keyframes button-dot-intro {
+@keyframes hdr-button-dot-intro {
   0% {
     opacity: 0;
   }
@@ -245,7 +272,7 @@
   }
 }
 
-@keyframes button-dot-pulse {
+@keyframes hdr-button-dot-pulse {
   0% {
     opacity: 0.6;
     transform: scale(0.75, 0.75);
@@ -269,7 +296,7 @@
   }
 }
 
-@keyframes button-success {
+@keyframes hdr-button-success {
   0% {
     margin-left: 1.25rem;
     width: 2.5rem;
@@ -299,7 +326,7 @@
   }
 }
 
-@keyframes button-success-label {
+@keyframes hdr-hdr-button-success-label {
   0% {
     opacity: 0;
   }
@@ -309,17 +336,18 @@
   }
 }
 
-.flash-button {
+.header-flash-button {
   position: relative;
   overflow: hidden;
-  width: 7rem;
+  min-width: 7rem;
+  height: 36px;
   color: variables.$cfg-header-text-dim;
-  border: 2px solid variables.$cfg-header-border;
+  border: 1px solid variables.$cfg-header-border;
   background-color: variables.$cfg-header-bg-raised;
   cursor: pointer;
-  line-height: 2;
+  line-height: 34px;
   margin: 0;
-  padding: 0;
+  padding: 0 16px;
   border-radius: variables.$cfg-radius-m;
   font-size: 0.85rem;
   font-family: variables.$cfg-font;
@@ -332,7 +360,7 @@
   &.enable {
     color: variables.$cfg-accent-text;
     border-color: variables.$cfg-accent;
-    animation: button-enable-intro 0.4s forwards;
+    animation: hdr-button-enable-intro 0.4s forwards;
     &:hover {
       background-color: variables.$cfg-accent-dark;
     }
@@ -340,7 +368,7 @@
 
   &.disable {
     cursor: not-allowed;
-    animation: button-disable-intro 0.5s forwards;
+    animation: hdr-button-disable-intro 0.5s forwards;
   }
 
   &:before,
@@ -361,7 +389,7 @@
 
   &.flashing {
     height: 40px;
-    animation: button-flashing 0.5s forwards;
+    animation: hdr-button-flashing 0.5s forwards;
   }
 
   &.flashing:before,
@@ -371,19 +399,19 @@
 
   &.flashing:before {
     opacity: 1;
-    animation: button-dot-intro 2.5s forwards;
+    animation: hdr-button-dot-intro 2.5s forwards;
   }
 
   &.flashing:after {
     opacity: 0;
-    animation: button-dot-pulse 2.5s infinite;
+    animation: hdr-button-dot-pulse 2.5s infinite;
   }
 
   &.success {
     text-indent: 0;
     color: transparent;
     background-color: white;
-    animation: button-success 2.5s forwards;
+    animation: hdr-button-success 2.5s forwards;
   }
 
   &.success:before {
@@ -400,6 +428,6 @@
     content: 'success';
     opacity: 0;
     z-index: 2;
-    animation: button-success-label 0.3s forwards 0.275s;
+    animation: hdr-hdr-button-success-label 0.3s forwards 0.275s;
   }
 }

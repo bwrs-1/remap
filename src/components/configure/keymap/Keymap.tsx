@@ -20,7 +20,6 @@ import KeyEventCapture from '../keyeventcapture/KeyEventCapture.container';
 import { ModsComposition } from '../../../services/hid/compositions/ModsComposition';
 import { IKeySwitchOperation } from '../../../store/state';
 import { KEYBOARD_LAYOUT_PADDING, KeyboardView } from './KeyboardView';
-import { Layer } from './Layer';
 import { LabelLang } from './LabelLang';
 import { t } from 'i18next';
 
@@ -312,14 +311,6 @@ export default class Keymap extends React.Component<
         </div>
         <div className="keyboards-wrapper">
           <div className="spacer"></div>
-          <Layer
-            layerCount={this.props.layerCount!}
-            selectedLayer={this.props.selectedLayer!}
-            remaps={this.props.remaps!}
-            onClickLayer={(layer) => {
-              this.props.onClickLayerNumber!(layer);
-            }}
-          />
 
           <KeyEventCapture
             onKeyDown={this.props.onKeyDown!}

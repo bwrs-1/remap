@@ -1,0 +1,103 @@
+@use '../../../variables';
+
+.editor-sidebar {
+  flex: 0 0 200px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px 14px;
+  background-color: variables.$cfg-sidebar-bg;
+  border-right: 1px solid variables.$cfg-panel-border;
+  font-family: variables.$cfg-font;
+  overflow-y: auto;
+
+  .editor-sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .editor-sidebar-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px 4px;
+    h2 {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: variables.$cfg-text-dim;
+    }
+  }
+
+  .editor-sidebar-count {
+    font-family: variables.$cfg-font-mono;
+    font-size: 11px;
+    color: variables.$cfg-text-dim;
+  }
+
+  .editor-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: variables.$cfg-radius-m;
+    background: transparent;
+    color: variables.$cfg-accent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    &:hover {
+      background-color: #e9e9eb;
+    }
+    &.selected {
+      background-color: variables.$cfg-panel-bg;
+      border-color: variables.$cfg-panel-border;
+      color: variables.$cfg-text;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    &:focus-visible {
+      outline: 2px solid variables.$cfg-accent;
+      outline-offset: 1px;
+    }
+  }
+
+  .layer-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid variables.$cfg-panel-border;
+    background-color: variables.$cfg-panel-bg;
+    font-family: variables.$cfg-font-mono;
+    font-size: 12px;
+  }
+
+  .layer-name {
+    flex: 1 1 auto;
+  }
+
+  .layer-changed {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border-radius: 9px;
+    background-color: variables.$cfg-accent;
+    color: variables.$cfg-accent-text;
+    font-family: variables.$cfg-font-mono;
+    font-size: 10px;
+    line-height: 18px;
+    text-align: center;
+  }
+}

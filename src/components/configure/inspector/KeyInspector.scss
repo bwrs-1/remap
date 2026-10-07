@@ -1,0 +1,119 @@
+@use '../../../variables';
+
+.key-inspector {
+  flex: 0 0 240px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  background-color: variables.$cfg-panel-bg;
+  border-left: 1px solid variables.$cfg-panel-border;
+  font-family: variables.$cfg-font;
+  color: variables.$cfg-text;
+  overflow-y: auto;
+
+  .mono {
+    font-family: variables.$cfg-font-mono;
+  }
+  .strong {
+    font-weight: 600;
+  }
+  .dim {
+    color: variables.$cfg-text-dim;
+  }
+
+  .key-inspector-heading {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: variables.$cfg-text-dim;
+  }
+
+  .key-inspector-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .key-inspector-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .key-inspector-cap {
+    flex: 0 0 64px;
+    height: 64px;
+    border-radius: 10px;
+    background-color: variables.$cfg-accent;
+    color: variables.$cfg-accent-text;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .key-inspector-codes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    font-size: 12px;
+    span {
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .key-inspector-desc {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: variables.$cfg-text-dim;
+  }
+
+  .key-inspector-diff {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: variables.$cfg-radius-m;
+    background-color: variables.$cfg-canvas-bg;
+    font-size: 12px;
+  }
+
+  .key-inspector-empty {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: variables.$cfg-text-dim;
+  }
+
+  .key-inspector-meta {
+    margin: auto 0 0;
+    padding-top: 16px;
+    border-top: 1px solid variables.$cfg-panel-border;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    div {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    dt {
+      color: variables.$cfg-text-dim;
+    }
+    dd {
+      margin: 0;
+    }
+  }
+}

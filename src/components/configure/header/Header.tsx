@@ -124,6 +124,15 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
     return (
       <React.Fragment>
         <header className="header">
+          <div className="header-logo">
+            <a href="/">
+              <span className="brand-mark" aria-hidden="true">
+                M
+              </span>
+              <span className="brand-name">{APPLICATION_NAME}</span>
+            </a>
+          </div>
+
           <div
             ref={this.deviceMenuRef}
             className={[
@@ -206,15 +215,12 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
               keyboardDefinitionDocument={this.props.keyboardDefinitionDocument}
               onClick={this.onClickShowInfoDialog.bind(this)}
             />
-          </div>
-
-          <div className="header-logo">
-            <a href="/">
-              <span className="brand-mark" aria-hidden="true">
-                M
+            {this.props.keyboard && (
+              <span className="connection-pill">
+                <span className="connection-dot" aria-hidden="true"></span>
+                {t('Connected')}
               </span>
-              <span className="brand-name">{APPLICATION_NAME}</span>
-            </a>
+            )}
           </div>
 
           <div className="header-right">
@@ -227,7 +233,7 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
                 ref={this.flashButtonRef}
                 disabled={flashBtnState == 'disable'}
                 onClick={this.onClickFlash.bind(this)}
-                className={['flash-button', flashBtnState].join(' ')}
+                className={['header-flash-button', flashBtnState].join(' ')}
               >
                 {t('Flash')}
               </button>

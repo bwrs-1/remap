@@ -437,5 +437,13 @@
   "idle": "idle",
   "This keyboard definition does not declare this feature. Add the following value to customFeatures in the keyboard definition and use a firmware that implements it.": "This keyboard definition does not declare this feature. Add the following value to customFeatures in the keyboard definition and use a firmware that implements it.",
   "Turns on the selected layer automatically while you are using the touchpad": "Turns on the selected layer automatically while you are using the touchpad",
-  "The touchpad is operated with the right hand, so placing click keys on the left half is recommended": "The touchpad is operated with the right hand, so placing click keys on the left half is recommended"
+  "The touchpad is operated with the right hand, so placing click keys on the left half is recommended": "The touchpad is operated with the right hand, so placing click keys on the left half is recommended",
+  "Connected": "Connected",
+  "Layers": "Layers",
+  "Keyboard": "Keyboard",
+  "Changes not yet flashed": "Changes not yet flashed",
+  "Selected key": "Selected key",
+  "Before": "Before",
+  "Revert this key": "Revert this key",
+  "Select a key on the keyboard to see its details here.": "Select a key on the keyboard to see its details here."
 }

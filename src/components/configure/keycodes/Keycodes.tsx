@@ -357,8 +357,7 @@ export default class Keycodes extends React.Component<KeycodesProps, OwnState> {
         <div
           className="keycodes"
           style={{
-            minWidth:
-              this.props.keyboardWidth! + 144 /* = (PADDING + KeycodeKey)*2 */,
+            minWidth: this.props.keyboardWidth!,
           }}
         >
           {keycodekeys}

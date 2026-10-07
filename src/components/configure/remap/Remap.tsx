@@ -15,7 +15,8 @@ import {
   FEATURE_TOUCHPAD,
   hasFeature,
 } from '../../../services/pointing/PointingSettings';
-import { t } from 'i18next';
+import EditorSidebar from '../sidebar/EditorSidebar.container';
+import KeyInspector from '../inspector/KeyInspector.container';
 
 type OwnProp = {};
 type RemapPropType = OwnProp &
@@ -29,64 +30,28 @@ type OwnState = {
   view: ConfigureView;
 };
 
-const MIN_SIDE_MENU_WIDTH = 80;
+// Horizontal room kept around the keyboard for the side toolbar.
+const MIN_SIDE_MENU_WIDTH = 32;
 
 export default class Remap extends React.Component<RemapPropType, OwnState> {
   private readonly keyboardWrapperRef: React.RefObject<HTMLDivElement>;
   private readonly keycodeRef: React.RefObject<HTMLDivElement>;
-  private readonly tabsRef: React.RefObject<HTMLDivElement>;
 
   constructor(props: RemapPropType | Readonly<RemapPropType>) {
     super(props);
     this.keyboardWrapperRef = React.createRef();
     this.keycodeRef = React.createRef();
-    this.tabsRef = React.createRef();
     this.state = {
       minWidth: 0,
       view: 'keymap',
     };
   }
 
-  private handleWindowResize() {
-    // To fetch the correct height of the keyboard wrapper,
-    // we need to wait until the keyboard wrapper is rendered.
-    setTimeout(() => {
-      if (!this.keyboardWrapperRef.current || !this.keycodeRef.current) {
-        return;
-      }
-      // Calculate the height of the keyboard wrapper,
-      // and set the height of the keycode wrapper
-      // to the height of the window minus the height of
-      // the keyboard wrapper dynamically.
-      const keyboardWrapperHeight =
-        this.keyboardWrapperRef.current.clientHeight;
-      const headerHeight = 56 + (this.tabsRef.current?.offsetHeight || 0);
-      const footerHeight = 27;
-      const windowHeight = window.innerHeight;
-      const keycodeWrapperHeight =
-        windowHeight - keyboardWrapperHeight - headerHeight - footerHeight;
-      this.keycodeRef.current.style.height = `${keycodeWrapperHeight}px`;
-    }, 0);
-  }
-
-  componentDidMount() {
-    window.addEventListener('resize', this.handleWindowResize.bind(this));
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.handleWindowResize.bind(this));
-  }
-
-  componentDidUpdate(prevProps: RemapPropType, prevState: OwnState) {
-    if (this.state.view === 'keymap' && prevState.view !== 'keymap') {
-      this.handleWindowResize();
-    }
+  componentDidUpdate(prevProps: RemapPropType) {
     if (this.props.keyboardWidth != prevProps.keyboardWidth) {
       this.setState({
         minWidth: this.props.keyboardWidth! + MIN_SIDE_MENU_WIDTH * 2,
       });
-      // Call once to set the initial height.
-      this.handleWindowResize();
     }
   }
 
@@ -109,61 +74,42 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
   render() {
     const views = this.availableViews();
     const view = views.includes(this.state.view) ? this.state.view : 'keymap';
-    const viewLabels: Record<ConfigureView, string> = {
-      keymap: t('Keymap'),
-      touchpad: t('Touchpad'),
-      autoMouse: t('Mouse Layer'),
-    };
     return (
       <React.Fragment>
-        {views.length > 1 && (
-          <div className="configure-view-tabs-wrapper" ref={this.tabsRef}>
-            <div
-              className="configure-view-tabs"
-              role="tablist"
-              aria-label={t('Settings')}
-            >
-              {views.map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  role="tab"
-                  aria-selected={view === v}
-                  onClick={() => this.setState({ view: v })}
-                >
-                  {viewLabels[v]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {view === 'keymap' ? (
-          <React.Fragment>
-            <div
-              className={[
-                'keyboard-wrapper',
-                views.length > 1 ? 'with-view-tabs' : '',
-              ].join(' ')}
-              style={{ minWidth: this.state.minWidth }}
-              ref={this.keyboardWrapperRef}
-            >
-              <EditMode mode={this.props.macroKey ? 'macro' : 'keymap'} />
-            </div>
-            <div
-              className="keycode"
-              style={{ minWidth: this.state.minWidth }}
-              ref={this.keycodeRef}
-            >
-              <Keycodes />
-            </div>
-            <Desc value={this.props.hoverKey} />
-          </React.Fragment>
-        ) : (
-          <PointingSettings
-            mode={view}
-            onEditLayer={this.onEditLayer.bind(this)}
+        <div className="editor-layout">
+          <EditorSidebar
+            views={views}
+            view={view}
+            onChangeView={(v) => this.setState({ view: v })}
           />
-        )}
+          <div className="editor-main">
+            {view === 'keymap' ? (
+              <React.Fragment>
+                <div
+                  className="keyboard-wrapper"
+                  style={{ minWidth: this.state.minWidth }}
+                  ref={this.keyboardWrapperRef}
+                >
+                  <EditMode mode={this.props.macroKey ? 'macro' : 'keymap'} />
+                </div>
+                <div
+                  className="keycode"
+                  style={{ minWidth: this.state.minWidth }}
+                  ref={this.keycodeRef}
+                >
+                  <Keycodes />
+                </div>
+              </React.Fragment>
+            ) : (
+              <PointingSettings
+                mode={view}
+                onEditLayer={this.onEditLayer.bind(this)}
+              />
+            )}
+          </div>
+          {view === 'keymap' && <KeyInspector />}
+        </div>
+        {view === 'keymap' && <Desc value={this.props.hoverKey} />}
       </React.Fragment>
     );
   }

@@ -3,18 +3,21 @@
 .keycodekey {
   width: calc(var(--key-width));
   height: calc(var(--key-height));
-  border: 1px solid #ccc;
-  border-radius: 3px;
+  border: 1px solid variables.$cfg-panel-border;
+  border-radius: variables.$cfg-radius-m;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  background-color: white;
-  color: #333;
+  background-color: variables.$cfg-canvas-bg;
+  color: variables.$cfg-text;
+  font-family: variables.$cfg-font;
   margin-right: 8px;
   margin-top: 8px;
   z-index: 1;
   position: relative;
   &:hover {
-    background-color: variables.$primary-pale !important;
+    background-color: variables.$cfg-muted !important;
+    border-color: variables.$cfg-accent;
   }
 
   &.grabbable {
@@ -30,9 +33,9 @@
   }
 
   &.addkey {
-    border: 1px dashed #ccc;
+    border: 1px dashed #d4d4d8;
     &:hover {
-      background-color: variables.$primary-pale;
+      background-color: variables.$cfg-muted;
       transition: background-color 0.5s;
     }
   }
