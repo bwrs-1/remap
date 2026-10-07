@@ -7,7 +7,7 @@ import { ArrowDropDown, Link } from '@mui/icons-material';
 import ConnectionModal from '../modals/connection/ConnectionModal';
 import { HeaderActionsType, HeaderStateType } from './Header.container';
 import { IKeyboard, IKeymap } from '../../../services/hid/Hid';
-import { Logo } from '../../common/logo/Logo';
+import { APPLICATION_NAME } from '../../../utils/Brand';
 import InfoDialog from '../info/InfoDialog.container';
 import { InfoIcon } from '../../common/icons/InfoIcon';
 import {
@@ -19,7 +19,6 @@ import { t } from 'i18next';
 
 type HeaderState = {
   connectionStateEl: any;
-  logoAnimation: boolean;
   openInfoDialog: boolean;
 };
 
@@ -37,7 +36,6 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
     super(props);
     this.state = {
       connectionStateEl: null,
-      logoAnimation: false,
       openInfoDialog: false,
     };
     this.flashButtonRef = React.createRef<HTMLButtonElement>();
@@ -93,14 +91,6 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
 
   private onCloseInfoDialog() {
     this.setState({ openInfoDialog: false });
-  }
-
-  private endLogoAnim() {
-    this.setState({ logoAnimation: false });
-  }
-
-  private startLogoAnim() {
-    this.setState({ logoAnimation: true });
   }
 
   render() {
@@ -219,16 +209,11 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
           </div>
 
           <div className="header-logo">
-            <a
-              href="/"
-              onMouseEnter={this.startLogoAnim.bind(this)}
-              onMouseLeave={this.endLogoAnim.bind(this)}
-            >
-              <Logo
-                width={100}
-                color="#f5f5f6"
-                animation={this.state.logoAnimation}
-              />
+            <a href="/">
+              <span className="brand-mark" aria-hidden="true">
+                M
+              </span>
+              <span className="brand-name">{APPLICATION_NAME}</span>
             </a>
           </div>
 

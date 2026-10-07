@@ -18,8 +18,7 @@ import { IKeyboard } from '../../services/hid/Hid';
 import Footer from '../common/footer/Footer.container';
 import { Button, CssBaseline } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-
-const APPLICATION_NAME = 'Remap';
+import { APPLICATION_NAME } from '../../utils/Brand';
 
 type OwnProps = {};
 type ConfigureProps = OwnProps &

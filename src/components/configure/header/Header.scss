@@ -64,9 +64,35 @@
   }
 
   .header-logo {
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     height: 100%;
-    padding-top: 16px;
+    a {
+      display: flex;
+      align-items: center;
+      gap: variables.$space-m;
+      color: variables.$cfg-header-text;
+      text-decoration: none;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: variables.$cfg-radius-m;
+      background-color: variables.$cfg-accent;
+      color: variables.$cfg-accent-text;
+      font-family: variables.$cfg-font-mono;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
   }
 
   .header-height {
@@ -294,8 +320,8 @@
   line-height: 2;
   margin: 0;
   padding: 0;
-  border-radius: 1.5rem;
-  font-size: 0.9rem;
+  border-radius: variables.$cfg-radius-m;
+  font-size: 0.85rem;
   font-family: variables.$cfg-font;
   font-weight: 600;
   outline: none;
@@ -304,7 +330,7 @@
     background-color 0.15s;
 
   &.enable {
-    color: #19191c;
+    color: variables.$cfg-accent-text;
     border-color: variables.$cfg-accent;
     animation: button-enable-intro 0.4s forwards;
     &:hover {

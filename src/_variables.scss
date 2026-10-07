@@ -37,27 +37,36 @@ $space-s: 4px;
 $space-xs: 2px;
 
 // Configure (editor) screen design tokens.
+// Values follow the reference editor (Conductor Studio 2.0): a light,
+// near-monochrome neutral palette (shadcn-style oklch tokens converted to hex),
+// Inter for UI text and JetBrains Mono for codes/numbers, 12px card radius.
 // Scoped to the Configure domain only so other domains (Catalog, Workbench,
 // Top, etc.) keep their existing indigo theme.
-$cfg-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+$cfg-font:
+  'Inter',
+  -apple-system,
+  BlinkMacSystemFont,
+  system-ui,
   sans-serif;
-$cfg-canvas-bg: #f3f3f5;
-$cfg-header-bg: #19191c;
-$cfg-header-bg-raised: #27272b;
-$cfg-header-text: #f5f5f6;
-$cfg-header-text-dim: #9a9aa2;
-$cfg-header-border: rgba(255, 255, 255, 0.1);
-$cfg-accent: #f5821f;
-$cfg-accent-dark: #d96e12;
+$cfg-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+$cfg-canvas-bg: #f7f7f8; // --background: oklch(97.5% .002 260)
+$cfg-sidebar-bg: #f2f2f3; // --sidebar: oklch(96% .002 260)
+$cfg-header-bg: #ffffff;
+$cfg-header-bg-raised: #ececee; // --muted: oklch(94% .003 260)
+$cfg-header-text: #121214; // --foreground: oklch(15% .005 260)
+$cfg-header-text-dim: #6b6c70; // --muted-foreground: oklch(52% .005 260)
+$cfg-header-border: #e2e2e4; // --border: oklch(90% .003 260)
+$cfg-accent: #333438; // --primary: oklch(30% .005 260)
+$cfg-accent-dark: #121214;
+$cfg-accent-text: #ffffff; // --primary-foreground
+$cfg-muted: #ececee;
 $cfg-panel-bg: #ffffff;
-$cfg-panel-border: #e4e4e7;
-$cfg-text: #1a1a1d;
-$cfg-text-dim: #7a7a82;
-$cfg-radius-s: 4px;
+$cfg-panel-border: #e2e2e4;
+$cfg-text: #121214;
+$cfg-text-dim: #6b6c70;
+$cfg-radius-s: 6px;
 $cfg-radius-m: 8px;
-$cfg-radius-l: 12px;
-$cfg-layer-colors: #1a1a1d, #3b82f6, #22c55e, #f59e0b, #ec4899, #a855f7,
-  #ef4444, #14b8a6, #6366f1, #84cc16, #06b6d4, #f97316;
+$cfg-radius-l: 12px; // --radius: .75rem
 
 // media query
 $breakpoints: (
