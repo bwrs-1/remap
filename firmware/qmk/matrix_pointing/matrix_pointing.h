@@ -57,3 +57,15 @@ uint8_t  matrix_pointing_hold_mode(void);
 //   #define DIGITIZER_SWIPE_UP_KC    MATRIX_POINTING_SWIPE_KC(2)
 //   #define DIGITIZER_SWIPE_DOWN_KC  MATRIX_POINTING_SWIPE_KC(3)
 uint8_t matrix_pointing_swipe(uint8_t direction);
+
+// Call from housekeeping_task_user() if you define it yourself (then define
+// MATRIX_POINTING_NO_HOUSEKEEPING). Syncs settings to the other half of a
+// split keyboard (MATRIX_POINTING_SPLIT_SYNC) and collects its swipes.
+void matrix_pointing_housekeeping(void);
+
+#ifdef RGB_MATRIX_ENABLE
+// Paints the LED color of the active layer; returns false when it did.
+// Called from rgb_matrix_indicators_advanced_user() (this module defines it
+// unless MATRIX_POINTING_NO_LED_HOOK).
+bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max);
+#endif

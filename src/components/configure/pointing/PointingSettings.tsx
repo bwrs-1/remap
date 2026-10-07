@@ -24,12 +24,18 @@ import {
   TAPPING_TERM_PRESETS,
   TIMING_SETTINGS,
   TOUCHPAD_SETTINGS,
+  LED_SETTINGS,
+  LED_COLORS,
+  LED_LAYER_COUNT,
+  fetchCapabilities,
+  isSettingApplied,
 } from '../../../services/pointing/PointingSettings';
+import { layerName, useLayerMeta } from '../../../services/layers/LayerMeta';
 import { SWIPE_KEYCODE_OPTIONS } from '../../../services/pointing/SwipeKeycodes';
 import { hexadecimal } from '../../../utils/StringUtils';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 
-export type PointingSettingsMode = 'touchpad' | 'autoMouse' | 'timing';
+export type PointingSettingsMode = 'touchpad' | 'autoMouse' | 'timing' | 'leds';
 
 type OwnProps = {
   mode: PointingSettingsMode;
@@ -51,6 +57,8 @@ type RowSpec = {
   choices?: { value: number; label: string }[];
   // Quick values shown under a slider.
   presets?: number[];
+  // Choices drawn as color swatches (css color per value).
+  swatches?: { value: number; label: string; css: string }[];
 };
 
 type SectionSpec = {
@@ -259,11 +267,30 @@ const timingSections = (): SectionSpec[] => [
   },
 ];
 
+const ledSections = (
+  layerCount: number,
+  nameOf: (layer: number) => string
+): SectionSpec[] => [
+  {
+    title: t('LED color per layer'),
+    desc: t(
+      'While a layer is active, all LEDs of the keyboard light in its color. "Lighting effect" keeps the normal lighting.'
+    ),
+    rows: [...Array(Math.min(layerCount, LED_LAYER_COUNT))].map((_, i) => ({
+      key: `led${i}`,
+      label: `${nameOf(i)}（L${i}）`,
+      help: '',
+      swatches: LED_COLORS.map((c) => ({ ...c, label: t(c.label) })),
+    })),
+  },
+];
+
 const MODE_DEFS: Record<PointingSettingsMode, readonly IPointingSettingDef[]> =
   {
     touchpad: TOUCHPAD_SETTINGS,
     autoMouse: AUTO_MOUSE_SETTINGS,
     timing: TIMING_SETTINGS,
+    leds: LED_SETTINGS,
   };
 
 export default function PointingSettings(props: PointingSettingsProps) {
@@ -281,6 +308,9 @@ export default function PointingSettings(props: PointingSettingsProps) {
   const [saving, setSaving] = useState<boolean>(false);
   const [stored, setStored] = useState<Values>(defaultValues(defs));
   const [values, setValues] = useState<Values>(defaultValues(defs));
+  // Which settings the firmware applies (null: unknown, assume all).
+  const [capabilities, setCapabilities] = useState<number | null>(null);
+  const layerMeta = useLayerMeta(props.keyboard?.getInformation());
 
   useEffect(() => {
     if (!props.keyboard) return;
@@ -294,6 +324,9 @@ export default function PointingSettings(props: PointingSettingsProps) {
       setSupport(probed);
       if (probed !== 'supported') return;
       setLoading(true);
+      const caps = await fetchCapabilities(props.keyboard!);
+      if (cancelled) return;
+      setCapabilities(caps);
       const result = await fetchSettings(props.keyboard!, defs);
       if (cancelled) return;
       setLoading(false);
@@ -318,6 +351,7 @@ export default function PointingSettings(props: PointingSettingsProps) {
     touchpad: t('Touchpad'),
     autoMouse: t('Auto mouse layer'),
     timing: t('Timing & gestures'),
+    leds: t('Layer LED colors'),
   };
   const descs: Record<PointingSettingsMode, string> = {
     touchpad: t('Mounted on the top of the right half'),
@@ -325,6 +359,7 @@ export default function PointingSettings(props: PointingSettingsProps) {
       'Turns on the selected layer automatically while you are using the touchpad'
     ),
     timing: t('Tap-hold key timing and touchpad swipe shortcuts'),
+    leds: t('Shows the active layer with the color of the keyboard LEDs'),
   };
   const title = titles[props.mode];
   const live = support === 'supported';
@@ -425,12 +460,15 @@ export default function PointingSettings(props: PointingSettingsProps) {
     }
   };
 
+  const layerCount = Number.isNaN(props.layerCount) ? 4 : props.layerCount!;
   const sections =
     props.mode === 'touchpad'
       ? touchpadSections()
       : props.mode === 'autoMouse'
         ? autoMouseSections()
-        : timingSections();
+        : props.mode === 'timing'
+          ? timingSections()
+          : ledSections(layerCount, (layer) => layerName(layerMeta, layer));
 
   return (
     <div className="pointing-settings">
@@ -473,6 +511,25 @@ export default function PointingSettings(props: PointingSettingsProps) {
         </div>
       )}
 
+      {live && (props.mode === 'touchpad' || props.mode === 'timing') && (
+        <section className="pointing-card pointing-info">
+          <h2>{t('How the settings reach the keyboard')}</h2>
+          <p>
+            {t(
+              '"Save to keyboard" writes the settings into the keyboard, so they stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.'
+            )}
+          </p>
+          {capabilities !== null &&
+            defs.some((d) => !isSettingApplied(capabilities, d.valueId)) && (
+              <p>
+                {t(
+                  'Settings marked "Not applied on this keyboard" are saved but have no effect with this touchpad and firmware.'
+                )}
+              </p>
+            )}
+        </section>
+      )}
+
       {props.mode === 'autoMouse' && (
         <AutoMouseOverview
           values={values}
@@ -497,6 +554,10 @@ export default function PointingSettings(props: PointingSettingsProps) {
                   def={defOf(row.key)}
                   value={values[row.key]}
                   disabled={loading || saving}
+                  applied={
+                    !live ||
+                    isSettingApplied(capabilities, defOf(row.key).valueId)
+                  }
                   onChange={(v) => update(row.key, v)}
                 />
               ))}
@@ -514,6 +575,8 @@ type SettingRowProps = {
   def: IPointingSettingDef;
   value: number;
   disabled: boolean;
+  // false: the firmware stores the value but does not use it.
+  applied: boolean;
   // eslint-disable-next-line no-unused-vars
   onChange: (value: number) => void;
 };
@@ -521,9 +584,20 @@ type SettingRowProps = {
 function SettingRow(props: SettingRowProps) {
   const { row, def, value } = props;
   return (
-    <div className="pointing-row">
+    <div
+      className={['pointing-row', props.applied ? '' : 'not-applied']
+        .join(' ')
+        .trim()}
+    >
       <div className="pointing-row-label">
-        <span className="label">{row.label}</span>
+        <span className="label">
+          {row.label}
+          {!props.applied && (
+            <span className="pointing-badge">
+              {t('Not applied on this keyboard')}
+            </span>
+          )}
+        </span>
         {row.help && <span className="help">{row.help}</span>}
       </div>
       <div className="pointing-row-control">
@@ -574,6 +648,32 @@ function SettingRow(props: SettingRowProps) {
             disabled={props.disabled}
             onChange={props.onChange}
           />
+        )}
+        {def.kind === 'choice' && row.swatches && (
+          <div
+            className="pointing-swatches"
+            role="group"
+            aria-label={row.label}
+          >
+            {row.swatches.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                className={['pointing-swatch', c.value === 0 ? 'effect' : '']
+                  .join(' ')
+                  .trim()}
+                style={{ backgroundColor: c.css }}
+                title={c.label}
+                aria-label={c.label}
+                aria-pressed={value === c.value}
+                disabled={props.disabled}
+                onClick={() => props.onChange(c.value)}
+              />
+            ))}
+            <span className="pointing-swatch-name">
+              {row.swatches.find((c) => c.value === value)?.label}
+            </span>
+          </div>
         )}
         {def.kind === 'choice' && row.choices && (
           <ToggleButtonGroup

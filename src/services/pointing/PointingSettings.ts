@@ -119,6 +119,61 @@ export const TIMING_SETTINGS = [
 
 export const TAPPING_TERM_PRESETS = [150, 175, 200, 250, 300];
 
+// Firmware protocol version 3: LED color per layer (RGB Matrix), layers 0-7.
+// 0 = keep the lighting effect, 1 = off, 2.. = the colors below.
+export const LED_LAYER_COUNT = 8;
+export const LED_SETTINGS = [0, 1, 2, 3, 4, 5, 6, 7].map((layer) =>
+  def(`led${layer}`, 0x50 + layer, 'choice', 0, 8, 0)
+);
+export const LED_COLORS: { value: number; label: string; css: string }[] = [
+  { value: 0, label: 'Lighting effect', css: 'transparent' },
+  { value: 1, label: 'Off', css: '#1f2023' },
+  { value: 2, label: 'Red', css: '#e5484d' },
+  { value: 3, label: 'Green', css: '#30a46c' },
+  { value: 4, label: 'Yellow', css: '#f5d90a' },
+  { value: 5, label: 'Blue', css: '#3e63dd' },
+  { value: 6, label: 'Magenta', css: '#d6409f' },
+  { value: 7, label: 'Cyan', css: '#05a2c2' },
+  { value: 8, label: 'White', css: '#ffffff' },
+];
+
+// Read-only value 0x7E (protocol version 3): which settings the firmware
+// actually applies. null = older firmware that does not say (assume all).
+export const CAPABILITIES_VALUE_ID = 0x7e;
+export const CAP_TIMING = 1 << 16;
+export const CAP_SWIPE = 1 << 17;
+export const CAP_LAYER_LED = 1 << 18;
+export const CAP_COMBOS = 1 << 19;
+
+export async function fetchCapabilities(
+  keyboard: IKeyboard
+): Promise<number | null> {
+  const result = await keyboard.fetchCustomValue(CAPABILITIES_VALUE_ID, 4);
+  if (!result.success || result.unhandled) return null;
+  return result.value! >>> 0;
+}
+
+// Whether the firmware applies the setting with this value ID.
+export function isSettingApplied(
+  capabilities: number | null,
+  valueId: number
+): boolean {
+  if (capabilities === null) return true;
+  if (valueId >= 0x01 && valueId <= 0x0f) {
+    return (capabilities & (1 << (valueId - 1))) !== 0;
+  }
+  if (valueId === 0x30 || valueId === 0x31) {
+    return (capabilities & CAP_TIMING) !== 0;
+  }
+  if (valueId >= 0x40 && valueId <= 0x43) {
+    return (capabilities & CAP_SWIPE) !== 0;
+  }
+  if (valueId >= 0x50 && valueId <= 0x57) {
+    return (capabilities & CAP_LAYER_LED) !== 0;
+  }
+  return true;
+}
+
 export type TouchpadSettingKey = (typeof TOUCHPAD_SETTINGS)[number]['key'];
 export type AutoMouseSettingKey = (typeof AUTO_MOUSE_SETTINGS)[number]['key'];
 export type TouchpadSettings = Record<TouchpadSettingKey, number>;

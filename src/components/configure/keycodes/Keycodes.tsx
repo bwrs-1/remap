@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+import { t } from 'i18next';
 import React from 'react';
 import './Keycodes.scss';
 import { Button, TextField, InputAdornment } from '@mui/material';
@@ -308,7 +309,11 @@ export default class Keycodes extends React.Component<KeycodesProps, OwnState> {
         return (
           <div className="sub-category-group" key={index}>
             <div className="sub-category">
-              <span>{sub.split('_').join(' ').toUpperCase()}</span>
+              <span>
+                {t(`keycodeGroup.${sub}`, {
+                  defaultValue: sub.split('_').join(' ').toUpperCase(),
+                })}
+              </span>
             </div>
             <div className="sub-category-keys">{categoryKeys[sub]}</div>
           </div>
@@ -332,7 +337,7 @@ export default class Keycodes extends React.Component<KeycodesProps, OwnState> {
                   disabled={this.state.category === cat || len === 0}
                   onClick={this.selectCategory.bind(this, cat)}
                 >
-                  {cat}
+                  {t(`keycodeCategory.${cat}`, { defaultValue: cat })}
                 </Button>
               </div>
             );

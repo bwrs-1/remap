@@ -6,6 +6,11 @@ import { Key } from '../keycodekey/KeyGen';
 import React from 'react';
 import Keycap from '../keycap/Keycap.container';
 import { LayoutOption } from './Keymap';
+import { t } from 'i18next';
+import {
+  OPEN_TOUCHPAD_SETTINGS_EVENT,
+  touchpadRect,
+} from '../../../services/pointing/TouchpadLayout';
 
 type KeycapData = {
   model: KeyModel;
@@ -50,6 +55,8 @@ type KeyboardViewType = {
   ) => void;
   // eslint-disable-next-line no-unused-vars
   setKeyboardSize: (width: number, height: number) => void;
+  // Draw the touchpad of the right half.
+  touchpad?: boolean;
 };
 
 export const KEYBOARD_LAYOUT_PADDING = 8;
@@ -126,6 +133,7 @@ export function KeyboardView(props: KeyboardViewType) {
           className="keyboard-frame"
           style={{ width: width, height: height, left: moveLeft, top: moveTop }}
         >
+          {props.touchpad && <Touchpad keys={keymaps} />}
           {keycaps.map((keycap: KeycapData) => {
             const anchorRef = React.createRef<HTMLDivElement>();
             return keycap.model.isDecal ? (
@@ -159,5 +167,29 @@ export function KeyboardView(props: KeyboardViewType) {
         </div>
       </div>
     </div>
+  );
+}
+
+function Touchpad(props: { keys: KeyModel[] }) {
+  const rect = touchpadRect(props.keys);
+  if (!rect) return null;
+  return (
+    <button
+      type="button"
+      className="keyboard-touchpad"
+      style={{
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+      }}
+      title={t('Touchpad: click to open its settings')}
+      aria-label={t('Touchpad: click to open its settings')}
+      onClick={() =>
+        window.dispatchEvent(new Event(OPEN_TOUCHPAD_SETTINGS_EVENT))
+      }
+    >
+      <span className="keyboard-touchpad-label">{t('Touchpad')}</span>
+    </button>
   );
 }

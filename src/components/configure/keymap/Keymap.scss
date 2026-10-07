@@ -154,6 +154,43 @@
         width: 100%;
         position: relative;
       }
+      // Touchpad on the right half (matte dark pad like the real one).
+      .keyboard-touchpad {
+        position: absolute;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        border: 1px solid #1f2023;
+        border-radius: 8px;
+        background-color: #3a3b3f;
+        background-image: radial-gradient(
+          rgba(255, 255, 255, 0.06) 1px,
+          transparent 1px
+        );
+        background-size: 4px 4px;
+        box-shadow:
+          inset 0 1px 3px rgba(0, 0, 0, 0.45),
+          0 1px 0 rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        &:hover {
+          outline: 2px solid variables.$cfg-accent;
+          outline-offset: 2px;
+        }
+        &:focus-visible {
+          outline: 2px solid variables.$cfg-accent;
+          outline-offset: 2px;
+        }
+      }
+      .keyboard-touchpad-label {
+        margin-bottom: 8px;
+        font-family: variables.$cfg-font;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        color: rgba(255, 255, 255, 0.7);
+      }
     }
     .app-info {
       position: absolute;

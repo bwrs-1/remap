@@ -93,6 +93,15 @@ editor then asks for a firmware update instead of showing defaults.
 | `0x42` | `swipeUp`     | 2    | as above                                                                  | `0x00E3` (LGUI)    |
 | `0x43` | `swipeDown`   | 2    | as above                                                                  | `0x0029` (ESC)     |
 
+### Protocol version 3
+
+| ID            | Key            | Size | Meaning                                                                                                                                                                                                         |
+| ------------- | -------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0x7E`        | `capabilities` | 4    | Read-only bit mask of what the build applies. Bits 0–14: touchpad value `0x01 + n`; bit 15: auto mouse layer; 16: timing; 17: swipes; 18: layer LEDs; 19: combos. `id_unhandled` (older firmware): assume all   |
+| `0x50`–`0x57` | `led0`–`led7`  | 1    | LED color of layer 0–7: 0 keep the effect, 1 off, 2 red, 3 green, 4 yellow, 5 blue, 6 magenta, 7 cyan, 8 white                                                                                                  |
+| `0x60`        | `comboCount`   | 1    | Read-only. Number of combo slots                                                                                                                                                                                |
+| `0x61`        | `combo`        | 14   | `[slot, keys[4], keycode, term, layers]`, 16-bit values big endian. The request carries the slot; the reply echoes it. Keys are layer-0 keycodes (`0` = unused); `term` 0 = default; `layers` bit mask, 0 = all |
+
 Values outside a range are clamped by the editor when read. The editor's
 defaults are its own starting values; the firmware's stored values win once
 they are read.

@@ -313,3 +313,71 @@
     font-size: 13px;
   }
 }
+
+.pointing-settings {
+  .pointing-info {
+    padding: 16px 20px;
+    h2 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    p {
+      margin: 0 0 4px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: variables.$cfg-text-dim;
+    }
+  }
+  .pointing-row.not-applied {
+    .pointing-row-control {
+      opacity: 0.45;
+    }
+  }
+  .pointing-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #ececee;
+    font-size: 10px;
+    font-weight: 500;
+    color: variables.$cfg-text-dim;
+    vertical-align: middle;
+  }
+  .pointing-swatches {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pointing-swatch {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 50%;
+    cursor: pointer;
+    &.effect {
+      background: conic-gradient(
+        #e5484d,
+        #f5d90a,
+        #30a46c,
+        #05a2c2,
+        #3e63dd,
+        #d6409f,
+        #e5484d
+      ) !important;
+    }
+    &[aria-pressed='true'] {
+      box-shadow:
+        0 0 0 2px #fff,
+        0 0 0 4px variables.$cfg-accent;
+    }
+  }
+  .pointing-swatch-name {
+    width: 110px;
+    margin-left: 6px;
+    font-size: 12px;
+    color: variables.$cfg-text-dim;
+  }
+}

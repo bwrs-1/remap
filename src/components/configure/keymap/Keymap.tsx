@@ -22,6 +22,7 @@ import { IKeySwitchOperation } from '../../../store/state';
 import { KEYBOARD_LAYOUT_PADDING, KeyboardView } from './KeyboardView';
 import { LabelLang } from './LabelLang';
 import { t } from 'i18next';
+import { keyboardHasTouchpad } from '../../../services/pointing/TouchpadLayout';
 
 export type LayoutOption = {
   option: number;
@@ -339,6 +340,7 @@ export default class Keymap extends React.Component<
                 this.props.setKeyboardSize!(width, height);
               }}
               isCustomKeyOpen={Boolean(this.state.selectedPos)}
+              touchpad={keyboardHasTouchpad(this.props.keyboardDefinition)}
               onClickKeycap={(pos, key, keySwitchEventType, encoderId, ref) => {
                 if (this.props.testMatrix) {
                   this.onClickKeycapForTestMatrix(pos);

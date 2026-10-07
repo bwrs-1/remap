@@ -4,6 +4,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { TextField } from '@mui/material';
 import { IKeymap } from '../../../services/hid/Hid';
 import { KeymapCategory } from '../../../services/hid/KeycodeList';
+import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
 
 /**
  * Filter and sort strategy.
@@ -108,7 +109,9 @@ export default class AutocompleteKeys extends React.Component<
                 )}
               </div>
               {option.desc && (
-                <div className="keycode-auto-desc">{option.desc}</div>
+                <div className="keycode-auto-desc">
+                  {localizedKeycodeDesc(option.desc)}
+                </div>
               )}
             </div>
           </li>

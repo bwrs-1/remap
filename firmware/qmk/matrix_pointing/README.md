@@ -1,6 +1,6 @@
 # Matrix pointing — QMK 側の実装
 
-Matrix エディタの「タッチパッド」「マウスレイヤー」「タイミング・ジェスチャー」画面から設定を読み書き・保存するための
+Matrix エディタの「タッチパッド」「マウスレイヤー」「タイミング・ジェスチャー」「コンボ」「レイヤーの LED 色」画面から設定を読み書き・保存するための
 QMK モジュールです。VIA のカスタム値（チャンネル 0）でエディタとやり取りし、設定は
 EEPROM のユーザー用データブロックに保存します。プロトコルの詳細は
 [`keyboards/matrix-split42/README.md`](../../../keyboards/matrix-split42/README.md) を参照してください。
@@ -85,9 +85,43 @@ EEPROM のユーザー用データブロックに保存します。プロトコ�
 #define DIGITIZER_SWIPE_DOWN_KC MATRIX_POINTING_SWIPE_KC(3)
 ```
 
+### 分割キーボード（USB を挿していない側にタッチパッドがある場合）
+
+タッチパッドのジェスチャー処理（タップ判定・スワイプ）は、タッチパッドが付いている側で動きます。
+USB を反対側に挿すと、エディタからの設定は USB 側にしか届きません。次を定義すると、USB 側が設定を
+相手側へ送り（変更時と 2 秒ごと）、相手側で検出したスワイプを受け取って入力します。
+
+```c
+#define MATRIX_POINTING_SPLIT_SYNC
+#define SPLIT_TRANSACTION_IDS_USER MP_SYNC_CONFIG, MP_SYNC_SWIPE
+#define RPC_M2S_BUFFER_SIZE 64
+```
+
+`housekeeping_task_user()` はこのモジュールが定義します（自分で定義している場合は
+`MATRIX_POINTING_NO_HOUSEKEEPING` を付けて、その中から `matrix_pointing_housekeeping()` を呼んでください）。
+
+### コンボ（EEPROM に保存）
+
+`COMBO_ENABLE = yes` と次の設定で、エディタから最大 16 個のコンボを登録できます。`combo_count()` /
+`combo_get()` をこのモジュールが定義するため、キーマップの `key_combos[]` は使われません（ビルドには空の定義が必要）。
+
+```c
+#define EECONFIG_USER_DATA_SIZE 320   // 設定 64 + コンボ 16 個 × 16
+#define COMBO_ONLY_FROM_LAYER 0       // キー位置はレイヤー 0 のキーで判定
+#define COMBO_TERM_PER_COMBO          // コンボごとの判定時間
+#define COMBO_SHOULD_TRIGGER          // 有効なレイヤーの指定
+```
+
+### レイヤーの LED 色（RGB Matrix）
+
+`RGB_MATRIX_ENABLE` があれば、`rgb_matrix_indicators_advanced_user()` で使用中のレイヤーの色に
+全 LED を点灯します（色が「通常のライト効果」のレイヤーでは何もしません）。分割キーボードでは
+`split.transport.sync.layer_state` と上記の分割同期が必要です。自分で同関数を定義している場合は
+`MATRIX_POINTING_NO_LED_HOOK` を付けて `matrix_pointing_rgb_indicators()` を呼んでください。
+
 ### 設定の保存形式のバージョン
 
-保存形式はバージョン 2 です（バージョン 1 にタイミングとスワイプを追加）。バージョン 1 で
+保存形式はバージョン 3 です（2: タイミングとスワイプ、3: レイヤーの LED 色を追加）。古いバージョンで
 保存された設定は起動時にそのまま引き継ぎ、追加分は初期値で補います。なお
 `EECONFIG_USER_DATA_SIZE` を変えると QMK がユーザー領域を初期化するため、その場合は初期値に戻ります。
 
@@ -99,18 +133,20 @@ RP2040 では BOOTSEL で再起動）。再起動は応答を返した約 100ms 
 
 ## 各設定の反映状況
 
-| 設定                                                                              | 反映方法                                   | 備考                                                                                                    |
-| --------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| 速度（CPI）                                                                       | `pointing_device_set_cpi()`                | Dilemma 標準の DPI 変更キーを押すと、そちらの値で上書きされます（再起動で本設定に戻ります）             |
-| 加速                                                                              | 本モジュールで移動量を補正                 | 速い移動ほど最大 3 倍                                                                                   |
-| 慣性（グライド）                                                                  | `cirque_pinnacle_enable_cursor_glide()`    | `POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE` が必要                                                   |
-| 回転・X/Y 反転                                                                    | 本モジュールで座標を変換                   | 回転の向きは QMK の `POINTING_DEVICE_ROTATION_*` と同じ                                                 |
-| タップでクリック                                                                  | `cirque_pinnacle_enable_tap()`             | `CIRQUE_PINNACLE_TAP_ENABLE` と absolute モードが必要                                                   |
-| サークルスクロール                                                                | `cirque_pinnacle_enable_circular_scroll()` | `CIRQUE_PINNACLE_CIRCULAR_SCROLL_ENABLE` が必要                                                         |
-| スクロール速度・反転・横スクロール                                                | 本モジュールでスクロール量を変換           | 速度は分周比 8 が元の速さ（4 で 2 倍、16 で半分）                                                       |
-| オートマウス 有効/対象レイヤー/解除時間/デバウンス                                | QMK の `set_auto_mouse_*()`                |                                                                                                         |
-| 起動する移動量・キー入力後の待機                                                  | `auto_mouse_activation()` を上書き         |                                                                                                         |
-| マウス用以外のキーで即解除・修飾キー中は維持                                      | `is_mouse_record_user()` で判定            |                                                                                                         |
-| 2 本指タップ・タップ＆ドラッグ・タップ判定時間・2 本指/端スクロール・センサー感度 | **保存のみ**                               | QMK の Cirque ドライバに実行時に変更する API がないため、値は保存・表示されますが動作には反映されません |
-| 長押し判定時間・ホールド判定モード                                                | `get_tapping_term()` などを定義            | `TAPPING_TERM_PER_KEY` / `PERMISSIVE_HOLD_PER_KEY` / `HOLD_ON_OTHER_KEY_PRESS_PER_KEY` が必要           |
-| 3 本指スワイプのキー                                                              | `matrix_pointing_swipe()`                  | マルチタッチ版 QMK フォークのみ。修飾キー付きの基本キーコードのみ送信                                   |
+| 設定                                                            | 反映方法                                                                | 備考                                                                                             |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 速度（CPI）                                                     | `pointing_device_set_cpi()`                                             | Dilemma 標準の DPI 変更キーを押すと、そちらの値で上書きされます（再起動で本設定に戻ります）      |
+| 加速                                                            | 本モジュールで移動量を補正                                              | 速い移動ほど最大 3 倍                                                                            |
+| 慣性（グライド）                                                | `cirque_pinnacle_enable_cursor_glide()`                                 | `POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE` が必要                                            |
+| 回転・X/Y 反転                                                  | 本モジュールで座標を変換                                                | 回転の向きは QMK の `POINTING_DEVICE_ROTATION_*` と同じ                                          |
+| タップでクリック                                                | `cirque_pinnacle_enable_tap()`                                          | `CIRQUE_PINNACLE_TAP_ENABLE` と absolute モードが必要                                            |
+| サークルスクロール                                              | `cirque_pinnacle_enable_circular_scroll()`                              | `CIRQUE_PINNACLE_CIRCULAR_SCROLL_ENABLE` が必要                                                  |
+| スクロール速度・反転・横スクロール                              | 本モジュールでスクロール量を変換                                        | 速度は分周比 8 が元の速さ（4 で 2 倍、16 で半分）                                                |
+| オートマウス 有効/対象レイヤー/解除時間/デバウンス              | QMK の `set_auto_mouse_*()`                                             |                                                                                                  |
+| 起動する移動量・キー入力後の待機                                | `auto_mouse_activation()` を上書き                                      |                                                                                                  |
+| マウス用以外のキーで即解除・修飾キー中は維持                    | `is_mouse_record_user()` で判定                                         |                                                                                                  |
+| タップでクリック・タップ判定時間（マルチタッチ版 QMK フォーク） | `DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT` に `matrix_pointing_tap_term()` | オフのときは判定時間 0 を返し、タップを検出させない                                              |
+| 2 本指タップ（右クリック）・タップ＆ドラッグ（同フォーク）      | `matrix_pointing_task()` でボタンを除去                                 | ドラッグは 80ms 以上押され続けたボタン 1 として判定                                              |
+| 上記以外（Cirque の 2 本指/端スクロール、センサー感度など）     | **保存のみ**                                                            | 値 `0x7E` で「反映しない」と通知し、エディタに「このキーボードでは反映されません」と表示されます |
+| 長押し判定時間・ホールド判定モード                              | `get_tapping_term()` などを定義                                         | `TAPPING_TERM_PER_KEY` / `PERMISSIVE_HOLD_PER_KEY` / `HOLD_ON_OTHER_KEY_PRESS_PER_KEY` が必要    |
+| 3 本指スワイプのキー                                            | `matrix_pointing_swipe()`                                               | マルチタッチ版 QMK フォークのみ。修飾キー付きの基本キーコードのみ送信                            |

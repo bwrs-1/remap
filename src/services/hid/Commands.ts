@@ -923,11 +923,16 @@ export class DynamicKeymapSetEncoderCommand extends AbstractCommand<
 // settings. Values are 1 or 2 bytes (big endian).
 export interface ICustomGetValueRequest extends ICommandRequest {
   valueId: number;
-  size: 1 | 2;
+  size: 1 | 2 | 4;
+  // Bytes sent after the value ID (e.g. a slot index). The reply must echo
+  // them to be matched.
+  args?: number[];
 }
 
 export interface ICustomGetValueResponse extends ICommandResponse {
   value: number;
+  // Raw value data (after command / channel / value ID).
+  bytes: Uint8Array;
   // The firmware has no handler for this value (VIA answers id_unhandled).
   unhandled: boolean;
 }
@@ -941,29 +946,32 @@ export class CustomGetValueCommand extends AbstractCommand<
       id_custom_get_value,
       id_custom_channel,
       this.getRequest().valueId,
+      ...(this.getRequest().args || []),
     ]);
   }
 
   createResponse(resultArray: Uint8Array): ICustomGetValueResponse {
+    const bytes = resultArray.slice(3);
     if (resultArray[0] === id_unhandled) {
-      return { value: 0, unhandled: true };
+      return { value: 0, bytes, unhandled: true };
     }
-    const value =
-      this.getRequest().size === 2
-        ? (resultArray[3] << 8) | resultArray[4]
-        : resultArray[3];
-    return { value, unhandled: false };
+    const size = this.getRequest().size;
+    let value = 0;
+    for (let i = 0; i < size; i++) value = value * 256 + resultArray[3 + i];
+    return { value, bytes, unhandled: false };
   }
 
   // A VIA firmware without a custom value handler replies with the request
   // whose first byte is replaced by id_unhandled; match that too so the
   // command queue does not wait forever.
   isSameRequest(resultArray: Uint8Array): boolean {
+    const args = this.getRequest().args || [];
     return (
       (resultArray[0] === id_custom_get_value ||
         resultArray[0] === id_unhandled) &&
       resultArray[1] === id_custom_channel &&
-      resultArray[2] === this.getRequest().valueId
+      resultArray[2] === this.getRequest().valueId &&
+      args.every((b, i) => resultArray[3 + i] === b)
     );
   }
 }
@@ -972,6 +980,8 @@ export interface ICustomSetValueRequest extends ICommandRequest {
   valueId: number;
   value: number;
   size: 1 | 2;
+  // Raw value data; when given, `value` / `size` are ignored.
+  bytes?: number[];
 }
 
 export class CustomSetValueCommand extends AbstractCommand<
@@ -980,8 +990,9 @@ export class CustomSetValueCommand extends AbstractCommand<
 > {
   createReport(): Uint8Array {
     const req = this.getRequest();
-    const data =
-      req.size === 2
+    const data = req.bytes
+      ? req.bytes.map((b) => b & 0xff)
+      : req.size === 2
         ? [(req.value >> 8) & 0xff, req.value & 0xff]
         : [req.value & 0xff];
     return new Uint8Array([

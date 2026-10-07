@@ -441,16 +441,18 @@ export class Keyboard implements IKeyboard {
 
   fetchCustomValue(
     valueId: number,
-    size: 1 | 2
+    size: 1 | 2 | 4,
+    args?: number[]
   ): Promise<IFetchCustomValueResult> {
     return new Promise<IFetchCustomValueResult>((resolve) => {
       const command = new CustomGetValueCommand(
-        { valueId, size },
+        { valueId, size, args },
         async (result) => {
           if (result.success) {
             resolve({
               success: true,
               value: result.response!.value,
+              bytes: result.response!.bytes,
               unhandled: result.response!.unhandled,
             });
           } else {
@@ -474,6 +476,26 @@ export class Keyboard implements IKeyboard {
     return new Promise<IResult>((resolve) => {
       const command = new CustomSetValueCommand(
         { valueId, value, size },
+        async (result) => {
+          if (result.success) {
+            resolve({ success: true });
+          } else {
+            resolve({
+              success: false,
+              error: result.error,
+              cause: result.cause,
+            });
+          }
+        }
+      );
+      return this.enqueue(command);
+    });
+  }
+
+  updateCustomBytes(valueId: number, bytes: number[]): Promise<IResult> {
+    return new Promise<IResult>((resolve) => {
+      const command = new CustomSetValueCommand(
+        { valueId, value: 0, size: 1, bytes },
         async (result) => {
           if (result.success) {
             resolve({ success: true });

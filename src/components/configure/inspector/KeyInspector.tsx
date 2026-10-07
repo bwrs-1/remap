@@ -14,6 +14,7 @@ import {
   ShortcutOs,
   shortcutText,
 } from '../../../services/presets/ShortcutPresets';
+import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
 
 const OS_STORAGE_KEY = 'matrix.shortcutOs';
 
@@ -60,7 +61,11 @@ export default function KeyInspector(props: KeyInspectorProps) {
               </span>
             </div>
           </div>
-          {current.desc && <p className="key-inspector-desc">{current.desc}</p>}
+          {current.desc && (
+            <p className="key-inspector-desc">
+              {localizedKeycodeDesc(current.desc)}
+            </p>
+          )}
           {remapped && original && (
             <div className="key-inspector-diff">
               <span className="dim">{t('Before')}</span>

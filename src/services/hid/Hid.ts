@@ -160,6 +160,8 @@ export interface IFetchViaProtocolVersionResult extends IResult {
 
 export interface IFetchCustomValueResult extends IResult {
   value?: number;
+  // Raw value data of the reply.
+  bytes?: Uint8Array;
   unhandled?: boolean;
 }
 
@@ -225,13 +227,16 @@ export interface IKeyboard {
   fetchViaProtocolVersion(): Promise<IFetchViaProtocolVersionResult>;
   fetchCustomValue(
     valueId: number,
-    size: 1 | 2
+    size: 1 | 2 | 4,
+    args?: number[]
   ): Promise<IFetchCustomValueResult>;
   updateCustomValue(
     valueId: number,
     value: number,
     size: 1 | 2
   ): Promise<IResult>;
+  // Sends raw value data (e.g. a combo slot).
+  updateCustomBytes(valueId: number, bytes: number[]): Promise<IResult>;
   saveCustomValues(): Promise<IResult>;
 }
 

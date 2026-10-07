@@ -12,14 +12,17 @@ import PointingSettings from '../pointing/PointingSettings.container';
 import { PointingSettingsMode } from '../pointing/PointingSettings';
 import EditorSidebar from '../sidebar/EditorSidebar.container';
 import KeyInspector from '../inspector/KeyInspector.container';
+import Combos from '../combos/Combos';
 import LayerBar, { EditorFooter } from '../layerbar/LayerBar';
+import { OPEN_TOUCHPAD_SETTINGS_EVENT } from '../../../services/pointing/TouchpadLayout';
+import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
 
 type OwnProp = {};
 type RemapPropType = OwnProp &
   Partial<RemapStateType> &
   Partial<RemapActionsType>;
 
-type ConfigureView = 'keymap' | PointingSettingsMode;
+type ConfigureView = 'keymap' | 'combos' | PointingSettingsMode;
 
 type OwnState = {
   minWidth: number;
@@ -43,6 +46,16 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     };
   }
 
+  private readonly openTouchpad = () => this.setState({ view: 'touchpad' });
+
+  componentDidMount() {
+    window.addEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
+  }
+
   componentDidUpdate(prevProps: RemapPropType) {
     if (this.props.keyboardWidth != prevProps.keyboardWidth) {
       this.setState({
@@ -54,7 +67,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
   // Touchpad / Mouse Layer are always listed; each screen checks whether
   // the firmware supports them and offers a preview otherwise.
   private availableViews(): ConfigureView[] {
-    return ['keymap', 'touchpad', 'autoMouse', 'timing'];
+    return ['keymap', 'touchpad', 'autoMouse', 'timing', 'combos', 'leds'];
   }
 
   private onEditLayer(layer: number) {
@@ -92,6 +105,8 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
                   <Keycodes />
                 </div>
               </React.Fragment>
+            ) : view === 'combos' ? (
+              <Combos />
             ) : (
               <PointingSettings
                 mode={view}
@@ -141,7 +156,9 @@ function Desc(props: DescType) {
     const code = info.code;
     const hex = hexadecimal(code);
     const categories = kinds2CategoryLabel(props.value.keymap.kinds);
-    const desc = props.value.keymap.desc ? ': ' + props.value.keymap.desc : '';
+    const desc = props.value.keymap.desc
+      ? ': ' + localizedKeycodeDesc(props.value.keymap.desc)
+      : '';
     const keycodeName = props.value.keymap.keycodeInfo.name.long;
     const label = isAscii ? `ASCII(${keycodeName})` : keycodeName;
     return (

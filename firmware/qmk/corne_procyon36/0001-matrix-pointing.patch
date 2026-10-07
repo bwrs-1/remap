@@ -1,4 +1,4 @@
-From 297f4116a6644beb0cf8c0269a4171dc7dc2b155 Mon Sep 17 00:00:00 2001
+From 3985da984ba4588fdec5599613cb25b12403598b Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
 Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
@@ -19,22 +19,22 @@ Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- keyboards/corne_procyon36/config.h            |  36 ++
+ keyboards/corne_procyon36/config.h            |  46 +
  keyboards/corne_procyon36/digitizer_user.c    |   7 +-
  keyboards/corne_procyon36/keyboard.json       |   2 +-
- .../corne_procyon36/keymaps/default/keymap.c  |  19 +-
- keyboards/corne_procyon36/matrix_pointing.c   | 566 ++++++++++++++++++
- keyboards/corne_procyon36/matrix_pointing.h   |  59 ++
- keyboards/corne_procyon36/rules.mk            |  10 +-
- 7 files changed, 685 insertions(+), 14 deletions(-)
+ .../corne_procyon36/keymaps/default/keymap.c  |  26 +-
+ keyboards/corne_procyon36/matrix_pointing.c   | 950 ++++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.h   |  71 ++
+ keyboards/corne_procyon36/rules.mk            |  11 +-
+ 7 files changed, 1099 insertions(+), 14 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
 diff --git a/keyboards/corne_procyon36/config.h b/keyboards/corne_procyon36/config.h
-index e074887..95fb1dd 100644
+index e074887..240746a 100644
 --- a/keyboards/corne_procyon36/config.h
 +++ b/keyboards/corne_procyon36/config.h
-@@ -81,3 +81,39 @@
+@@ -81,3 +81,49 @@
   * Auto Mouse Layer 設定
   * ============================================================================ */
  #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -48,7 +48,7 @@ index e074887..95fb1dd 100644
 +#define DYNAMIC_KEYMAP_LAYER_COUNT 5
 +
 +/* Matrix エディタからのタッチパッド/マウスレイヤー設定（matrix_pointing.c） */
-+#define EECONFIG_USER_DATA_SIZE 64               // 設定の保存領域（MATRIX_POINTING_EEPROM_SIZE）
++#define EECONFIG_USER_DATA_SIZE 320              // 設定の保存領域（設定 64 + コンボ 16 個 × 16）
 +#define MATRIX_POINTING_DEFAULT_AM_LAYER 4       // オートマウスの初期レイヤー = _MOUSE
 +#define MATRIX_POINTING_DEFAULT_ACCELERATION 0   // 既存の操作感を保つため加速は初期オフ
 +
@@ -74,6 +74,16 @@ index e074887..95fb1dd 100644
 +#define DIGITIZER_SWIPE_RIGHT_KC MATRIX_POINTING_SWIPE_KC(1)
 +#define DIGITIZER_SWIPE_UP_KC MATRIX_POINTING_SWIPE_KC(2)
 +#define DIGITIZER_SWIPE_DOWN_KC MATRIX_POINTING_SWIPE_KC(3)
++
++/* 左右どちらに USB を挿しても、Matrix で変えたタッチパッド設定を右手側（タッチパッド側）へ送る */
++#define MATRIX_POINTING_SPLIT_SYNC
++#define SPLIT_TRANSACTION_IDS_USER MP_SYNC_CONFIG, MP_SYNC_SWIPE
++#define RPC_M2S_BUFFER_SIZE 64
++
++/* Matrix で設定するコンボ（キー位置はレイヤー 0 のキーで判定） */
++#define COMBO_ONLY_FROM_LAYER 0
++#define COMBO_TERM_PER_COMBO
++#define COMBO_SHOULD_TRIGGER
 diff --git a/keyboards/corne_procyon36/digitizer_user.c b/keyboards/corne_procyon36/digitizer_user.c
 index d827269..bf2bf19 100644
 --- a/keyboards/corne_procyon36/digitizer_user.c
@@ -118,7 +128,7 @@ index bcedbf5..ff8fd37 100644
          "device_version": "0.0.1",
          "pid": "0xBFC6",
 diff --git a/keyboards/corne_procyon36/keymaps/default/keymap.c b/keyboards/corne_procyon36/keymaps/default/keymap.c
-index 2784405..92f1ff0 100644
+index 2784405..b110ef8 100644
 --- a/keyboards/corne_procyon36/keymaps/default/keymap.c
 +++ b/keyboards/corne_procyon36/keymaps/default/keymap.c
 @@ -15,6 +15,7 @@
@@ -156,14 +166,22 @@ index 2784405..92f1ff0 100644
      [_LOWER] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
      [_RAISE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
      [_ADJUST] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
-@@ -94,8 +95,12 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+@@ -93,9 +94,20 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+ };
  #endif
  
- void keyboard_post_init_user(void) {
+-void keyboard_post_init_user(void) {
 -#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
 -    set_auto_mouse_layer(_MOUSE);
 -    set_auto_mouse_enable(true);
--#endif
++#ifdef COMBO_ENABLE
++// コンボは Matrix から設定し EEPROM に保存（matrix_pointing.c の combo_count / combo_get）。
++// QMK のビルドに key_combos が必要なため、空の定義だけ置いておく。
++const uint16_t PROGMEM matrix_unused_combo[] = {COMBO_END};
++combo_t                key_combos[]          = {COMBO(matrix_unused_combo, KC_NO)};
+ #endif
++
++void keyboard_post_init_user(void) {
 +    // オートマウス（対象レイヤー・有効/無効など）とタッチパッドの設定を EEPROM から読み込んで適用。
 +    // 初期値の対象レイヤーは config.h の MATRIX_POINTING_DEFAULT_AM_LAYER（_MOUSE）。
 +    matrix_pointing_init();
@@ -175,10 +193,10 @@ index 2784405..92f1ff0 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..c71ae8a
+index 0000000..61486a0
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
-@@ -0,0 +1,566 @@
+@@ -0,0 +1,950 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +// See matrix_pointing.h and README.md next to this file.
 +//
@@ -229,9 +247,9 @@ index 0000000..c71ae8a
 +#endif
 +
 +#define MP_MAGIC 0x4D58 // 'MX'
-+#define MP_VERSION 2
-+// Bytes of mp_config_t that version 1 stored (fields up to am_hold_with_modifiers).
-+#define MP_V1_SIZE 28
++#define MP_VERSION 3
++// Bytes of mp_config_t that earlier versions stored (index = version).
++static const uint8_t mp_version_size[] = {0, 28, 39};
 +
 +// Layout of the persisted settings. Append new fields at the end and bump
 +// MP_VERSION; never reorder (values stored in EEPROM would be misread).
@@ -268,9 +286,14 @@ index 0000000..c71ae8a
 +    uint8_t  hold_mode; // 0: hold preferred, 1: balanced, 2: tap preferred
 +    // 3-finger swipe keycodes: left, right, up, down
 +    uint16_t swipe_kc[4];
++    // --- version 3 ---
++    // LED color per layer (RGB Matrix): 0 = keep the effect, 1 = off,
++    // 2.. = red, green, yellow, blue, magenta, cyan, white
++    uint8_t led_layer_color[8];
 +} mp_config_t;
 +
-+_Static_assert(offsetof(mp_config_t, tapping_term) == MP_V1_SIZE, "version 1 layout changed");
++_Static_assert(offsetof(mp_config_t, tapping_term) == 28, "version 1 layout changed");
++_Static_assert(offsetof(mp_config_t, led_layer_color) == 39, "version 2 layout changed");
 +
 +_Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t does not fit MATRIX_POINTING_EEPROM_SIZE");
 +
@@ -351,6 +374,7 @@ index 0000000..c71ae8a
 +    .tapping_term           = MATRIX_POINTING_DEFAULT_TAPPING_TERM,
 +    .hold_mode              = MATRIX_POINTING_DEFAULT_HOLD_MODE,
 +    .swipe_kc               = {MATRIX_POINTING_DEFAULT_SWIPE_LEFT, MATRIX_POINTING_DEFAULT_SWIPE_RIGHT, MATRIX_POINTING_DEFAULT_SWIPE_UP, MATRIX_POINTING_DEFAULT_SWIPE_DOWN},
++    .led_layer_color        = {0},
 +};
 +
 +static mp_config_t mp_config;
@@ -406,7 +430,63 @@ index 0000000..c71ae8a
 +    MP_FIELD(0x41, swipe_kc[1], 0, 0xFFFF),
 +    MP_FIELD(0x42, swipe_kc[2], 0, 0xFFFF),
 +    MP_FIELD(0x43, swipe_kc[3], 0, 0xFFFF),
++    MP_FIELD(0x50, led_layer_color[0], 0, 8),
++    MP_FIELD(0x51, led_layer_color[1], 0, 8),
++    MP_FIELD(0x52, led_layer_color[2], 0, 8),
++    MP_FIELD(0x53, led_layer_color[3], 0, 8),
++    MP_FIELD(0x54, led_layer_color[4], 0, 8),
++    MP_FIELD(0x55, led_layer_color[5], 0, 8),
++    MP_FIELD(0x56, led_layer_color[6], 0, 8),
++    MP_FIELD(0x57, led_layer_color[7], 0, 8),
 +};
++
++// Read-only value 0x7E: which settings this build actually applies. Bit n
++// of the low word = value ID n + 1 (touchpad 0x01..0x0F); the high word:
++// bit 0 timing (0x30/0x31), bit 1 swipes (0x40..), bit 2 layer LEDs
++// (0x50..), bit 3 combos (0x60/0x61). Older firmware answers id_unhandled:
++// the editor then assumes everything is applied.
++#define MP_CAPABILITIES_VALUE_ID 0x7E
++#define MP_CAP(id) (1UL << ((id) - 1))
++static uint32_t mp_capabilities(void) {
++    uint32_t caps = 0;
++#ifdef POINTING_DEVICE_ENABLE
++    // Applied by this module's report transform / QMK's CPI setting.
++    caps |= MP_CAP(0x01) | MP_CAP(0x02) | MP_CAP(0x04) | MP_CAP(0x05) | MP_CAP(0x06) | MP_CAP(0x0C) | MP_CAP(0x0D) | MP_CAP(0x0E);
++#endif
++#ifdef POINTING_DEVICE_DRIVER_digitizer
++    caps |= MP_CAP(0x08) | MP_CAP(0x09); // filtered in matrix_pointing_task()
++#    ifdef DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT
++    caps |= MP_CAP(0x07) | MP_CAP(0x0A); // through matrix_pointing_tap_term()
++#    endif
++#endif
++#ifdef MP_CIRQUE
++#    ifdef POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE
++    caps |= MP_CAP(0x03);
++#    endif
++#    if defined(CIRQUE_PINNACLE_TAP_ENABLE) && CIRQUE_PINNACLE_POSITION_MODE
++    caps |= MP_CAP(0x07);
++#    endif
++#    ifdef CIRQUE_PINNACLE_CIRCULAR_SCROLL_ENABLE
++    caps |= MP_CAP(0x0B);
++#    endif
++#endif
++#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
++    caps |= 0x8000; // marks that the auto mouse layer exists (not a touchpad ID)
++#endif
++#if defined(TAPPING_TERM_PER_KEY) && !defined(MATRIX_POINTING_NO_TAPPING_HOOKS)
++    caps |= 1UL << 16;
++#endif
++#ifdef DIGITIZER_SWIPE_LEFT_KC
++    caps |= 1UL << 17;
++#endif
++#if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK)
++    caps |= 1UL << 18;
++#endif
++#if defined(COMBO_ENABLE) && !defined(MATRIX_POINTING_NO_COMBOS)
++    caps |= 1UL << 19;
++#endif
++    return caps;
++}
 +
 +static const mp_field_t *mp_find_field(uint8_t id) {
 +    for (uint8_t i = 0; i < ARRAY_SIZE(mp_fields); i++) {
@@ -473,20 +553,27 @@ index 0000000..c71ae8a
 +#endif
 +}
 +
++static void mp_combos_load(void);
++static void mp_combos_clear(void);
++static void mp_split_register(void);
++static void mp_config_changed(void);
++
 +static void mp_load(void) {
 +    mp_loaded = true;
 +    MP_EEPROM_READ(mp_config);
-+    if (mp_config.version == 1) {
-+        // Keep the version 1 settings; new fields get their defaults.
++    if (mp_config.version >= 1 && mp_config.version < MP_VERSION) {
++        // Keep the settings of the older version; new fields get defaults.
 +        mp_config_t migrated = mp_defaults;
-+        memcpy(&migrated, &mp_config, MP_V1_SIZE);
++        memcpy(&migrated, &mp_config, mp_version_size[mp_config.version]);
 +        migrated.version = MP_VERSION;
 +        mp_config        = migrated;
 +        MP_EEPROM_WRITE(mp_config);
 +    } else if (mp_config.version != MP_VERSION) {
 +        mp_config = mp_defaults;
 +        MP_EEPROM_WRITE(mp_config);
++        mp_combos_clear();
 +    }
++    mp_combos_load();
 +    // Re-clamp everything in case the stored bytes are out of range.
 +    for (uint8_t i = 0; i < ARRAY_SIZE(mp_fields); i++) {
 +        mp_write_field(&mp_fields[i], mp_read_field(&mp_fields[i]));
@@ -500,7 +587,9 @@ index 0000000..c71ae8a
 +
 +uint16_t matrix_pointing_tap_term(void) {
 +    mp_ensure_loaded();
-+    return mp_config.tap_term;
++    // With tap-to-click off no touch is short enough to count as a tap, so
++    // the digitizer fallback never sends tap clicks (or tap-and-drag).
++    return mp_config.tap_to_click ? mp_config.tap_term : 0;
 +}
 +
 +uint16_t matrix_pointing_get_cpi(void) {
@@ -511,6 +600,7 @@ index 0000000..c71ae8a
 +void matrix_pointing_init(void) {
 +    mp_load();
 +    mp_apply();
++    mp_split_register();
 +}
 +
 +// ---------------------------------------------------------------------------
@@ -552,17 +642,293 @@ index 0000000..c71ae8a
 +// header. Sends the configured keycode (basic keycode with modifiers) and
 +// returns KC_NO, so the fork's own tap_code() does nothing.
 +
-+uint8_t matrix_pointing_swipe(uint8_t direction) {
-+    mp_ensure_loaded();
-+    if (direction >= ARRAY_SIZE(mp_config.swipe_kc)) return KC_NO;
++static void mp_send_swipe(uint8_t direction) {
++    if (direction >= ARRAY_SIZE(mp_config.swipe_kc)) return;
 +    const uint16_t keycode = mp_config.swipe_kc[direction];
 +    if (keycode != KC_NO && keycode <= QK_MODS_MAX) tap_code16(keycode);
++}
++
++#if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++static volatile uint8_t mp_pending_swipe = 0; // direction + 1, on the target half
++#endif
++
++uint8_t matrix_pointing_swipe(uint8_t direction) {
++    mp_ensure_loaded();
++#if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++    // Keys tapped on the half without USB never reach the host: hand the
++    // swipe to the master (polled in matrix_pointing_housekeeping()).
++    if (!is_keyboard_master()) {
++        if (direction < ARRAY_SIZE(mp_config.swipe_kc)) mp_pending_swipe = direction + 1;
++        return KC_NO;
++    }
++#endif
++    mp_send_swipe(direction);
 +    return KC_NO;
 +}
 +
 +// ---------------------------------------------------------------------------
++// Split keyboards: the touchpad's gestures run on the half it is wired to.
++// When USB is on the other half, settings changed from the editor only reach
++// the master, so the master sends them over (and collects swipes).
++//
++// config.h:
++//   #define MATRIX_POINTING_SPLIT_SYNC
++//   #define SPLIT_TRANSACTION_IDS_USER MP_SYNC_CONFIG, MP_SYNC_SWIPE
++//   #define RPC_M2S_BUFFER_SIZE 64
++
++#if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++#    include "transactions.h"
++_Static_assert(sizeof(mp_config_t) <= RPC_M2S_BUFFER_SIZE, "Set RPC_M2S_BUFFER_SIZE to at least 64 in config.h");
++
++static uint8_t  mp_generation        = 1;
++static uint8_t  mp_synced_generation = 0;
++static uint16_t mp_last_sync         = 0;
++
++static void mp_config_changed(void) {
++    mp_generation++;
++}
++
++static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
++    if (in_len < sizeof(mp_config_t)) return;
++    memcpy(&mp_config, in, sizeof(mp_config_t));
++    mp_loaded = true;
++#    ifdef POINTING_DEVICE_DRIVER_digitizer
++    extern bool digitizer_taps_as_clicks;
++    digitizer_taps_as_clicks = mp_config.tap_to_click;
++#    endif
++}
++
++static void mp_sync_swipe_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
++    if (out_len < 1) return;
++    ((uint8_t *)out)[0] = mp_pending_swipe;
++    mp_pending_swipe    = 0;
++}
++
++static void mp_split_register(void) {
++    transaction_register_rpc(MP_SYNC_CONFIG, mp_sync_config_slave);
++    transaction_register_rpc(MP_SYNC_SWIPE, mp_sync_swipe_slave);
++}
++
++void matrix_pointing_housekeeping(void) {
++    if (!is_keyboard_master()) return;
++    mp_ensure_loaded();
++    // Send on change, and every 2 s in case the other half restarted.
++    if (mp_synced_generation != mp_generation || timer_elapsed(mp_last_sync) > 2000) {
++        mp_last_sync = timer_read();
++        if (transaction_rpc_send(MP_SYNC_CONFIG, sizeof(mp_config_t), &mp_config)) {
++            mp_synced_generation = mp_generation;
++        }
++    }
++    static uint16_t last_poll = 0;
++    if (timer_elapsed(last_poll) >= 20) {
++        last_poll         = timer_read();
++        uint8_t direction = 0;
++        if (transaction_rpc_recv(MP_SYNC_SWIPE, sizeof(direction), &direction) && direction) {
++            mp_send_swipe(direction - 1);
++        }
++    }
++}
++#else
++static void mp_config_changed(void) {}
++static void mp_split_register(void) {}
++void        matrix_pointing_housekeeping(void) {}
++#endif
++
++#ifndef MATRIX_POINTING_NO_HOUSEKEEPING
++void housekeeping_task_user(void) {
++    matrix_pointing_housekeeping();
++}
++#endif
++
++// ---------------------------------------------------------------------------
++// LED color per layer (RGB Matrix)
++
++#if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK)
++// Index 2.. of led_layer_color: hue / saturation (QMK HSV).
++static const uint8_t mp_led_hs[][2] = {
++    {0, 255},   // red
++    {85, 255},  // green
++    {43, 255},  // yellow
++    {170, 255}, // blue
++    {213, 255}, // magenta
++    {128, 255}, // cyan
++    {0, 0},     // white
++};
++
++bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max) {
++    mp_ensure_loaded();
++    const uint8_t layer = get_highest_layer(layer_state | default_layer_state);
++    if (layer >= ARRAY_SIZE(mp_config.led_layer_color)) return true;
++    const uint8_t color = mp_config.led_layer_color[layer];
++    if (color == 0) return true; // keep the running effect
++    rgb_t rgb = {0, 0, 0};
++    if (color >= 2 && color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
++        hsv_t hsv = {mp_led_hs[color - 2][0], mp_led_hs[color - 2][1], rgb_matrix_get_val()};
++        rgb       = hsv_to_rgb(hsv);
++    }
++    for (uint8_t i = led_min; i < led_max; i++) {
++        rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
++    }
++    return false;
++}
++
++bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
++    return matrix_pointing_rgb_indicators(led_min, led_max);
++}
++#endif
++
++// ---------------------------------------------------------------------------
++// Combos stored in EEPROM, after the settings. Combos match the keycodes of
++// layer 0 at the pressed positions (COMBO_ONLY_FROM_LAYER 0), so the editor
++// can define them by key position.
++//
++// Value 0x60 (read): number of combo slots.
++// Value 0x61: data[0] = slot; data[1..16] = keys[4], keycode, term (ms),
++// all 16-bit big endian, then the layer mask (bit n = layer n, 0 = all).
++
++#define MP_COMBO_KEYS 4
++typedef struct __attribute__((packed)) {
++    uint16_t keys[MP_COMBO_KEYS]; // KC_NO for unused
++    uint16_t keycode;
++    uint16_t term; // 0 = COMBO_TERM
++    uint8_t  layers;
++    uint8_t  reserved[3];
++} mp_combo_entry_t;
++_Static_assert(sizeof(mp_combo_entry_t) == 16, "combo entry size");
++
++#if defined(COMBO_ENABLE) && !defined(MATRIX_POINTING_NO_COMBOS)
++#    ifndef MATRIX_POINTING_COMBO_COUNT
++#        define MATRIX_POINTING_COMBO_COUNT 16
++#    endif
++#    define MP_COMBO_EEPROM_OFFSET (MATRIX_POINTING_EEPROM_OFFSET + MATRIX_POINTING_EEPROM_SIZE)
++#    if (EECONFIG_USER_DATA_SIZE) < (MATRIX_POINTING_EEPROM_OFFSET + MATRIX_POINTING_EEPROM_SIZE + MATRIX_POINTING_COMBO_COUNT * 16)
++#        error "Set EECONFIG_USER_DATA_SIZE to MATRIX_POINTING_EEPROM_SIZE + MATRIX_POINTING_COMBO_COUNT * 16 (default 64 + 256 = 320)"
++#    endif
++#    ifndef eeconfig_read_user_datablock_field
++#        error "Combos stored by matrix_pointing need the newer QMK datablock API"
++#    endif
++#    ifndef COMBO_ONLY_FROM_LAYER
++#        error "Define COMBO_ONLY_FROM_LAYER 0 in config.h (combos are set by key position on layer 0)"
++#    endif
++
++static mp_combo_entry_t mp_combo_entries[MATRIX_POINTING_COMBO_COUNT];
++static uint16_t         mp_combo_keys[MATRIX_POINTING_COMBO_COUNT][MP_COMBO_KEYS + 1];
++static combo_t          mp_combos[MATRIX_POINTING_COMBO_COUNT];
++static bool             mp_combos_dirty = false;
++
++static void mp_combo_build(uint8_t i) {
++    uint8_t n = 0;
++    for (uint8_t k = 0; k < MP_COMBO_KEYS; k++) {
++        if (mp_combo_entries[i].keys[k] != KC_NO) mp_combo_keys[i][n++] = mp_combo_entries[i].keys[k];
++    }
++    for (uint8_t k = n; k <= MP_COMBO_KEYS; k++) mp_combo_keys[i][k] = COMBO_END;
++    memset(&mp_combos[i], 0, sizeof(combo_t));
++    mp_combos[i].keys    = mp_combo_keys[i];
++    mp_combos[i].keycode = mp_combo_entries[i].keycode;
++    // A combo needs at least two keys and an output.
++    mp_combos[i].disabled = n < 2 || mp_combo_entries[i].keycode == KC_NO;
++}
++
++static void mp_combos_load(void) {
++    eeconfig_read_user_datablock(mp_combo_entries, MP_COMBO_EEPROM_OFFSET, sizeof(mp_combo_entries));
++    for (uint8_t i = 0; i < MATRIX_POINTING_COMBO_COUNT; i++) mp_combo_build(i);
++}
++
++static void mp_combos_clear(void) {
++    memset(mp_combo_entries, 0, sizeof(mp_combo_entries));
++    eeconfig_update_user_datablock(mp_combo_entries, MP_COMBO_EEPROM_OFFSET, sizeof(mp_combo_entries));
++}
++
++static void mp_combos_save(void) {
++    if (!mp_combos_dirty) return;
++    mp_combos_dirty = false;
++    eeconfig_update_user_datablock(mp_combo_entries, MP_COMBO_EEPROM_OFFSET, sizeof(mp_combo_entries));
++}
++
++static void mp_put16(uint8_t *p, uint16_t v) {
++    p[0] = v >> 8;
++    p[1] = v & 0xFF;
++}
++static uint16_t mp_get16(const uint8_t *p) {
++    return (uint16_t)((p[0] << 8) | p[1]);
++}
++
++static bool mp_combo_get_value(uint8_t value_id, uint8_t *data, uint8_t length) {
++    if (value_id == 0x60) {
++        data[0] = MATRIX_POINTING_COMBO_COUNT;
++        return true;
++    }
++    if (value_id != 0x61 || length < 17) return false;
++    const uint8_t i = data[0];
++    memset(data + 1, 0, 16);
++    if (i >= MATRIX_POINTING_COMBO_COUNT) return true;
++    const mp_combo_entry_t *e = &mp_combo_entries[i];
++    for (uint8_t k = 0; k < MP_COMBO_KEYS; k++) mp_put16(data + 1 + k * 2, e->keys[k]);
++    mp_put16(data + 9, e->keycode);
++    mp_put16(data + 11, e->term);
++    data[13] = e->layers;
++    return true;
++}
++
++static bool mp_combo_set_value(uint8_t value_id, const uint8_t *data, uint8_t length) {
++    if (value_id != 0x61) return false;
++    if (length < 14 || data[0] >= MATRIX_POINTING_COMBO_COUNT) return true;
++    const uint8_t     i = data[0];
++    mp_combo_entry_t *e = &mp_combo_entries[i];
++    memset(e, 0, sizeof(*e));
++    for (uint8_t k = 0; k < MP_COMBO_KEYS; k++) e->keys[k] = mp_get16(data + 1 + k * 2);
++    e->keycode = mp_get16(data + 9);
++    e->term    = mp_get16(data + 11);
++    if (e->term > 1000) e->term = 1000;
++    e->layers = data[13];
++    mp_combo_build(i);
++    mp_combos_dirty = true;
++    return true;
++}
++
++uint16_t combo_count(void) {
++    return MATRIX_POINTING_COMBO_COUNT;
++}
++
++combo_t *combo_get(uint16_t combo_idx) {
++    return combo_idx < MATRIX_POINTING_COMBO_COUNT ? &mp_combos[combo_idx] : NULL;
++}
++
++#    ifdef COMBO_TERM_PER_COMBO
++uint16_t get_combo_term(uint16_t combo_index, combo_t *combo) {
++    const uint16_t term = combo_index < MATRIX_POINTING_COMBO_COUNT ? mp_combo_entries[combo_index].term : 0;
++    return term ? term : COMBO_TERM;
++}
++#    endif
++
++#    ifdef COMBO_SHOULD_TRIGGER
++bool combo_should_trigger(uint16_t combo_index, combo_t *combo, uint16_t keycode, keyrecord_t *record) {
++    if (combo_index >= MATRIX_POINTING_COMBO_COUNT) return true;
++    const uint8_t mask = mp_combo_entries[combo_index].layers;
++    if (mask == 0) return true;
++    const uint8_t layer = get_highest_layer(layer_state | default_layer_state);
++    return layer < 8 && (mask & (1 << layer));
++}
++#    endif
++#else
++static void mp_combos_load(void) {}
++static void mp_combos_clear(void) {}
++static void mp_combos_save(void) {}
++static bool mp_combo_get_value(uint8_t value_id, uint8_t *data, uint8_t length) {
++    return false;
++}
++static bool mp_combo_set_value(uint8_t value_id, const uint8_t *data, uint8_t length) {
++    return false;
++}
++#endif
++
++// ---------------------------------------------------------------------------
 +// VIA custom channel (channel 0)
 +// data = [ command_id, channel_id, value_id, value_data... ]
++
++static bool mp_combo_get_value(uint8_t value_id, uint8_t *data, uint8_t length);
++static bool mp_combo_set_value(uint8_t value_id, const uint8_t *data, uint8_t length);
++static void mp_combos_save(void);
 +
 +#ifndef MATRIX_POINTING_NO_VIA_HOOK
 +void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -583,6 +949,15 @@ index 0000000..c71ae8a
 +                value_data[1] = MP_MAGIC & 0xFF;
 +                return;
 +            }
++            if (*value_id == MP_CAPABILITIES_VALUE_ID) {
++                const uint32_t caps = mp_capabilities();
++                value_data[0]       = caps >> 24;
++                value_data[1]       = caps >> 16;
++                value_data[2]       = caps >> 8;
++                value_data[3]       = caps & 0xFF;
++                return;
++            }
++            if (mp_combo_get_value(*value_id, value_data, length - 3)) return;
 +            const mp_field_t *field = mp_find_field(*value_id);
 +            if (field == NULL) {
 +                *command_id = id_unhandled;
@@ -598,6 +973,7 @@ index 0000000..c71ae8a
 +            return;
 +        }
 +        case id_custom_set_value: {
++            if (mp_combo_set_value(*value_id, value_data, length - 3)) return;
 +            if (*value_id == MP_BOOTLOADER_VALUE_ID) {
 +                // Reply first; the reboot happens shortly after in
 +                // matrix_pointing_task() so the editor gets the echo.
@@ -613,10 +989,12 @@ index 0000000..c71ae8a
 +            uint16_t value = field->size == 2 ? (uint16_t)((value_data[0] << 8) | value_data[1]) : value_data[0];
 +            mp_write_field(field, value);
 +            mp_apply();
++            mp_config_changed();
 +            return;
 +        }
 +        case id_custom_save:
 +            MP_EEPROM_WRITE(mp_config);
++            mp_combos_save();
 +            return;
 +        default:
 +            *command_id = id_unhandled;
@@ -650,9 +1028,33 @@ index 0000000..c71ae8a
 +    return (mouse_hv_report_t)v;
 +}
 +
++// Digitizer fallback: taps arrive as short button pulses, tap-and-drag as a
++// held button 1. Filter what the editor turned off.
++#ifndef MP_DRAG_HOLD_MS
++#    define MP_DRAG_HOLD_MS 80
++#endif
++static uint8_t mp_filter_buttons(uint8_t buttons) {
++#ifdef POINTING_DEVICE_DRIVER_digitizer
++    static bool     held      = false;
++    static uint16_t held_time = 0;
++    if (!mp_config.two_finger_tap) buttons &= ~0x02;
++    if (buttons & 0x01) {
++        if (!held) {
++            held      = true;
++            held_time = timer_read();
++        }
++        if (!mp_config.tap_drag && timer_elapsed(held_time) > MP_DRAG_HOLD_MS) buttons &= ~0x01;
++    } else {
++        held = false;
++    }
++#endif
++    return buttons;
++}
++
 +report_mouse_t matrix_pointing_task(report_mouse_t r) {
 +    mp_ensure_loaded();
 +    mp_bootloader_check();
++    r.buttons = mp_filter_buttons(r.buttons);
 +    int32_t x = r.x;
 +    int32_t y = r.y;
 +
@@ -747,10 +1149,10 @@ index 0000000..c71ae8a
 +#endif // POINTING_DEVICE_AUTO_MOUSE_ENABLE
 diff --git a/keyboards/corne_procyon36/matrix_pointing.h b/keyboards/corne_procyon36/matrix_pointing.h
 new file mode 100644
-index 0000000..8b0fb43
+index 0000000..5523978
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.h
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,71 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +//
 +// Implements the protocol the Matrix editor uses on the VIA custom channel
@@ -810,8 +1212,20 @@ index 0000000..8b0fb43
 +//   #define DIGITIZER_SWIPE_UP_KC    MATRIX_POINTING_SWIPE_KC(2)
 +//   #define DIGITIZER_SWIPE_DOWN_KC  MATRIX_POINTING_SWIPE_KC(3)
 +uint8_t matrix_pointing_swipe(uint8_t direction);
++
++// Call from housekeeping_task_user() if you define it yourself (then define
++// MATRIX_POINTING_NO_HOUSEKEEPING). Syncs settings to the other half of a
++// split keyboard (MATRIX_POINTING_SPLIT_SYNC) and collects its swipes.
++void matrix_pointing_housekeeping(void);
++
++#ifdef RGB_MATRIX_ENABLE
++// Paints the LED color of the active layer; returns false when it did.
++// Called from rgb_matrix_indicators_advanced_user() (this module defines it
++// unless MATRIX_POINTING_NO_LED_HOOK).
++bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max);
++#endif
 diff --git a/keyboards/corne_procyon36/rules.mk b/keyboards/corne_procyon36/rules.mk
-index b8c04b6..a48f630 100644
+index b8c04b6..48b3b70 100644
 --- a/keyboards/corne_procyon36/rules.mk
 +++ b/keyboards/corne_procyon36/rules.mk
 @@ -10,9 +10,10 @@
@@ -828,13 +1242,14 @@ index b8c04b6..a48f630 100644
  
  # ============================================================================
  # デバッグ設定
-@@ -24,4 +25,5 @@ DEBUG_ENABLE = yes                        # dprintf/uprintf を有効化（デ
+@@ -24,4 +25,6 @@ DEBUG_ENABLE = yes                        # dprintf/uprintf を有効化（デ
  # ============================================================================
  # ソースファイル
  # ============================================================================
 -SRC += digitizer_user.c                   # カスタムデジタイザー処理を追加
 \ No newline at end of file
 +SRC += digitizer_user.c                   # カスタムデジタイザー処理を追加
++COMBO_ENABLE = yes                        # Matrix で設定するコンボ
 +SRC += matrix_pointing.c                   # Matrix エディタのタッチパッド/マウスレイヤー設定（VIA カスタム値）
 -- 
 2.43.0
