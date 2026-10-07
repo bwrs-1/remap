@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import i18next from 'i18next';
+import { beforeAll, vi } from 'vitest';
 import PointingSettings from './PointingSettings';
 import { mockIKeyboad } from '../../../services/hid/Hid.mock';
 import { IKeyboard } from '../../../services/hid/Hid';
