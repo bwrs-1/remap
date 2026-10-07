@@ -20,6 +20,33 @@
 #    error "Set EECONFIG_USER_DATA_SIZE to at least MATRIX_POINTING_EEPROM_SIZE in config.h"
 #endif
 
+// QMK changed the user datablock API: newer versions take (data, offset,
+// length) and define eeconfig_read_user_datablock_field; older ones read and
+// write the whole block with (data) only.
+#ifdef eeconfig_read_user_datablock_field
+#    define MP_EEPROM_READ(cfg) eeconfig_read_user_datablock(&(cfg), MATRIX_POINTING_EEPROM_OFFSET, sizeof(cfg))
+#    define MP_EEPROM_WRITE(cfg) eeconfig_update_user_datablock(&(cfg), MATRIX_POINTING_EEPROM_OFFSET, sizeof(cfg))
+#else
+#    if MATRIX_POINTING_EEPROM_OFFSET != 0
+#        error "MATRIX_POINTING_EEPROM_OFFSET needs the newer QMK datablock API"
+#    endif
+// The legacy API always copies the whole EECONFIG_USER_DATA_SIZE block, so go
+// through a buffer of that size (mp_config_t may be smaller).
+#    define MP_EEPROM_READ(cfg)                                 \
+        do {                                                    \
+            uint8_t mp_buf[EECONFIG_USER_DATA_SIZE];            \
+            eeconfig_read_user_datablock(mp_buf);               \
+            memcpy(&(cfg), mp_buf, sizeof(cfg));                \
+        } while (0)
+#    define MP_EEPROM_WRITE(cfg)                                \
+        do {                                                    \
+            uint8_t mp_buf[EECONFIG_USER_DATA_SIZE];            \
+            eeconfig_read_user_datablock(mp_buf);               \
+            memcpy(mp_buf, &(cfg), sizeof(cfg));                \
+            eeconfig_update_user_datablock(mp_buf);             \
+        } while (0)
+#endif
+
 #define MP_MAGIC 0x4D58 // 'MX'
 #define MP_VERSION 1
 
@@ -56,11 +83,19 @@ typedef struct __attribute__((packed)) {
 
 _Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t does not fit MATRIX_POINTING_EEPROM_SIZE");
 
-// Defaults match the Matrix editor's defaults.
+#ifndef MATRIX_POINTING_DEFAULT_ACCELERATION
+#    define MATRIX_POINTING_DEFAULT_ACCELERATION 1
+#endif
+#ifndef MATRIX_POINTING_DEFAULT_AM_LAYER
+#    define MATRIX_POINTING_DEFAULT_AM_LAYER 3
+#endif
+
+// Defaults match the Matrix editor's defaults (the auto mouse layer can be
+// set per keyboard with MATRIX_POINTING_DEFAULT_AM_LAYER).
 static const mp_config_t mp_defaults = {
     .version                = MP_VERSION,
     .cpi                    = 1600,
-    .acceleration           = 1,
+    .acceleration           = MATRIX_POINTING_DEFAULT_ACCELERATION,
     .glide                  = 0,
     .rotation               = 0,
     .invert_x               = 0,
@@ -75,7 +110,7 @@ static const mp_config_t mp_defaults = {
     .horizontal_scroll      = 1,
     .sensitivity            = 1,
     .am_enabled             = 1,
-    .am_layer               = 3,
+    .am_layer               = MATRIX_POINTING_DEFAULT_AM_LAYER,
     .am_threshold           = 10,
     .am_timeout             = 650,
     .am_activation_delay    = 200,
@@ -85,6 +120,7 @@ static const mp_config_t mp_defaults = {
 };
 
 static mp_config_t mp_config;
+static bool        mp_loaded = false;
 
 // Value IDs on the VIA custom channel. Must match the editor
 // (src/services/pointing/PointingSettings.ts).
@@ -172,22 +208,38 @@ static void mp_apply(void) {
 #endif
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
     set_auto_mouse_layer(mp_config.am_layer);
+#    ifndef MATRIX_POINTING_LEGACY_AUTO_MOUSE
+    // Older QMK has no runtime setters for these (AUTO_MOUSE_TIME /
+    // AUTO_MOUSE_DEBOUNCE are compile-time there): define
+    // MATRIX_POINTING_LEGACY_AUTO_MOUSE if the build cannot find them.
     set_auto_mouse_timeout(mp_config.am_timeout);
     set_auto_mouse_debounce(mp_config.am_debounce);
+#    endif
     set_auto_mouse_enable(mp_config.am_enabled);
 #endif
 }
 
 static void mp_load(void) {
-    eeconfig_read_user_datablock(&mp_config, MATRIX_POINTING_EEPROM_OFFSET, sizeof(mp_config));
+    mp_loaded = true;
+    MP_EEPROM_READ(mp_config);
     if (mp_config.version != MP_VERSION) {
         mp_config = mp_defaults;
-        eeconfig_update_user_datablock(&mp_config, MATRIX_POINTING_EEPROM_OFFSET, sizeof(mp_config));
+        MP_EEPROM_WRITE(mp_config);
     }
     // Re-clamp everything in case the stored bytes are out of range.
     for (uint8_t i = 0; i < ARRAY_SIZE(mp_fields); i++) {
         mp_write_field(&mp_fields[i], mp_read_field(&mp_fields[i]));
     }
+}
+
+// Drivers may ask for settings before keyboard_post_init_user() runs.
+static void mp_ensure_loaded(void) {
+    if (!mp_loaded) mp_load();
+}
+
+uint16_t matrix_pointing_get_cpi(void) {
+    mp_ensure_loaded();
+    return mp_config.cpi;
 }
 
 void matrix_pointing_init(void) {
@@ -244,7 +296,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
             return;
         }
         case id_custom_save:
-            eeconfig_update_user_datablock(&mp_config, MATRIX_POINTING_EEPROM_OFFSET, sizeof(mp_config));
+            MP_EEPROM_WRITE(mp_config);
             return;
         default:
             *command_id = id_unhandled;
@@ -272,6 +324,7 @@ static mouse_hv_report_t mp_clamp_hv(int32_t v) {
 }
 
 report_mouse_t matrix_pointing_task(report_mouse_t r) {
+    mp_ensure_loaded();
     int32_t x = r.x;
     int32_t y = r.y;
 

@@ -22,6 +22,9 @@
 // Call from keyboard_post_init_user().
 void matrix_pointing_init(void);
 
+// Current CPI setting, e.g. for digitizer_get_cpi_user().
+uint16_t matrix_pointing_get_cpi(void);
+
 // Call from pointing_device_task_user(); returns the transformed report.
 report_mouse_t matrix_pointing_task(report_mouse_t mouse_report);
 
