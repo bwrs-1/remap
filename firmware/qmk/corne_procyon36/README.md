@@ -1,5 +1,12 @@
 # Corne Procyon36（Dilemma_3X6）への組み込み
 
+> **ビルド済みファームウェア**: Matrix の「ファームウェアを書き込む」→
+> 「Matrix 対応ファームウェアを使う」で、このパッチを当ててビルドした `.uf2` をそのまま書き込めます
+> （`public/firmware/corne_procyon36_matrix.uf2`）。
+>
+> ビルド環境: [george-norton/qmk_firmware](https://github.com/george-norton/qmk_firmware) `multitouch_experiment`
+> （コミット `7744c90`）+ arm-none-eabi-gcc 13.2.1。公式 QMK には `digitizer` ドライバがないためビルドできません。
+
 `bwrs-1/qmk_firmware_corne_procyon`（ブランチ `corne_procyon_dev`、コミット `4e12844`）の
 `keyboards/corne_procyon36` に Matrix のタッチパッド／マウスレイヤー設定を組み込むパッチです。
 

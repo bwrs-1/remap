@@ -325,7 +325,12 @@ export default function PointingSettings(props: PointingSettingsProps) {
     const result = await applySettings(props.keyboard!, defs, stored, values);
     setSaving(false);
     if (result.success) {
-      setStored({ ...values });
+      // Read back: the firmware may clamp values to its own range
+      // (e.g. the digitizer driver limits CPI to 1200).
+      const reread = await fetchSettings(props.keyboard!, defs);
+      const actual = reread.success ? reread.values! : { ...values };
+      setStored(actual);
+      setValues(actual);
       props.notifySuccess!(t('Saved the settings to the keyboard'));
     } else {
       props.notifyError!(

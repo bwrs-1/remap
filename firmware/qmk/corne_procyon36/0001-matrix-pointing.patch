@@ -1,37 +1,40 @@
-From 701939933564078a6c89e573a572b834cd48445a Mon Sep 17 00:00:00 2001
+From 4342784b10b205d6eceb4baff85c0ad7e1c58c3e Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
-Subject: [PATCH] Add Matrix editor support (touchpad / auto mouse settings
- over VIA)
+Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
+ QMK fork
 
 - matrix_pointing.c/.h: answer the Matrix editor on the VIA custom
   channel, keep the settings in the user EEPROM datablock and apply them
-  (CPI, rotation / inversion, acceleration, scroll, auto mouse layer).
-- digitizer_user.c: CPI comes from the saved setting (default 1600 as
-  before); the Matrix transform runs after the existing smoothing.
-- keymap.c: load the settings at startup (auto mouse layer defaults to
-  _MOUSE as before) and track key presses for the post-typing delay.
+  (CPI, tap-to-click, tap term, rotation / inversion, acceleration,
+  scroll, auto mouse layer) and reboot into BOOTSEL on request.
 - config.h: DYNAMIC_KEYMAP_LAYER_COUNT 5 so the _MOUSE layer (layer 4) is
-  part of the VIA keymap; with the default of 4 every key on it reads as
-  KC_NO, which disables the keyboard while the auto mouse layer is on.
+  part of the VIA keymap (the fork refuses to build with the default 4);
+  wire DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT to the Matrix tap term.
+- Build fixes for george-norton/qmk_firmware multitouch_experiment:
+  use the fork's maxtouch driver (DIGITIZER_DRIVER = maxtouch) instead of
+  the stale local copy, no comment after POINTING_DEVICE_DRIVER (the fork
+  compares it without stripping whitespace), non-empty "url" in
+  keyboard.json, current RGB / mouse keycode names.
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- keyboards/corne_procyon36/config.h            |  13 +
+ keyboards/corne_procyon36/config.h            |  24 +
  keyboards/corne_procyon36/digitizer_user.c    |   7 +-
- .../corne_procyon36/keymaps/default/keymap.c  |  13 +-
- keyboards/corne_procyon36/matrix_pointing.c   | 441 ++++++++++++++++++
- keyboards/corne_procyon36/matrix_pointing.h   |  37 ++
- keyboards/corne_procyon36/rules.mk            |   3 +-
- 6 files changed, 507 insertions(+), 7 deletions(-)
+ keyboards/corne_procyon36/keyboard.json       |   2 +-
+ .../corne_procyon36/keymaps/default/keymap.c  |  19 +-
+ keyboards/corne_procyon36/matrix_pointing.c   | 467 ++++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.h   |  41 ++
+ keyboards/corne_procyon36/rules.mk            |  10 +-
+ 7 files changed, 556 insertions(+), 14 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
 diff --git a/keyboards/corne_procyon36/config.h b/keyboards/corne_procyon36/config.h
-index e074887..886cf0f 100644
+index e074887..b426053 100644
 --- a/keyboards/corne_procyon36/config.h
 +++ b/keyboards/corne_procyon36/config.h
-@@ -81,3 +81,16 @@
+@@ -81,3 +81,27 @@
   * Auto Mouse Layer 設定
   * ============================================================================ */
  #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -48,6 +51,17 @@ index e074887..886cf0f 100644
 +#define EECONFIG_USER_DATA_SIZE 32               // 設定の保存領域
 +#define MATRIX_POINTING_DEFAULT_AM_LAYER 4       // オートマウスの初期レイヤー = _MOUSE
 +#define MATRIX_POINTING_DEFAULT_ACCELERATION 0   // 既存の操作感を保つため加速は初期オフ
++
++/* マルチタッチ版 QMK（george-norton/qmk_firmware multitouch_experiment）の digitizer ドライバ向け */
++#define MATRIX_POINTING_CPI_MIN 50                // ドライバの CPI 範囲（DIGITIZER_MIN_CPI〜MAX_CPI）
++#define MATRIX_POINTING_CPI_MAX 1200
++#define MATRIX_POINTING_DEFAULT_CPI 1200          // センサー等倍（ドライバ既定の 400 は遅いため）
++#define MATRIX_POINTING_DEFAULT_TAP_TERM 150      // ドライバ既定のタップ判定時間と同じ
++#ifndef __ASSEMBLER__
++#    include <stdint.h>
++uint16_t matrix_pointing_tap_term(void);
++#endif
++#define DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT matrix_pointing_tap_term()  // タップ判定時間を Matrix から変更
 diff --git a/keyboards/corne_procyon36/digitizer_user.c b/keyboards/corne_procyon36/digitizer_user.c
 index d827269..bf2bf19 100644
 --- a/keyboards/corne_procyon36/digitizer_user.c
@@ -78,8 +92,21 @@ index d827269..bf2bf19 100644
 +    // Matrix エディタの設定（回転・反転・加速・スクロール）を適用
 +    return matrix_pointing_task(mouse_report);
  }
+diff --git a/keyboards/corne_procyon36/keyboard.json b/keyboards/corne_procyon36/keyboard.json
+index bcedbf5..ff8fd37 100644
+--- a/keyboards/corne_procyon36/keyboard.json
++++ b/keyboards/corne_procyon36/keyboard.json
+@@ -170,7 +170,7 @@
+             }
+         }
+     },
+-    "url": "",
++    "url": "https://github.com/bwrs-1/qmk_firmware_corne_procyon",
+     "usb": {
+         "device_version": "0.0.1",
+         "pid": "0xBFC6",
 diff --git a/keyboards/corne_procyon36/keymaps/default/keymap.c b/keyboards/corne_procyon36/keymaps/default/keymap.c
-index 2784405..d26d218 100644
+index 2784405..92f1ff0 100644
 --- a/keyboards/corne_procyon36/keymaps/default/keymap.c
 +++ b/keyboards/corne_procyon36/keymaps/default/keymap.c
 @@ -15,6 +15,7 @@
@@ -90,6 +117,33 @@ index 2784405..d26d218 100644
  
  enum layer_namKC {
      _BASE,
+@@ -65,7 +66,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+         KC_LCTL, XXXXXXX, KC_AMPR, KC_PIPE, KC_BSLS, XXXXXXX,                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_TILD,  KC_GRV,
+     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+-        KC_LSFT, XXXXXXX, XXXXXXX, XXXXXXX, KC_PERC, XXXXXXX,                      RGB_TOG, RGB_MOD, RGB_HUI, RGB_SAI, RGB_VAI, KC_RSFT,
++        KC_LSFT, XXXXXXX, XXXXXXX, XXXXXXX, KC_PERC, XXXXXXX,                      RM_TOGG, RM_NEXT, RM_HUEU, RM_SATU, RM_VALU, KC_RSFT,
+     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
+                           _______, KC_LGUI, _______,  KC_SPC,     KC_ENT, _______,  KC_LALT, _______
+                                  //`---------------------------------'  `-----------------------------------'
+@@ -73,7 +74,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+ 	[_MOUSE] =	LAYOUT(
+         _______, _______, _______, _______, _______, _______,                      _______, _______, _______, _______, _______, _______,
+     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+-        _______, _______, KC_MS_BTN2, KC_MS_BTN1, _______, _______,                _______, _______, _______, _______, _______, _______,
++        _______, _______, MS_BTN2, MS_BTN1, _______, _______,                _______, _______, _______, _______, _______, _______,
+     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+         _______, _______, _______, _______, _______, _______,                      _______, _______, _______, _______, _______, _______,
+     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
+@@ -85,7 +86,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+ 
+ #if defined(ENCODER_MAP_ENABLE)
+ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+-    [_BASE] = { ENCODER_CCW_CW(KC_MS_WH_DOWN, KC_MS_WH_UP), ENCODER_CCW_CW(KC_AUDIO_VOL_UP, KC_AUDIO_VOL_DOWN) },
++    [_BASE] = { ENCODER_CCW_CW(MS_WHLD, MS_WHLU), ENCODER_CCW_CW(KC_AUDIO_VOL_UP, KC_AUDIO_VOL_DOWN) },
+     [_LOWER] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+     [_RAISE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+     [_ADJUST] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
 @@ -94,8 +95,12 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
  #endif
  
@@ -109,10 +163,10 @@ index 2784405..d26d218 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..8ef7e2c
+index 0000000..6dd00fd
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
-@@ -0,0 +1,441 @@
+@@ -0,0 +1,467 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +// See matrix_pointing.h and README.md next to this file.
 +//
@@ -198,6 +252,20 @@ index 0000000..8ef7e2c
 +
 +_Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t does not fit MATRIX_POINTING_EEPROM_SIZE");
 +
++// CPI range and default (some drivers clamp to their own range, e.g. the
++// digitizer driver of the multitouch QMK fork: 50..1200).
++#ifndef MATRIX_POINTING_CPI_MIN
++#    define MATRIX_POINTING_CPI_MIN 400
++#endif
++#ifndef MATRIX_POINTING_CPI_MAX
++#    define MATRIX_POINTING_CPI_MAX 3200
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_CPI
++#    define MATRIX_POINTING_DEFAULT_CPI 1600
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_TAP_TERM
++#    define MATRIX_POINTING_DEFAULT_TAP_TERM 200
++#endif
 +#ifndef MATRIX_POINTING_DEFAULT_ACCELERATION
 +#    define MATRIX_POINTING_DEFAULT_ACCELERATION 1
 +#endif
@@ -209,7 +277,7 @@ index 0000000..8ef7e2c
 +// set per keyboard with MATRIX_POINTING_DEFAULT_AM_LAYER).
 +static const mp_config_t mp_defaults = {
 +    .version                = MP_VERSION,
-+    .cpi                    = 1600,
++    .cpi                    = MATRIX_POINTING_DEFAULT_CPI,
 +    .acceleration           = MATRIX_POINTING_DEFAULT_ACCELERATION,
 +    .glide                  = 0,
 +    .rotation               = 0,
@@ -218,7 +286,7 @@ index 0000000..8ef7e2c
 +    .tap_to_click           = 1,
 +    .two_finger_tap         = 1,
 +    .tap_drag               = 0,
-+    .tap_term               = 200,
++    .tap_term               = MATRIX_POINTING_DEFAULT_TAP_TERM,
 +    .scroll_mode            = 0,
 +    .scroll_divisor         = 8,
 +    .natural_scroll         = 0,
@@ -258,7 +326,7 @@ index 0000000..8ef7e2c
 +    { .id = (_id), .size = sizeof(((mp_config_t *)0)->_field), .min = (_min), .max = (_max), .offset = offsetof(mp_config_t, _field) }
 +
 +static const mp_field_t mp_fields[] = {
-+    MP_FIELD(0x01, cpi, 400, 3200),
++    MP_FIELD(0x01, cpi, MATRIX_POINTING_CPI_MIN, MATRIX_POINTING_CPI_MAX),
 +    MP_FIELD(0x02, acceleration, 0, 1),
 +    MP_FIELD(0x03, glide, 0, 1),
 +    MP_FIELD(0x04, rotation, 0, 3),
@@ -317,6 +385,13 @@ index 0000000..8ef7e2c
 +#ifdef POINTING_DEVICE_ENABLE
 +    pointing_device_set_cpi(mp_config.cpi);
 +#endif
++#ifdef POINTING_DEVICE_DRIVER_digitizer
++    // Multitouch QMK fork (digitizer mouse fallback): taps as clicks.
++    // The tap timing is wired through DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT
++    // (see matrix_pointing_tap_term() / README).
++    extern bool digitizer_taps_as_clicks;
++    digitizer_taps_as_clicks = mp_config.tap_to_click;
++#endif
 +#ifdef MP_CIRQUE
 +#    ifdef POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE
 +    cirque_pinnacle_enable_cursor_glide(mp_config.glide);
@@ -357,6 +432,11 @@ index 0000000..8ef7e2c
 +// Drivers may ask for settings before keyboard_post_init_user() runs.
 +static void mp_ensure_loaded(void) {
 +    if (!mp_loaded) mp_load();
++}
++
++uint16_t matrix_pointing_tap_term(void) {
++    mp_ensure_loaded();
++    return mp_config.tap_term;
 +}
 +
 +uint16_t matrix_pointing_get_cpi(void) {
@@ -556,10 +636,10 @@ index 0000000..8ef7e2c
 +#endif // POINTING_DEVICE_AUTO_MOUSE_ENABLE
 diff --git a/keyboards/corne_procyon36/matrix_pointing.h b/keyboards/corne_procyon36/matrix_pointing.h
 new file mode 100644
-index 0000000..b1c7173
+index 0000000..c1ceb6b
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.h
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,41 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +//
 +// Implements the protocol the Matrix editor uses on the VIA custom channel
@@ -587,6 +667,10 @@ index 0000000..b1c7173
 +// Current CPI setting, e.g. for digitizer_get_cpi_user().
 +uint16_t matrix_pointing_get_cpi(void);
 +
++// Current tap term (ms), e.g. for
++//   #define DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT matrix_pointing_tap_term()
++uint16_t matrix_pointing_tap_term(void);
++
 +// Call from pointing_device_task_user(); returns the transformed report.
 +report_mouse_t matrix_pointing_task(report_mouse_t mouse_report);
 +
@@ -598,10 +682,24 @@ index 0000000..b1c7173
 +// module defines is_mouse_record_user() (see MATRIX_POINTING_NO_MOUSE_RECORD).
 +bool matrix_pointing_is_mouse_record(uint16_t keycode, keyrecord_t *record);
 diff --git a/keyboards/corne_procyon36/rules.mk b/keyboards/corne_procyon36/rules.mk
-index b8c04b6..48e98f7 100644
+index b8c04b6..a48f630 100644
 --- a/keyboards/corne_procyon36/rules.mk
 +++ b/keyboards/corne_procyon36/rules.mk
-@@ -24,4 +24,5 @@ DEBUG_ENABLE = yes                        # dprintf/uprintf を有効化（デ
+@@ -10,9 +10,10 @@
+ SERIAL_DRIVER = vendor                    # ベンダー提供のシリアルドライバーを使用
+ I2C_DRIVER_REQUIRED = yes                 # I2Cドライバーの使用を必須化
+ 
+-# DIGITIZER_DRIVER = maxtouch               # 削除 (QMK標準にないため)
+-POINTING_DEVICE_DRIVER = digitizer        # ポインティングデバイスとしてデジタイザーを使用
+-SRC += maxtouch.c                         # ローカルのmaxtouchドライバーを使用
++DIGITIZER_DRIVER = maxtouch               # フォーク版 QMK の maXTouch ドライバ（procyon.h でセンサー寸法を設定）
++# ポインティングデバイスとしてデジタイザーを使用（フォーク版の比較は空白を除去しないため、値の後ろにコメントを書かない）
++POINTING_DEVICE_DRIVER = digitizer
++# SRC += maxtouch.c  (フォーク版ドライバを使うため不要。ローカルの maxtouch.c は旧版)
+ 
+ # ============================================================================
+ # デバッグ設定
+@@ -24,4 +25,5 @@ DEBUG_ENABLE = yes                        # dprintf/uprintf を有効化（デ
  # ============================================================================
  # ソースファイル
  # ============================================================================

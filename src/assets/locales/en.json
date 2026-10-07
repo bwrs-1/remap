@@ -477,5 +477,6 @@
   "Writing failed:": "Writing failed:",
   "On Windows, the browser may need the WinUSB driver for the RP2 Boot interface (interface 1). It can be installed with a tool such as Zadig.": "On Windows, the browser may need the WinUSB driver for the RP2 Boot interface (interface 1). It can be installed with a tool such as Zadig.",
   "The keyboard stays in flash mode, so you can try again. The firmware on it is not started until writing succeeds.": "The keyboard stays in flash mode, so you can try again. The firmware on it is not started until writing succeeds.",
-  "Need to update the keyboard firmware?": "Need to update the keyboard firmware?"
+  "Need to update the keyboard firmware?": "Need to update the keyboard firmware?",
+  "Use the Matrix-ready firmware for": "Use the Matrix-ready firmware for"
 }

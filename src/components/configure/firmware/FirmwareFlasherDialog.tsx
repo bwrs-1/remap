@@ -24,6 +24,17 @@ import {
 } from '../../../services/firmware/rp2040/Picoboot';
 import { requestBootloader } from '../../../services/pointing/PointingSettings';
 
+// Firmware builds shipped with Matrix (public/firmware). See
+// firmware/qmk/corne_procyon36 for how they are built.
+type BundledFirmware = { keyboard: string; url: string; fileName: string };
+const BUNDLED_FIRMWARES: BundledFirmware[] = [
+  {
+    keyboard: 'Dilemma_3X6 (Corne Procyon36)',
+    url: '/firmware/corne_procyon36_matrix.uf2',
+    fileName: 'corne_procyon36_matrix.uf2',
+  },
+];
+
 type Status =
   | { kind: 'idle' }
   | { kind: 'flashing'; progress: FlashProgress | null }
@@ -67,6 +78,20 @@ export default function FirmwareFlasherDialog() {
     if (busy) return;
     reset();
     firmwareFlasherStore.close();
+  };
+
+  const loadBundled = async (firmware: BundledFirmware) => {
+    setImage(null);
+    setFileError('');
+    setStatus({ kind: 'idle' });
+    setFileName(firmware.fileName);
+    try {
+      const response = await fetch(firmware.url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setImage(parseUf2(new Uint8Array(await response.arrayBuffer())));
+    } catch (e: any) {
+      setFileError(e?.message || String(e));
+    }
   };
 
   const onSelectFile = async (file: File | undefined) => {
@@ -154,6 +179,17 @@ export default function FirmwareFlasherDialog() {
             <span className="step-title">
               {t('Choose the firmware file (.uf2)')}
             </span>
+            {BUNDLED_FIRMWARES.map((firmware) => (
+              <Button
+                key={firmware.url}
+                variant="outlined"
+                size="small"
+                disabled={busy}
+                onClick={() => loadBundled(firmware)}
+              >
+                {t('Use the Matrix-ready firmware for')} {firmware.keyboard}
+              </Button>
+            ))}
             <label className="firmware-flasher-file">
               <input
                 type="file"

@@ -83,6 +83,20 @@ typedef struct __attribute__((packed)) {
 
 _Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t does not fit MATRIX_POINTING_EEPROM_SIZE");
 
+// CPI range and default (some drivers clamp to their own range, e.g. the
+// digitizer driver of the multitouch QMK fork: 50..1200).
+#ifndef MATRIX_POINTING_CPI_MIN
+#    define MATRIX_POINTING_CPI_MIN 400
+#endif
+#ifndef MATRIX_POINTING_CPI_MAX
+#    define MATRIX_POINTING_CPI_MAX 3200
+#endif
+#ifndef MATRIX_POINTING_DEFAULT_CPI
+#    define MATRIX_POINTING_DEFAULT_CPI 1600
+#endif
+#ifndef MATRIX_POINTING_DEFAULT_TAP_TERM
+#    define MATRIX_POINTING_DEFAULT_TAP_TERM 200
+#endif
 #ifndef MATRIX_POINTING_DEFAULT_ACCELERATION
 #    define MATRIX_POINTING_DEFAULT_ACCELERATION 1
 #endif
@@ -94,7 +108,7 @@ _Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t 
 // set per keyboard with MATRIX_POINTING_DEFAULT_AM_LAYER).
 static const mp_config_t mp_defaults = {
     .version                = MP_VERSION,
-    .cpi                    = 1600,
+    .cpi                    = MATRIX_POINTING_DEFAULT_CPI,
     .acceleration           = MATRIX_POINTING_DEFAULT_ACCELERATION,
     .glide                  = 0,
     .rotation               = 0,
@@ -103,7 +117,7 @@ static const mp_config_t mp_defaults = {
     .tap_to_click           = 1,
     .two_finger_tap         = 1,
     .tap_drag               = 0,
-    .tap_term               = 200,
+    .tap_term               = MATRIX_POINTING_DEFAULT_TAP_TERM,
     .scroll_mode            = 0,
     .scroll_divisor         = 8,
     .natural_scroll         = 0,
@@ -143,7 +157,7 @@ typedef struct {
     { .id = (_id), .size = sizeof(((mp_config_t *)0)->_field), .min = (_min), .max = (_max), .offset = offsetof(mp_config_t, _field) }
 
 static const mp_field_t mp_fields[] = {
-    MP_FIELD(0x01, cpi, 400, 3200),
+    MP_FIELD(0x01, cpi, MATRIX_POINTING_CPI_MIN, MATRIX_POINTING_CPI_MAX),
     MP_FIELD(0x02, acceleration, 0, 1),
     MP_FIELD(0x03, glide, 0, 1),
     MP_FIELD(0x04, rotation, 0, 3),
@@ -202,6 +216,13 @@ static void mp_apply(void) {
 #ifdef POINTING_DEVICE_ENABLE
     pointing_device_set_cpi(mp_config.cpi);
 #endif
+#ifdef POINTING_DEVICE_DRIVER_digitizer
+    // Multitouch QMK fork (digitizer mouse fallback): taps as clicks.
+    // The tap timing is wired through DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT
+    // (see matrix_pointing_tap_term() / README).
+    extern bool digitizer_taps_as_clicks;
+    digitizer_taps_as_clicks = mp_config.tap_to_click;
+#endif
 #ifdef MP_CIRQUE
 #    ifdef POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE
     cirque_pinnacle_enable_cursor_glide(mp_config.glide);
@@ -242,6 +263,11 @@ static void mp_load(void) {
 // Drivers may ask for settings before keyboard_post_init_user() runs.
 static void mp_ensure_loaded(void) {
     if (!mp_loaded) mp_load();
+}
+
+uint16_t matrix_pointing_tap_term(void) {
+    mp_ensure_loaded();
+    return mp_config.tap_term;
 }
 
 uint16_t matrix_pointing_get_cpi(void) {

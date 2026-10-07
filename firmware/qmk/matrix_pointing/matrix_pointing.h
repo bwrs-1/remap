@@ -25,6 +25,10 @@ void matrix_pointing_init(void);
 // Current CPI setting, e.g. for digitizer_get_cpi_user().
 uint16_t matrix_pointing_get_cpi(void);
 
+// Current tap term (ms), e.g. for
+//   #define DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT matrix_pointing_tap_term()
+uint16_t matrix_pointing_tap_term(void);
+
 // Call from pointing_device_task_user(); returns the transformed report.
 report_mouse_t matrix_pointing_task(report_mouse_t mouse_report);
 
