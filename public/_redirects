@@ -1,0 +1,2 @@
+# Cloudflare Pages: serve the SPA for every route (Firebase uses firebase.json rewrites instead).
+/* /index.html 200
