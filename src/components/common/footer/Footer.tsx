@@ -39,9 +39,6 @@ export default class Footer extends React.Component<
             <a href="https://qmk018.remap-keys.app">Remap for QMK 0.18</a>
           </div>
           <div className="footer-content">
-            <a href="/docs/">News & Resources</a>
-          </div>
-          <div className="footer-content">
             <a
               href="https://discord.gg/uf7v5DruMB"
               target={'_blank'}
@@ -71,9 +68,6 @@ export default class Footer extends React.Component<
           </div>
         </div>
         <div className="footer-contents-mobile">
-          <span className="footer-content">
-            <a href="/docs">Resources</a>
-          </span>
           <div className="footer-content">
             <a
               href="https://github.com/sponsors/yoichiro"

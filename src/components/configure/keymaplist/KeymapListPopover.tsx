@@ -426,7 +426,7 @@ function SharedKeymapList(props: ISharedKeymapListProps) {
                   <IconButton
                     edge="end"
                     aria-label="link"
-                    href={`/catalog/${props.definitionDocument!.id}/keymap?id=${
+                    href={`https://remap-keys.app/catalog/${props.definitionDocument!.id}/keymap?id=${
                       item.id
                     }`}
                     target="_blank"
@@ -491,7 +491,7 @@ function MyKeymapList(props: IMyKeymapListProps) {
                   <IconButton
                     edge="end"
                     aria-label="link"
-                    href={`/catalog/${props.definitionDocument!.id}/keymap?id=${
+                    href={`https://remap-keys.app/catalog/${props.definitionDocument!.id}/keymap?id=${
                       item.id
                     }`}
                     target="_blank"

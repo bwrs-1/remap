@@ -222,7 +222,7 @@ function KeyboardDefinitionSection(props: IKeyboardDefinitionSectionProps) {
                       'The keyboard definition is currently applied for only you. Please submit a review request of this keyboard definition for all users from'
                     )}{' '}
                     <a
-                      href={`/keyboards/${props.keyboardDefinitionDocument.id}`}
+                      href={`https://remap-keys.app/keyboards/${props.keyboardDefinitionDocument.id}`}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -254,7 +254,11 @@ function KeyboardDefinitionSection(props: IKeyboardDefinitionSectionProps) {
             <div className="info-dialog-information-message">
               Are you a designer of this keyboard? If yes, please register your
               keyboard to Remap from{' '}
-              <a href={'/keyboards'} target="_blank" rel="noreferrer">
+              <a
+                href={'https://remap-keys.app/keyboards'}
+                target="_blank"
+                rel="noreferrer"
+              >
                 here
               </a>
               .

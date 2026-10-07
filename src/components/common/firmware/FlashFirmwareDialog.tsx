@@ -160,7 +160,7 @@ export default function FlashFirmwareDialog(
               <br />
               {t('* Please read:')}{' '}
               <Link
-                href="/docs/faq#faq-firmware-writing-feature"
+                href="https://remap-keys.app/docs/faq#faq-firmware-writing-feature"
                 target="_blank"
                 rel="noreferrer"
               >
