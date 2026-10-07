@@ -8,6 +8,7 @@ const mapStateToProps = (state: RootState) => {
     layerCount: state.entities.device.layerCount,
     selectedLayer: state.configure.keymap.selectedLayer,
     remaps: state.app.remaps,
+    keyboard: state.entities.keyboard,
   };
 };
 export type EditorSidebarStateType = ReturnType<typeof mapStateToProps>;

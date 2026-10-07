@@ -100,4 +100,17 @@
     line-height: 18px;
     text-align: center;
   }
+
+  .editor-sidebar-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid variables.$cfg-panel-border;
+  }
+
+  .editor-sidebar-note {
+    padding: 0 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: variables.$cfg-text-dim;
+  }
 }

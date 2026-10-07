@@ -17,11 +17,10 @@ import {
   applySettings,
   AUTO_MOUSE_SETTINGS,
   defaultValues,
-  FEATURE_AUTO_MOUSE_LAYER,
-  FEATURE_TOUCHPAD,
   fetchSettings,
-  hasFeature,
   IPointingSettingDef,
+  probeProtocol,
+  ProtocolSupport,
   TOUCHPAD_SETTINGS,
 } from '../../../services/pointing/PointingSettings';
 
@@ -218,19 +217,32 @@ export default function PointingSettings(props: PointingSettingsProps) {
   const defs: readonly IPointingSettingDef[] = isTouchpad
     ? TOUCHPAD_SETTINGS
     : AUTO_MOUSE_SETTINGS;
-  const feature = isTouchpad ? FEATURE_TOUCHPAD : FEATURE_AUTO_MOUSE_LAYER;
-  const supported = hasFeature(props.customFeatures, feature);
 
+  const [support, setSupport] = useState<ProtocolSupport | 'checking'>(
+    'checking'
+  );
+  // Shows the settings UI with default values without talking to the
+  // keyboard, so the screen can be checked on any firmware.
+  const [preview, setPreview] = useState<boolean>(false);
+  const [retry, setRetry] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [stored, setStored] = useState<Values>(defaultValues(defs));
   const [values, setValues] = useState<Values>(defaultValues(defs));
 
   useEffect(() => {
-    if (!supported || !props.keyboard) return;
+    if (!props.keyboard) return;
     let cancelled = false;
-    setLoading(true);
-    fetchSettings(props.keyboard, defs).then((result) => {
+    setSupport('checking');
+    setStored(defaultValues(defs));
+    setValues(defaultValues(defs));
+    (async () => {
+      const probed = await probeProtocol(props.keyboard!);
+      if (cancelled) return;
+      setSupport(probed);
+      if (probed !== 'supported') return;
+      setLoading(true);
+      const result = await fetchSettings(props.keyboard!, defs);
       if (cancelled) return;
       setLoading(false);
       if (result.success) {
@@ -242,23 +254,62 @@ export default function PointingSettings(props: PointingSettingsProps) {
           result.cause
         );
       }
-    });
+    })();
     return () => {
       cancelled = true;
     };
-  }, [props.keyboard, props.mode, supported]);
+  }, [props.keyboard, props.mode, retry]);
 
-  if (!supported) {
+  const title = isTouchpad ? t('Touchpad') : t('Auto mouse layer');
+  const live = support === 'supported';
+
+  if (!live && !preview) {
     return (
       <div className="pointing-settings">
         <div className="pointing-card pointing-unsupported">
-          <h2>{isTouchpad ? t('Touchpad') : t('Auto mouse layer')}</h2>
-          <p>
-            {t(
-              'This keyboard definition does not declare this feature. Add the following value to customFeatures in the keyboard definition and use a firmware that implements it.'
-            )}
-          </p>
-          <code>{feature}</code>
+          <h2>{title}</h2>
+          {support === 'checking' && (
+            <p className="pointing-checking">
+              <CircularProgress size={16} />
+              {t('Checking whether the firmware supports this feature...')}
+            </p>
+          )}
+          {support === 'unsupported' && (
+            <>
+              <p>
+                {t(
+                  'The firmware of this keyboard does not support these settings yet. The firmware needs to implement the Matrix pointing protocol (VIA custom values on channel 0).'
+                )}
+              </p>
+              <p>
+                {t(
+                  'You can still preview this screen. Nothing is sent to the keyboard in the preview.'
+                )}
+              </p>
+            </>
+          )}
+          {support === 'error' && (
+            <p>{t('Could not communicate with the keyboard.')}</p>
+          )}
+          {support !== 'checking' && (
+            <div className="pointing-actions">
+              <Button
+                variant="contained"
+                size="small"
+                disableElevation
+                onClick={() => setPreview(true)}
+              >
+                {t('Preview this screen')}
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setRetry(retry + 1)}
+              >
+                {t('Check again')}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -313,13 +364,25 @@ export default function PointingSettings(props: PointingSettingsProps) {
             variant="contained"
             size="small"
             disableElevation
-            disabled={loading || saving || !dirty}
+            disabled={!live || loading || saving || !dirty}
             onClick={onSave}
           >
-            {dirty ? t('Save to keyboard') : t('Saved')}
+            {!live
+              ? t('Preview (not saved)')
+              : dirty
+                ? t('Save to keyboard')
+                : t('Saved')}
           </Button>
         </div>
       </div>
+
+      {!live && (
+        <div className="pointing-preview-banner" role="status">
+          {t(
+            'Preview: the firmware does not support these settings, so nothing is read from or sent to the keyboard.'
+          )}
+        </div>
+      )}
 
       {!isTouchpad && (
         <AutoMouseOverview

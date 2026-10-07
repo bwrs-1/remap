@@ -445,5 +445,15 @@
   "Selected key": "Selected key",
   "Before": "Before",
   "Revert this key": "Revert this key",
-  "Select a key on the keyboard to see its details here.": "Select a key on the keyboard to see its details here."
+  "Select a key on the keyboard to see its details here.": "Select a key on the keyboard to see its details here.",
+  "Checking whether the firmware supports this feature...": "Checking whether the firmware supports this feature...",
+  "The firmware of this keyboard does not support these settings yet. The firmware needs to implement the Matrix pointing protocol (VIA custom values on channel 0).": "The firmware of this keyboard does not support these settings yet. The firmware needs to implement the Matrix pointing protocol (VIA custom values on channel 0).",
+  "You can still preview this screen. Nothing is sent to the keyboard in the preview.": "You can still preview this screen. Nothing is sent to the keyboard in the preview.",
+  "Could not communicate with the keyboard.": "Could not communicate with the keyboard.",
+  "Preview this screen": "Preview this screen",
+  "Check again": "Check again",
+  "Preview (not saved)": "Preview (not saved)",
+  "Preview: the firmware does not support these settings, so nothing is read from or sent to the keyboard.": "Preview: the firmware does not support these settings, so nothing is read from or sent to the keyboard.",
+  "The keyboard definition is saved in this browser.": "The keyboard definition is saved in this browser.",
+  "Load another definition file": "Load another definition file"
 }

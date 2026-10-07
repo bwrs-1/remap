@@ -5,10 +5,7 @@ import { beforeAll, vi } from 'vitest';
 import PointingSettings from './PointingSettings';
 import { mockIKeyboad } from '../../../services/hid/Hid.mock';
 import { IKeyboard } from '../../../services/hid/Hid';
-import {
-  FEATURE_AUTO_MOUSE_LAYER,
-  FEATURE_TOUCHPAD,
-} from '../../../services/pointing/PointingSettings';
+import { PROTOCOL_MAGIC } from '../../../services/pointing/PointingSettings';
 
 describe('PointingSettings', () => {
   beforeAll(async () => {
@@ -16,15 +13,26 @@ describe('PointingSettings', () => {
     await i18next.init({ lng: 'en', resources: {} });
   });
 
-  const setup = (mode: 'touchpad' | 'autoMouse', features: string[]) => {
+  const setup = (mode: 'touchpad' | 'autoMouse', supported = true) => {
     const sent: [number, number][] = [];
     let saved = 0;
     const keyboard: IKeyboard = {
       ...mockIKeyboad,
-      fetchCustomValue: async (valueId) => ({
-        success: true,
-        value: valueId === 0x01 ? 1600 : valueId === 0x21 ? 3 : 0,
-      }),
+      fetchCustomValue: async (valueId) =>
+        supported
+          ? {
+              success: true,
+              unhandled: false,
+              value:
+                valueId === 0x00
+                  ? PROTOCOL_MAGIC
+                  : valueId === 0x01
+                    ? 1600
+                    : valueId === 0x21
+                      ? 3
+                      : 0,
+            }
+          : { success: true, unhandled: true, value: 0 },
       updateCustomValue: async (valueId, value) => {
         sent.push([valueId, value]);
         return { success: true };
@@ -41,7 +49,6 @@ describe('PointingSettings', () => {
         mode={mode}
         onEditLayer={onEditLayer}
         keyboard={keyboard}
-        customFeatures={features}
         layerCount={4}
         notifySuccess={notifySuccess}
         notifyError={vi.fn()}
@@ -50,13 +57,22 @@ describe('PointingSettings', () => {
     return { sent, saved: () => saved, onEditLayer, notifySuccess };
   };
 
-  test('explains how to enable when the definition lacks the feature', () => {
-    setup('touchpad', []);
-    expect(screen.getByText(FEATURE_TOUCHPAD)).toBeTruthy();
+  test('unsupported firmware: offers a preview that never saves', async () => {
+    const ctx = setup('touchpad', false);
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Preview this screen' })
+    );
+    const invertX = await screen.findByRole('checkbox', {
+      name: 'Invert X axis',
+    });
+    fireEvent.click(invertX);
+    const save = screen.getByRole('button', { name: 'Preview (not saved)' });
+    expect((save as HTMLButtonElement).disabled).toBe(true);
+    expect(ctx.sent).toEqual([]);
   });
 
   test('touchpad: reads values, then saves only the changed one', async () => {
-    const ctx = setup('touchpad', [FEATURE_TOUCHPAD]);
+    const ctx = setup('touchpad');
     const invertX = await screen.findByRole('checkbox', {
       name: 'Invert X axis',
     });
@@ -69,7 +85,7 @@ describe('PointingSettings', () => {
   });
 
   test('auto mouse: opens the keymap of the target layer', async () => {
-    const ctx = setup('autoMouse', [FEATURE_AUTO_MOUSE_LAYER]);
+    const ctx = setup('autoMouse');
     const edit = await screen.findByRole('button', {
       name: 'Edit keymap of this layer',
     });

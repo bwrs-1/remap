@@ -2,6 +2,10 @@ import React from 'react';
 import './EditorSidebar.scss';
 import { t } from 'i18next';
 import {
+  hasSavedLocalDefinition,
+  removeLocalDefinition,
+} from '../../../services/definitions/LocalDefinitions';
+import {
   EditorSidebarActionsType,
   EditorSidebarStateType,
 } from './EditorSidebar.container';
@@ -96,6 +100,33 @@ export default function EditorSidebar(props: EditorSidebarProps) {
           ))}
         </section>
       )}
+      <SavedDefinition keyboard={props.keyboard} />
     </nav>
+  );
+}
+
+// The definition JSON is remembered in this browser after the first upload.
+// This lets the user replace it (e.g. after editing the JSON).
+function SavedDefinition(props: { keyboard: EditorSidebarProps['keyboard'] }) {
+  const info = props.keyboard?.getInformation();
+  if (!info || !hasSavedLocalDefinition(info.vendorId, info.productId)) {
+    return null;
+  }
+  return (
+    <section className="editor-sidebar-section editor-sidebar-footer">
+      <span className="editor-sidebar-note">
+        {t('The keyboard definition is saved in this browser.')}
+      </span>
+      <button
+        type="button"
+        className="editor-sidebar-item"
+        onClick={() => {
+          removeLocalDefinition(info.vendorId, info.productId);
+          window.location.reload();
+        }}
+      >
+        <span className="layer-name">{t('Load another definition file')}</span>
+      </button>
+    </section>
   );
 }

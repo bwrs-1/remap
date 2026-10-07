@@ -928,6 +928,8 @@ export interface ICustomGetValueRequest extends ICommandRequest {
 
 export interface ICustomGetValueResponse extends ICommandResponse {
   value: number;
+  // The firmware has no handler for this value (VIA answers id_unhandled).
+  unhandled: boolean;
 }
 
 export class CustomGetValueCommand extends AbstractCommand<
@@ -943,16 +945,23 @@ export class CustomGetValueCommand extends AbstractCommand<
   }
 
   createResponse(resultArray: Uint8Array): ICustomGetValueResponse {
+    if (resultArray[0] === id_unhandled) {
+      return { value: 0, unhandled: true };
+    }
     const value =
       this.getRequest().size === 2
         ? (resultArray[3] << 8) | resultArray[4]
         : resultArray[3];
-    return { value };
+    return { value, unhandled: false };
   }
 
+  // A VIA firmware without a custom value handler replies with the request
+  // whose first byte is replaced by id_unhandled; match that too so the
+  // command queue does not wait forever.
   isSameRequest(resultArray: Uint8Array): boolean {
     return (
-      resultArray[0] === id_custom_get_value &&
+      (resultArray[0] === id_custom_get_value ||
+        resultArray[0] === id_unhandled) &&
       resultArray[1] === id_custom_channel &&
       resultArray[2] === this.getRequest().valueId
     );

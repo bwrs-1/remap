@@ -15,18 +15,17 @@ Replace the following before using it with real hardware:
 
 Encoders: left outermost thumb key = `e0` (`3,3`), right outermost thumb key = `e1` (`7,2`).
 
-## Feature flags
+## Firmware detection
 
-The editor shows the **Touchpad** and **Mouse Layer** tabs only when the
-definition declares them in `customFeatures`:
+The editor always lists **Touchpad** and **Mouse Layer**. When one of them is
+opened, it first reads value `0x00` (2 bytes) and continues only if the
+firmware returns the magic `0x4D58` (`'MX'`). Anything else — the
+`id_unhandled` (`0xFF`) reply of a VIA firmware without a custom value handler,
+or a different custom handler on channel 0 — is treated as "not supported":
+nothing else is read or written, and the screen can only be previewed.
 
-```json
-"customFeatures": ["matrix_touchpad", "matrix_auto_mouse_layer"]
-```
-
-Only declare a flag when the firmware implements the handler below. A firmware
-without it answers `id_unhandled` (`0xFF`), which the editor cannot match to the
-request.
+The `customFeatures` entries in the template (`matrix_touchpad`,
+`matrix_auto_mouse_layer`) are informational; detection does not rely on them.
 
 ## Protocol (VIA custom channel)
 
@@ -41,6 +40,10 @@ All values use the standard VIA custom value commands on **channel 0**
 
 The editor sends `set_value` only for changed values, then one `save` to
 persist them (e.g. to EEPROM / `eeconfig_update_kb_datablock`).
+
+| ID     | Key     | Size | Meaning                                  |
+| ------ | ------- | ---- | ---------------------------------------- |
+| `0x00` | `magic` | 2    | Read-only. Must return `0x4D58` (`'MX'`) |
 
 ### Touchpad (`matrix_touchpad`)
 

@@ -489,5 +489,15 @@
   "Selected key": "選択中のキー",
   "Before": "変更前",
   "Revert this key": "このキーを元に戻す",
-  "Select a key on the keyboard to see its details here.": "キーボード上のキーを選択すると、ここに詳細が表示されます。"
+  "Select a key on the keyboard to see its details here.": "キーボード上のキーを選択すると、ここに詳細が表示されます。",
+  "Checking whether the firmware supports this feature...": "ファームウェアがこの機能に対応しているか確認しています…",
+  "The firmware of this keyboard does not support these settings yet. The firmware needs to implement the Matrix pointing protocol (VIA custom values on channel 0).": "このキーボードのファームウェアは、まだこの設定に対応していません。ファームウェア側に Matrix のポインティング設定プロトコル（VIA カスタム値・チャンネル 0）の実装が必要です。",
+  "You can still preview this screen. Nothing is sent to the keyboard in the preview.": "画面のプレビューは表示できます。プレビュー中はキーボードに何も送信しません。",
+  "Could not communicate with the keyboard.": "キーボードと通信できませんでした。",
+  "Preview this screen": "画面をプレビュー",
+  "Check again": "再確認",
+  "Preview (not saved)": "プレビュー（保存不可）",
+  "Preview: the firmware does not support these settings, so nothing is read from or sent to the keyboard.": "プレビュー表示中：ファームウェアが未対応のため、キーボードとの読み書きは行いません。",
+  "The keyboard definition is saved in this browser.": "キーボード定義はこのブラウザに保存されています。",
+  "Load another definition file": "別の定義ファイルを読み込む"
 }

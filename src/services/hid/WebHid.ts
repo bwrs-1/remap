@@ -448,7 +448,11 @@ export class Keyboard implements IKeyboard {
         { valueId, size },
         async (result) => {
           if (result.success) {
-            resolve({ success: true, value: result.response!.value });
+            resolve({
+              success: true,
+              value: result.response!.value,
+              unhandled: result.response!.unhandled,
+            });
           } else {
             resolve({
               success: false,

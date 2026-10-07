@@ -160,6 +160,7 @@ export interface IFetchViaProtocolVersionResult extends IResult {
 
 export interface IFetchCustomValueResult extends IResult {
   value?: number;
+  unhandled?: boolean;
 }
 
 export interface IKeyboard {

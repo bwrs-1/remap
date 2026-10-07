@@ -1,3 +1,8 @@
+import {
+  findLocalDefinition,
+  removeLocalDefinition,
+  saveLocalDefinition,
+} from '../services/definitions/LocalDefinitions';
 import { ThunkAction, ThunkDispatch } from 'redux-thunk';
 import {
   ICatalogPhase,
@@ -227,8 +232,14 @@ export const storageActionsThunk = {
     (keyboardDefinition: KeyboardDefinitionSchema): ThunkPromiseAction<void> =>
     async (
       dispatch: ThunkDispatch<RootState, undefined, ActionTypes>,
-      _getState: () => RootState
+      getState: () => RootState
     ) => {
+      // Remember the definition in this browser so that the next connection
+      // of the same keyboard does not ask for the JSON file again.
+      const info = getState().entities.keyboard?.getInformation();
+      if (info) {
+        saveLocalDefinition(info.vendorId, info.productId, keyboardDefinition);
+      }
       dispatch(StorageActions.updateKeyboardDefinition(keyboardDefinition));
       dispatch(
         LayoutOptionsActions.initSelectedOptions(
@@ -427,6 +438,24 @@ export const storageActionsThunk = {
       getState: () => RootState
     ) => {
       const { storage, app } = getState();
+
+      // A definition uploaded earlier in this browser or bundled with the app.
+      const localDefinition = findLocalDefinition(vendorId, productId);
+      if (localDefinition) {
+        const localValidateResult =
+          validateKeyboardDefinitionSchema(localDefinition);
+        if (localValidateResult.valid) {
+          await dispatch(
+            storageActionsThunk.uploadKeyboardDefinition(localDefinition)
+          );
+          return;
+        }
+        console.warn(
+          'The saved keyboard definition is invalid. Ask for the file again.',
+          localValidateResult.errors
+        );
+        removeLocalDefinition(vendorId, productId);
+      }
 
       if (storage.instance === null) {
         console.warn(

@@ -6,6 +6,8 @@ import {
   fetchSettings,
   FEATURE_TOUCHPAD,
   hasFeature,
+  probeProtocol,
+  PROTOCOL_MAGIC,
   TOUCHPAD_SETTINGS,
 } from './PointingSettings';
 import { mockIKeyboad } from '../hid/Hid.mock';
@@ -108,6 +110,26 @@ describe('PointingSettings', () => {
   });
 });
 
+describe('probeProtocol', () => {
+  const kb = (r: Awaited<ReturnType<IKeyboard['fetchCustomValue']>>) =>
+    keyboardWith({ fetchCustomValue: async () => r });
+
+  test('supported only when value 0x00 returns the magic', async () => {
+    expect(
+      await probeProtocol(kb({ success: true, value: PROTOCOL_MAGIC }))
+    ).toEqual('supported');
+    expect(await probeProtocol(kb({ success: true, value: 0x1234 }))).toEqual(
+      'unsupported'
+    );
+    expect(
+      await probeProtocol(kb({ success: true, unhandled: true, value: 0 }))
+    ).toEqual('unsupported');
+    expect(await probeProtocol(kb({ success: false, error: 'x' }))).toEqual(
+      'error'
+    );
+  });
+});
+
 describe('Custom channel commands', () => {
   const noop = async () => {};
 
@@ -119,9 +141,12 @@ describe('Custom channel commands', () => {
     expect(command.createResponse(response).value).toEqual(1600);
   });
 
-  test('unhandled response is not matched', () => {
+  test('an id_unhandled reply is matched and reported as unhandled', () => {
     const command = new CustomGetValueCommand({ valueId: 0x01, size: 1 }, noop);
-    expect(command.isSameRequest(new Uint8Array([0xff, 0x00, 0x01]))).toBe(
+    const reply = new Uint8Array([0xff, 0x00, 0x01]);
+    expect(command.isSameRequest(reply)).toBe(true);
+    expect(command.createResponse(reply).unhandled).toBe(true);
+    expect(command.isSameRequest(new Uint8Array([0xff, 0x00, 0x02]))).toBe(
       false
     );
   });

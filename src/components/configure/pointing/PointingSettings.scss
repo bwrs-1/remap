@@ -236,7 +236,27 @@
     padding: 14px 18px;
   }
 
+  .pointing-preview-banner {
+    padding: 10px 14px;
+    border-radius: variables.$cfg-radius-m;
+    border: 1px dashed #c4c4c8;
+    background-color: variables.$cfg-muted;
+    font-size: 12px;
+    color: variables.$cfg-accent;
+  }
+
+  .pointing-checking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .pointing-unsupported {
+    .pointing-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
     padding: 18px;
     display: flex;
     flex-direction: column;

@@ -7,6 +7,23 @@ import { IKeyboard, IResult } from '../hid/Hid';
 export const FEATURE_TOUCHPAD = 'matrix_touchpad';
 export const FEATURE_AUTO_MOUSE_LAYER = 'matrix_auto_mouse_layer';
 
+// Value 0x00 is read-only and identifies firmware that implements this
+// protocol. Any other answer (id_unhandled, or another custom handler that
+// happens to use channel 0) means "not supported": nothing is read or written.
+export const PROTOCOL_MAGIC_VALUE_ID = 0x00;
+export const PROTOCOL_MAGIC = 0x4d58; // 'MX'
+
+export type ProtocolSupport = 'supported' | 'unsupported' | 'error';
+
+export async function probeProtocol(
+  keyboard: IKeyboard
+): Promise<ProtocolSupport> {
+  const result = await keyboard.fetchCustomValue(PROTOCOL_MAGIC_VALUE_ID, 2);
+  if (!result.success) return 'error';
+  if (result.unhandled || result.value !== PROTOCOL_MAGIC) return 'unsupported';
+  return 'supported';
+}
+
 export type PointingSettingKind = 'switch' | 'range' | 'choice';
 
 export interface IPointingSettingDef<K extends string = string> {

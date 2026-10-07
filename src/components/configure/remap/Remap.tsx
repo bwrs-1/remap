@@ -10,11 +10,6 @@ import { kinds2CategoryLabel } from '../customkey/AutocompleteKeys';
 import MacroEditor from '../macroeditor/MacroEditor.container';
 import PointingSettings from '../pointing/PointingSettings.container';
 import { PointingSettingsMode } from '../pointing/PointingSettings';
-import {
-  FEATURE_AUTO_MOUSE_LAYER,
-  FEATURE_TOUCHPAD,
-  hasFeature,
-} from '../../../services/pointing/PointingSettings';
 import EditorSidebar from '../sidebar/EditorSidebar.container';
 import KeyInspector from '../inspector/KeyInspector.container';
 
@@ -55,15 +50,10 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     }
   }
 
+  // Touchpad / Mouse Layer are always listed; each screen checks whether
+  // the firmware supports them and offers a preview otherwise.
   private availableViews(): ConfigureView[] {
-    const views: ConfigureView[] = ['keymap'];
-    if (hasFeature(this.props.customFeatures, FEATURE_TOUCHPAD)) {
-      views.push('touchpad');
-    }
-    if (hasFeature(this.props.customFeatures, FEATURE_AUTO_MOUSE_LAYER)) {
-      views.push('autoMouse');
-    }
-    return views;
+    return ['keymap', 'touchpad', 'autoMouse'];
   }
 
   private onEditLayer(layer: number) {
