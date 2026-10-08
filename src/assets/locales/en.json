@@ -613,5 +613,9 @@
   "Download the Matrix-ready firmware": "Download the Matrix-ready firmware",
   "Put the keyboard into flash mode. A drive named \"RPI-RP2\" appears on the computer.": "Put the keyboard into flash mode. A drive named \"RPI-RP2\" appears on the computer.",
   "Copy (drag and drop) the .uf2 file onto the RPI-RP2 drive. The keyboard restarts by itself when the copy finishes.": "Copy (drag and drop) the .uf2 file onto the RPI-RP2 drive. The keyboard restarts by itself when the copy finishes.",
-  "For a split keyboard, do the same for the other half.": "For a split keyboard, do the same for the other half."
+  "For a split keyboard, do the same for the other half.": "For a split keyboard, do the same for the other half.",
+  "Connection mode": "Connection mode",
+  "How the computer sees the touchpad": "How the computer sees the touchpad",
+  "Act as a Windows precision touchpad": "Act as a Windows precision touchpad",
+  "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.": "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode."
 }

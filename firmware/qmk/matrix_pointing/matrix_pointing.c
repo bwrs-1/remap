@@ -48,9 +48,9 @@
 #endif
 
 #define MP_MAGIC 0x4D58 // 'MX'
-#define MP_VERSION 3
+#define MP_VERSION 4
 // Bytes of mp_config_t that earlier versions stored (index = version).
-static const uint8_t mp_version_size[] = {0, 28, 39};
+static const uint8_t mp_version_size[] = {0, 28, 39, 47};
 
 // Layout of the persisted settings. Append new fields at the end and bump
 // MP_VERSION; never reorder (values stored in EEPROM would be misread).
@@ -91,10 +91,17 @@ typedef struct __attribute__((packed)) {
     // LED color per layer (RGB Matrix): 0 = keep the effect, 1 = off,
     // 2.. = red, green, yellow, blue, magenta, cyan, white
     uint8_t led_layer_color[8];
+    // --- version 4 ---
+    // Multitouch fork: 1 = act as a Windows precision touchpad when the
+    // host asks for it (native gestures, but the host then gets digitizer
+    // reports, so the auto mouse layer and the report transforms do not
+    // apply). 0 = always send mouse reports.
+    uint8_t precision_touchpad;
 } mp_config_t;
 
 _Static_assert(offsetof(mp_config_t, tapping_term) == 28, "version 1 layout changed");
 _Static_assert(offsetof(mp_config_t, led_layer_color) == 39, "version 2 layout changed");
+_Static_assert(offsetof(mp_config_t, precision_touchpad) == 47, "version 3 layout changed");
 
 _Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t does not fit MATRIX_POINTING_EEPROM_SIZE");
 
@@ -176,6 +183,7 @@ static const mp_config_t mp_defaults = {
     .hold_mode              = MATRIX_POINTING_DEFAULT_HOLD_MODE,
     .swipe_kc               = {MATRIX_POINTING_DEFAULT_SWIPE_LEFT, MATRIX_POINTING_DEFAULT_SWIPE_RIGHT, MATRIX_POINTING_DEFAULT_SWIPE_UP, MATRIX_POINTING_DEFAULT_SWIPE_DOWN},
     .led_layer_color        = {0},
+    .precision_touchpad     = 0,
 };
 
 static mp_config_t mp_config;
@@ -217,6 +225,7 @@ static const mp_field_t mp_fields[] = {
     MP_FIELD(0x0D, natural_scroll, 0, 1),
     MP_FIELD(0x0E, horizontal_scroll, 0, 1),
     MP_FIELD(0x0F, sensitivity, 0, 3),
+    MP_FIELD(0x10, precision_touchpad, 0, 1),
     MP_FIELD(0x20, am_enabled, 0, 1),
     MP_FIELD(0x21, am_layer, 1, 31),
     MP_FIELD(0x22, am_threshold, 1, 50),
@@ -244,7 +253,8 @@ static const mp_field_t mp_fields[] = {
 // Read-only value 0x7E: which settings this build actually applies. Bit n
 // of the low word = value ID n + 1 (touchpad 0x01..0x0F); the high word:
 // bit 0 timing (0x30/0x31), bit 1 swipes (0x40..), bit 2 layer LEDs
-// (0x50..), bit 3 combos (0x60/0x61). Older firmware answers id_unhandled:
+// (0x50..), bit 3 combos (0x60/0x61), bit 4 the precision touchpad
+// switch (0x10). Older firmware answers id_unhandled:
 // the editor then assumes everything is applied.
 #define MP_CAPABILITIES_VALUE_ID 0x7E
 #define MP_CAP(id) (1UL << ((id) - 1))
@@ -285,6 +295,9 @@ static uint32_t mp_capabilities(void) {
 #endif
 #if defined(COMBO_ENABLE) && !defined(MATRIX_POINTING_NO_COMBOS)
     caps |= 1UL << 19;
+#endif
+#ifdef POINTING_DEVICE_DRIVER_digitizer
+    caps |= 1UL << 20; // precision touchpad switch (0x10)
 #endif
     return caps;
 }
@@ -329,6 +342,11 @@ static void mp_apply(void) {
     // (see matrix_pointing_tap_term() / README).
     extern bool digitizer_taps_as_clicks;
     digitizer_taps_as_clicks = mp_config.tap_to_click;
+    // Windows switches a touchpad to digitizer reports; QMK's auto mouse
+    // layer and this module only see mouse reports, so keep sending those
+    // unless the precision touchpad mode is chosen.
+    extern bool force_digitizer_send_mouse_reports;
+    force_digitizer_send_mouse_reports = !mp_config.precision_touchpad;
 #endif
 #ifdef MP_CIRQUE
 #    ifdef POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE
@@ -496,6 +514,8 @@ static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len
 #    ifdef POINTING_DEVICE_DRIVER_digitizer
     extern bool digitizer_taps_as_clicks;
     digitizer_taps_as_clicks = mp_config.tap_to_click;
+    extern bool force_digitizer_send_mouse_reports;
+    force_digitizer_send_mouse_reports = !mp_config.precision_touchpad;
 #    endif
 }
 

@@ -172,6 +172,19 @@ const touchpadSections = (): SectionSpec[] => [
     ],
   },
   {
+    title: t('Connection mode'),
+    desc: t('How the computer sees the touchpad'),
+    rows: [
+      {
+        key: 'precisionTouchpad',
+        label: t('Act as a Windows precision touchpad'),
+        help: t(
+          'Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.'
+        ),
+      },
+    ],
+  },
+  {
     title: t('Sensitivity'),
     desc: t('Adjust when touches are missed or misdetected'),
     rows: [

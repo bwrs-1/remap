@@ -48,23 +48,24 @@ persist them (e.g. to EEPROM / `eeconfig_update_kb_datablock`).
 
 ### Touchpad (`matrix_touchpad`)
 
-| ID     | Key                | Size | Range / meaning                               | Default |
-| ------ | ------------------ | ---- | --------------------------------------------- | ------- |
-| `0x01` | `cpi`              | 2    | 400 – 3200                                    | 1600    |
-| `0x02` | `acceleration`     | 1    | 0 / 1                                         | 1       |
-| `0x03` | `glide`            | 1    | 0 / 1 (cursor glide / inertia)                | 0       |
-| `0x04` | `rotation`         | 1    | 0: 0°, 1: 90°, 2: 180°, 3: 270°               | 0       |
-| `0x05` | `invertX`          | 1    | 0 / 1                                         | 0       |
-| `0x06` | `invertY`          | 1    | 0 / 1                                         | 0       |
-| `0x07` | `tapToClick`       | 1    | 0 / 1                                         | 1       |
-| `0x08` | `twoFingerTap`     | 1    | 0 / 1 (right click, multi-touch sensors only) | 1       |
-| `0x09` | `tapDrag`          | 1    | 0 / 1                                         | 0       |
-| `0x0A` | `tapTerm`          | 2    | 100 – 400 ms                                  | 200     |
-| `0x0B` | `scrollMode`       | 1    | 0: two finger, 1: circular, 2: edge           | 0       |
-| `0x0C` | `scrollDivisor`    | 1    | 1 – 32 (smaller = faster)                     | 8       |
-| `0x0D` | `naturalScroll`    | 1    | 0 / 1                                         | 0       |
-| `0x0E` | `horizontalScroll` | 1    | 0 / 1                                         | 1       |
-| `0x0F` | `sensitivity`      | 1    | 0: 1x, 1: 2x, 2: 3x, 3: 4x                    | 1       |
+| ID     | Key                 | Size | Range / meaning                                                                   | Default |
+| ------ | ------------------- | ---- | --------------------------------------------------------------------------------- | ------- |
+| `0x01` | `cpi`               | 2    | 400 – 3200                                                                        | 1600    |
+| `0x02` | `acceleration`      | 1    | 0 / 1                                                                             | 1       |
+| `0x03` | `glide`             | 1    | 0 / 1 (cursor glide / inertia)                                                    | 0       |
+| `0x04` | `rotation`          | 1    | 0: 0°, 1: 90°, 2: 180°, 3: 270°                                                   | 0       |
+| `0x05` | `invertX`           | 1    | 0 / 1                                                                             | 0       |
+| `0x06` | `invertY`           | 1    | 0 / 1                                                                             | 0       |
+| `0x07` | `tapToClick`        | 1    | 0 / 1                                                                             | 1       |
+| `0x08` | `twoFingerTap`      | 1    | 0 / 1 (right click, multi-touch sensors only)                                     | 1       |
+| `0x09` | `tapDrag`           | 1    | 0 / 1                                                                             | 0       |
+| `0x0A` | `tapTerm`           | 2    | 100 – 400 ms                                                                      | 200     |
+| `0x0B` | `scrollMode`        | 1    | 0: two finger, 1: circular, 2: edge                                               | 0       |
+| `0x0C` | `scrollDivisor`     | 1    | 1 – 32 (smaller = faster)                                                         | 8       |
+| `0x0D` | `naturalScroll`     | 1    | 0 / 1                                                                             | 0       |
+| `0x0E` | `horizontalScroll`  | 1    | 0 / 1                                                                             | 1       |
+| `0x0F` | `sensitivity`       | 1    | 0: 1x, 1: 2x, 2: 3x, 3: 4x                                                        | 1       |
+| `0x10` | `precisionTouchpad` | 1    | 0: always a mouse, 1: Windows precision touchpad when the host asks (protocol v4) | 0       |
 
 ### Auto mouse layer (`matrix_auto_mouse_layer`)
 
@@ -95,12 +96,12 @@ editor then asks for a firmware update instead of showing defaults.
 
 ### Protocol version 3
 
-| ID            | Key            | Size | Meaning                                                                                                                                                                                                         |
-| ------------- | -------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0x7E`        | `capabilities` | 4    | Read-only bit mask of what the build applies. Bits 0–14: touchpad value `0x01 + n`; bit 15: auto mouse layer; 16: timing; 17: swipes; 18: layer LEDs; 19: combos. `id_unhandled` (older firmware): assume all   |
-| `0x50`–`0x57` | `led0`–`led7`  | 1    | LED color of layer 0–7: 0 keep the effect, 1 off, 2 red, 3 green, 4 yellow, 5 blue, 6 magenta, 7 cyan, 8 white                                                                                                  |
-| `0x60`        | `comboCount`   | 1    | Read-only. Number of combo slots                                                                                                                                                                                |
-| `0x61`        | `combo`        | 14   | `[slot, keys[4], keycode, term, layers]`, 16-bit values big endian. The request carries the slot; the reply echoes it. Keys are layer-0 keycodes (`0` = unused); `term` 0 = default; `layers` bit mask, 0 = all |
+| ID            | Key            | Size | Meaning                                                                                                                                                                                                                                      |
+| ------------- | -------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0x7E`        | `capabilities` | 4    | Read-only bit mask of what the build applies. Bits 0–14: touchpad value `0x01 + n`; bit 15: auto mouse layer; 16: timing; 17: swipes; 18: layer LEDs; 19: combos; 20: precision touchpad switch. `id_unhandled` (older firmware): assume all |
+| `0x50`–`0x57` | `led0`–`led7`  | 1    | LED color of layer 0–7: 0 keep the effect, 1 off, 2 red, 3 green, 4 yellow, 5 blue, 6 magenta, 7 cyan, 8 white                                                                                                                               |
+| `0x60`        | `comboCount`   | 1    | Read-only. Number of combo slots                                                                                                                                                                                                             |
+| `0x61`        | `combo`        | 14   | `[slot, keys[4], keycode, term, layers]`, 16-bit values big endian. The request carries the slot; the reply echoes it. Keys are layer-0 keycodes (`0` = unused); `term` 0 = default; `layers` bit mask, 0 = all                              |
 
 Values outside a range are clamped by the editor when read. The editor's
 defaults are its own starting values; the firmware's stored values win once

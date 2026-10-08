@@ -92,6 +92,8 @@ export const TOUCHPAD_SETTINGS = [
   def('horizontalScroll', 0x0e, 'switch', 0, 1, 1),
   // 0: 1x, 1: 2x, 2: 3x, 3: 4x
   def('sensitivity', 0x0f, 'choice', 0, 3, 1),
+  // Multitouch fork: 1 = Windows precision touchpad, 0 = always a mouse.
+  def('precisionTouchpad', 0x10, 'switch', 0, 1, 0),
 ] as const;
 
 export const AUTO_MOUSE_SETTINGS = [
@@ -144,6 +146,7 @@ export const CAP_TIMING = 1 << 16;
 export const CAP_SWIPE = 1 << 17;
 export const CAP_LAYER_LED = 1 << 18;
 export const CAP_COMBOS = 1 << 19;
+export const CAP_PRECISION_TOUCHPAD = 1 << 20;
 
 export async function fetchCapabilities(
   keyboard: IKeyboard
@@ -161,6 +164,9 @@ export function isSettingApplied(
   if (capabilities === null) return true;
   if (valueId >= 0x01 && valueId <= 0x0f) {
     return (capabilities & (1 << (valueId - 1))) !== 0;
+  }
+  if (valueId === 0x10) {
+    return (capabilities & CAP_PRECISION_TOUCHPAD) !== 0;
   }
   if (valueId === 0x30 || valueId === 0x31) {
     return (capabilities & CAP_TIMING) !== 0;

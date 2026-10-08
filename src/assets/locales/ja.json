@@ -706,5 +706,9 @@
   "Download the Matrix-ready firmware": "Matrix 対応ファームウェアをダウンロード",
   "Put the keyboard into flash mode. A drive named \"RPI-RP2\" appears on the computer.": "キーボードを書き込みモードにします。パソコンに「RPI-RP2」というドライブが表示されます。",
   "Copy (drag and drop) the .uf2 file onto the RPI-RP2 drive. The keyboard restarts by itself when the copy finishes.": "ダウンロードした .uf2 ファイルを「RPI-RP2」ドライブにドラッグ＆ドロップ（コピー）します。コピーが終わるとキーボードが自動で再起動し、書き込み完了です。",
-  "For a split keyboard, do the same for the other half.": "分割キーボードは、反対側にも同じ手順で書き込んでください。"
+  "For a split keyboard, do the same for the other half.": "分割キーボードは、反対側にも同じ手順で書き込んでください。",
+  "Connection mode": "接続モード",
+  "How the computer sees the touchpad": "パソコンからタッチパッドがどう見えるか",
+  "Act as a Windows precision touchpad": "Windows の高精度タッチパッドとして動作",
+  "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.": "オフ（推奨）：マウスとして動作し、マウスレイヤーの自動切替や Matrix の設定がすべて効きます。オン：Windows 標準のタッチパッド操作（ジェスチャーなど）が使えますが、USB をタッチパッド側に挿しているときは、マウスレイヤーの自動切替・速度・回転・スクロールの設定が効かなくなります。macOS では常にマウスとして動作します。"
 }
