@@ -24,6 +24,11 @@ describe('EdgeKnob presets', () => {
       0x00da, 0x00d9,
     ]);
   });
+  test('Ctrl + wheel zoom: counter-clockwise zooms out', () => {
+    expect(presetKeycodes(preset('zoomWheel'), 'other', false)).toEqual([
+      0x01da, 0x01d9,
+    ]);
+  });
   test('zoom uses the keypad keys (any keyboard layout)', () => {
     // Ctrl + keypad - / Ctrl + keypad +; counter-clockwise zooms out
     expect(presetKeycodes(preset('zoom'), 'other', false)).toEqual([

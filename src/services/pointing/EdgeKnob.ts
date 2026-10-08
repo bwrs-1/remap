@@ -70,6 +70,14 @@ export const PAIR_PRESETS: PairPreset[] = [
     kind: 'motion',
     pair: [0x00db, 0x00dc],
   },
+  // Ctrl + wheel zooms in browsers and most Windows apps on any keyboard
+  // layout. Firmware r15+ holds Ctrl while it sends one whole notch.
+  {
+    id: 'zoomWheel',
+    label: 'Zoom (Ctrl + wheel, firmware r15+)',
+    kind: 'value',
+    pair: [CTL | 0x00da, CTL | 0x00d9],
+  },
   // Keypad + / - are the same on every keyboard layout (Ctrl + "=" is "^"
   // on a Japanese layout, so it did not zoom in there).
   {

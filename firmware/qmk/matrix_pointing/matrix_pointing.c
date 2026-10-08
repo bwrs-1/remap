@@ -56,7 +56,7 @@ __attribute__((weak)) bool usb_hires_scroll_enabled(void);
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 14
+#define MP_REVISION 15
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -872,6 +872,49 @@ static void mp_wheel_key(uint16_t keycode, bool pressed) {
 }
 #endif // MP_HIRES
 
+#ifdef MP_SMOOTH
+// Wheel keycodes with modifiers (revision 15), e.g. Ctrl + wheel to zoom:
+// the modifiers are held while one whole notch goes out in a single report
+// (QMK's mouse keys would send 1/120 notch with the high-resolution wheel),
+// then released.
+static uint8_t  mp_modwheel_mods  = 0;
+static uint16_t mp_modwheel_until = 0;
+
+static bool mp_is_mod_wheel(uint16_t keycode) {
+    const uint8_t basic = keycode & 0xFF;
+    return keycode <= QK_MODS_MAX && (keycode >> 8) != 0 && basic >= QK_MOUSE_WHEEL_UP && basic <= QK_MOUSE_WHEEL_RIGHT;
+}
+
+static void mp_mod_wheel(uint16_t keycode) {
+    const uint8_t m    = (keycode >> 8) & 0x1F; // QK_MODS: Ctrl 1, Shift 2, Alt 4, GUI 8, right 0x10
+    const uint8_t mods = (m & 0x10) ? (uint8_t)((m & 0x0F) << 4) : (uint8_t)(m & 0x0F);
+    if (mp_modwheel_mods != mods) {
+        if (mp_modwheel_mods) unregister_mods(mp_modwheel_mods);
+        register_mods(mods);
+        mp_modwheel_mods = mods;
+    }
+    int32_t h = 0, v = 0;
+    switch (keycode & 0xFF) {
+        case QK_MOUSE_WHEEL_UP: v = 1; break;
+        case QK_MOUSE_WHEEL_DOWN: v = -1; break;
+        case QK_MOUSE_WHEEL_LEFT: h = -1; break;
+        case QK_MOUSE_WHEEL_RIGHT: h = 1; break;
+        default: break;
+    }
+    mp_momentum_h = mp_momentum_v = 0;
+    mp_scroll_queue(h * mp_notch(), v * mp_notch(), 0);
+    mp_modwheel_until = timer_read() + 40;
+}
+
+// Releases the modifiers once the notch is out (and 40 ms have passed).
+static void mp_mod_wheel_task(void) {
+    if (mp_modwheel_mods && mp_scroll_pend_h == 0 && mp_scroll_pend_v == 0 && (int16_t)(timer_read() - mp_modwheel_until) >= 0) {
+        unregister_mods(mp_modwheel_mods);
+        mp_modwheel_mods = 0;
+    }
+}
+#endif // MP_SMOOTH
+
 // ---------------------------------------------------------------------------
 // Touchpad edge sliders and corner taps (revision 12, digitizer touchpads).
 // A single finger that lands within edge_width % of a side whose keycodes
@@ -967,6 +1010,12 @@ static void mp_edge_emit(uint8_t edge, uint8_t forward) {
     }
 #    endif
     const uint16_t keycode = mp_ext.edge_kc[edge][forward ? 1 : 0];
+#    ifdef MP_SMOOTH
+    if (mp_is_mod_wheel(keycode)) {
+        mp_mod_wheel(keycode);
+        return;
+    }
+#    endif
 #    ifdef MP_HIRES
     if (mp_is_wheel_keycode(keycode)) {
         mp_wheel_notch(keycode);
@@ -1164,6 +1213,12 @@ static bool mp_knob_process(uint16_t keycode, keyrecord_t *record) {
             mp_knob_turned[knob] = true;
             const uint16_t alt   = mp_ext.knob_kc[knob][dir];
             if (alt == KC_NO) return true; // not set: the usual keycode
+#    ifdef MP_SMOOTH
+            if (mp_is_mod_wheel(alt)) {
+                mp_mod_wheel(alt);
+                return false;
+            }
+#    endif
 #    ifdef MP_HIRES
             if (mp_is_wheel_keycode(alt)) {
                 mp_wheel_notch(alt);
@@ -1948,6 +2003,7 @@ static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
     mp_scroll_pend_v -= ov;
     r.h = oh;
     r.v = ov;
+    mp_mod_wheel_task();
     return r;
 }
 #endif // MP_SMOOTH
@@ -2024,6 +2080,12 @@ bool matrix_pointing_process_record(uint16_t keycode, keyrecord_t *record) {
 #ifdef MP_KNOBS
     mp_ensure_loaded();
     if (!mp_knob_process(keycode, record)) return false;
+#endif
+#ifdef MP_SMOOTH
+    if (mp_is_mod_wheel(keycode)) {
+        if (record->event.pressed) mp_mod_wheel(keycode);
+        return false;
+    }
 #endif
 #ifdef MP_HIRES
     if (mp_is_wheel_keycode(keycode)) {
