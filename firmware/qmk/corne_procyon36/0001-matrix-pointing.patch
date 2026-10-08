@@ -1,4 +1,4 @@
-From ba0ead41d97ae7098a24ba1030e4e1352a9f4dce Mon Sep 17 00:00:00 2001
+From c69026ae0b3dccb3f262ab90192952432c024944 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
 Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
@@ -23,10 +23,10 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
  keyboards/corne_procyon36/digitizer_user.c    |   99 +-
  keyboards/corne_procyon36/keyboard.json       |    2 +-
  .../corne_procyon36/keymaps/default/keymap.c  |   26 +-
- keyboards/corne_procyon36/matrix_pointing.c   | 2451 +++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.c   | 2588 +++++++++++++++++
  keyboards/corne_procyon36/matrix_pointing.h   |   89 +
  keyboards/corne_procyon36/rules.mk            |   11 +-
- 7 files changed, 2664 insertions(+), 100 deletions(-)
+ 7 files changed, 2801 insertions(+), 100 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
@@ -338,10 +338,10 @@ index 2784405..a661c11 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..2b178b5
+index 0000000..fd18a11
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
-@@ -0,0 +1,2451 @@
+@@ -0,0 +1,2588 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +// See matrix_pointing.h and README.md next to this file.
 +//
@@ -400,7 +400,7 @@ index 0000000..2b178b5
 +// Read-only value 0x7C: revision of this module, so the editor can tell that
 +// the keyboard runs an older build. Bump it with every behaviour change.
 +#define MP_REVISION_VALUE_ID 0x7C
-+#define MP_REVISION 19
++#define MP_REVISION 20
 +// Read-only value 0x7D: the other half of a split keyboard —
 +// [state, its revision (2), this build's ID (2), its build ID (2)];
 +// state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -593,7 +593,11 @@ index 0000000..2b178b5
 +#define MP_CORNER_COUNT 4 // top-left, top-right, bottom-left, bottom-right
 +#define MP_KNOB_COUNT 2
 +#define MP_EXT_MAGIC 0x4D5A // 'MZ'
-+#define MP_EXT_VERSION 5
++#if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
++#    define MP_GUIDE // light only the assigned keys (revision 20)
++#endif
++#define MP_EXT_VERSION 6
++#define MP_EXT_V5_SIZE 50 // version 5 (up to `touch_glow_fade`)
 +#define MP_EXT_V4_SIZE 48 // version 4 (up to `touch_glow_color`)
 +#define MP_EXT_V3_SIZE 46 // version 3 (up to `precision_scale`)
 +#define MP_EXT_V1_SIZE 39 // bytes covered by version 1 (up to `smooth`)
@@ -639,12 +643,17 @@ index 0000000..2b178b5
 +    // version 5 (revision 19)
 +    uint8_t touch_glow_radius; // LED units (keys are about 13 apart)
 +    uint8_t touch_glow_fade;   // fade-out after lifting, x10 ms
++    // version 6 (revision 20)
++    uint8_t key_guide;       // light only assigned keys: 0 off, 1 on layers above the base, 2 always
++    uint8_t key_guide_color; // 0 = keep the colors, 1 = color by the kind of key
++    uint8_t key_guide_dim;   // brightness of unassigned keys, % (0 = off)
 +} mp_ext_t;
 +_Static_assert(sizeof(mp_ext_t) <= 64, "mp_ext_t must fit 64 bytes");
 +_Static_assert(offsetof(mp_ext_t, accel_slow) == MP_EXT_V1_SIZE, "extension version 1 layout changed");
 +_Static_assert(offsetof(mp_ext_t, precision_scale) == MP_EXT_V2_SIZE, "extension version 2 layout changed");
 +_Static_assert(offsetof(mp_ext_t, touch_glow) == MP_EXT_V3_SIZE, "extension version 3 layout changed");
 +_Static_assert(offsetof(mp_ext_t, touch_glow_radius) == MP_EXT_V4_SIZE, "extension version 4 layout changed");
++_Static_assert(offsetof(mp_ext_t, key_guide) == MP_EXT_V5_SIZE, "extension version 5 layout changed");
 +
 +// Touch sensor tuning: written to the sensor from the housekeeping task on
 +// the half it is wired to (the slave half gets the values over the split
@@ -683,6 +692,7 @@ index 0000000..2b178b5
 +    .touch_glow      = 1,
 +    .touch_glow_radius = 28,
 +    .touch_glow_fade   = 30,
++    .key_guide         = 1,
 +};
 +static mp_ext_t mp_ext = {0};
 +
@@ -705,7 +715,7 @@ index 0000000..2b178b5
 +    eeconfig_read_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
 +    // Older versions (1: revisions 12-13, 2: 14-16): keep their settings,
 +    // new fields get defaults.
-+    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE, MP_EXT_V4_SIZE};
++    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE, MP_EXT_V4_SIZE, MP_EXT_V5_SIZE};
 +    if (mp_ext.magic == MP_EXT_MAGIC && mp_ext.version >= 1 && mp_ext.version < MP_EXT_VERSION) {
 +        const uint8_t size = old_sizes[mp_ext.version];
 +        if (mp_ext.checksum == mp_ext_checksum_n(&mp_ext, size)) {
@@ -882,6 +892,9 @@ index 0000000..2b178b5
 +    caps |= 1UL << 30; // touch glow size and fade-out (0x9C, 0x9D)
 +#    endif
 +#endif
++#ifdef MP_GUIDE
++    caps |= 1UL << 31; // light only the assigned keys (0x9E..0xA0)
++#endif
 +    return caps;
 +}
 +
@@ -919,6 +932,9 @@ index 0000000..2b178b5
 +    MP_EXT_FIELD(0x9B, touch_glow_color, 0, 8),
 +    MP_EXT_FIELD(0x9C, touch_glow_radius, 10, 60),
 +    MP_EXT_FIELD(0x9D, touch_glow_fade, 0, 200),
++    MP_EXT_FIELD(0x9E, key_guide, 0, 2),
++    MP_EXT_FIELD(0x9F, key_guide_color, 0, 1),
++    MP_EXT_FIELD(0xA0, key_guide_dim, 0, 50),
 +};
 +
 +static const mp_field_t *mp_find_ext_field(uint8_t id) {
@@ -1610,6 +1626,65 @@ index 0000000..2b178b5
 +    }
 +}
 +
++#ifdef MP_GUIDE
++// Key guide (revision 20): on the active layer, light only the keys that do
++// something there; transparent and empty keys go dark (or dim). The USB half
++// reads the keymap and sends the kind of each key to the other half, which
++// has no copy of the keymap.
++#    define MP_GUIDE_KEYS (MATRIX_ROWS * MATRIX_COLS)
++#    define MP_GUIDE_PACKET (3 + (MP_GUIDE_KEYS + 1) / 2) // marker, flags, dim, 4 bits per key
++#    define MP_GUIDE_MARKER 0xB7
++enum { MP_KIND_NONE, MP_KIND_KEY, MP_KIND_MOD, MP_KIND_LAYER, MP_KIND_MEDIA, MP_KIND_MOUSE, MP_KIND_OTHER };
++
++static uint8_t mp_guide_packet[MP_GUIDE_PACKET] = {0};
++static bool    mp_guide_have                    = false;
++
++static uint8_t mp_guide_kind_of(uint16_t kc) {
++    if (kc == KC_NO || kc == KC_TRANSPARENT) return MP_KIND_NONE;
++    if (IS_MODIFIER_KEYCODE(kc) || IS_QK_MOD_TAP(kc) || IS_QK_ONE_SHOT_MOD(kc)) return MP_KIND_MOD;
++    if (IS_QK_LAYER_TAP(kc) || IS_QK_LAYER_MOD(kc) || IS_QK_TO(kc) || IS_QK_MOMENTARY(kc) || IS_QK_DEF_LAYER(kc) || IS_QK_TOGGLE_LAYER(kc) || IS_QK_ONE_SHOT_LAYER(kc) || IS_QK_LAYER_TAP_TOGGLE(kc) || IS_QK_PERSISTENT_DEF_LAYER(kc)) return MP_KIND_LAYER;
++    if (IS_SYSTEM_KEYCODE(kc) || IS_CONSUMER_KEYCODE(kc)) return MP_KIND_MEDIA;
++    if (IS_MOUSE_KEYCODE(kc) || IS_QK_KB(kc)) return MP_KIND_MOUSE; // QK_KB_*: DPI / precision keys
++    if (IS_BASIC_KEYCODE(kc)) return MP_KIND_KEY;
++    return MP_KIND_OTHER; // shortcuts (mods + key), macros, system keys...
++}
++
++// USB half: what the active layer has at each key position.
++static void mp_guide_compute(void) {
++    const uint8_t layer  = get_highest_layer(layer_state | default_layer_state);
++    const uint8_t base   = get_highest_layer(default_layer_state);
++    const bool    active = mp_ext.key_guide == 2 || (mp_ext.key_guide == 1 && layer != base);
++    uint8_t      *p      = mp_guide_packet;
++    memset(p, 0, sizeof(mp_guide_packet));
++    p[0] = MP_GUIDE_MARKER;
++    p[1] = (active ? 1 : 0) | (mp_ext.key_guide_color ? 2 : 0);
++    p[2] = mp_ext.key_guide_dim > 50 ? 50 : mp_ext.key_guide_dim;
++    if (active) {
++        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
++            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
++                const uint16_t i    = row * MATRIX_COLS + col;
++                const uint8_t  kind = mp_guide_kind_of(keymap_key_to_keycode(layer, (keypos_t){.col = col, .row = row}));
++                p[3 + i / 2] |= (i & 1) ? (uint8_t)(kind << 4) : kind;
++            }
++        }
++    }
++    mp_guide_have = true;
++}
++
++// The other half: the packet from the USB half.
++static void mp_guide_unpack(const uint8_t *in) {
++    if (in[0] != MP_GUIDE_MARKER) return;
++    memcpy(mp_guide_packet, in, sizeof(mp_guide_packet));
++    mp_guide_have = true;
++}
++
++static uint8_t mp_guide_kind_at(uint8_t row, uint8_t col) {
++    const uint16_t i = row * MATRIX_COLS + col;
++    const uint8_t  b = mp_guide_packet[3 + i / 2];
++    return (i & 1) ? b >> 4 : b & 0x0F;
++}
++#endif
++
 +// Touch glow (revision 18): where a finger is on the pad (0..MP_EDGE_SCALE,
 +// as the user sees it), for lighting the keys at the same place on the
 +// keyboard. Known on the touchpad half; the other half gets it with the
@@ -1869,6 +1944,9 @@ index 0000000..2b178b5
 +#    ifdef MP_EDGES
 +    if (in_len >= 5 && !mp_edge_on_this_side()) mp_glow_unpack((const uint8_t *)in);
 +#    endif
++#    ifdef MP_GUIDE
++    if (in_len >= 5 + MP_GUIDE_PACKET) mp_guide_unpack((const uint8_t *)in + 5);
++#    endif
 +    if (out_len < 1) return;
 +    uint8_t *o       = (uint8_t *)out;
 +    o[0]             = mp_pending_swipe;
@@ -1957,7 +2035,15 @@ index 0000000..2b178b5
 +    if (timer_elapsed(last_poll) >= 20) {
 +        last_poll         = timer_read();
 +        uint8_t reply[MP_PEER_REPLY_SIZE] = {0};
-+        uint8_t glow[5]                   = {0}; // this half's touch glow, for the other half
++        // This half's touch glow (5 bytes), then (revision 20) the key guide.
++#    ifdef MP_GUIDE
++        _Static_assert(5 + MP_GUIDE_PACKET <= RPC_M2S_BUFFER_SIZE, "key guide does not fit the split request");
++        uint8_t glow[5 + MP_GUIDE_PACKET] = {0};
++        mp_guide_compute();
++        memcpy(glow + 5, mp_guide_packet, MP_GUIDE_PACKET);
++#    else
++        uint8_t glow[5] = {0};
++#    endif
 +#    ifdef MP_EDGES
 +        if (mp_edge_on_this_side()) mp_glow_pack(&mp_glow_local, glow);
 +#    endif
@@ -2061,6 +2147,13 @@ index 0000000..2b178b5
 +
 +void matrix_pointing_housekeeping(void) {
 +    mp_drain();
++#ifdef MP_GUIDE
++#    ifdef SPLIT_KEYBOARD
++    if (!is_transport_connected() && is_keyboard_master()) mp_guide_compute(); // else with the split poll
++#    else
++    mp_guide_compute();
++#    endif
++#endif
 +    mp_split_housekeeping();
 +    mp_sensor_task();
 +#ifdef MP_EDGES
@@ -2151,6 +2244,47 @@ index 0000000..2b178b5
 +}
 +#endif
 +
++#ifdef MP_GUIDE
++static void mp_guide_render(uint8_t led_min, uint8_t led_max, uint8_t layer_color) {
++    if (!mp_guide_have || !(mp_guide_packet[1] & 1)) return;
++    static const uint8_t kind_hs[][2] = {
++        {0, 0},     // key: white
++        {170, 255}, // modifier: blue
++        {213, 255}, // layer: magenta
++        {85, 255},  // media / system: green
++        {43, 255},  // mouse: yellow
++        {128, 255}, // other (shortcuts, macros): cyan
++    };
++    const bool    by_kind = mp_guide_packet[1] & 2;
++    const uint8_t dim     = mp_guide_packet[2];
++    const uint8_t val     = rgb_matrix_get_val();
++    uint8_t       hue = rgb_matrix_get_hue(), sat = rgb_matrix_get_sat();
++    if (layer_color >= 2 && layer_color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
++        hue = mp_led_hs[layer_color - 2][0];
++        sat = mp_led_hs[layer_color - 2][1];
++    }
++    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
++        for (uint8_t col = 0; col < MATRIX_COLS; col++) {
++            const uint8_t led = g_led_config.matrix_co[row][col];
++            if (led == NO_LED || led < led_min || led >= led_max) continue;
++            const uint8_t kind = mp_guide_kind_at(row, col);
++            hsv_t         hsv  = {hue, sat, val};
++            if (kind == MP_KIND_NONE) {
++                if (matrix_is_on(row, col)) continue; // keep the held key (e.g. the layer key) lit
++                hsv.v = (uint8_t)((uint16_t)val * dim / 100);
++            } else if (by_kind && kind - 1 < (int)ARRAY_SIZE(kind_hs)) {
++                hsv.h = kind_hs[kind - 1][0];
++                hsv.s = kind_hs[kind - 1][1];
++            } else {
++                continue; // assigned: keep what the lighting drew
++            }
++            const rgb_t rgb = hsv_to_rgb(hsv);
++            rgb_matrix_set_color(led, rgb.r, rgb.g, rgb.b);
++        }
++    }
++}
++#endif
++
 +bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max) {
 +    mp_ensure_loaded();
 +    bool          keep_going = true;
@@ -2167,6 +2301,9 @@ index 0000000..2b178b5
 +        }
 +        keep_going = false;
 +    }
++#ifdef MP_GUIDE
++    mp_guide_render(led_min, led_max, color);
++#endif
 +#ifdef MP_EDGES
 +    mp_glow_render(led_min, led_max);
 +#endif
