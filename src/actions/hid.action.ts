@@ -26,6 +26,7 @@ import { maxValueByBitLength } from '../utils/NumberUtils';
 import { KeyOp } from '../gen/types/KeyboardDefinition';
 import { getEncoderIdList, sendOperationLog } from './utils';
 import { bmpKeyInfoList } from '../services/hid/KeycodeInfoListBmp';
+import { keyboardHasTouchpad } from '../services/pointing/TouchpadLayout';
 
 const PRODUCT_PREFIX_FOR_BLE_MICRO_PRO = '(BMP)';
 
@@ -748,9 +749,22 @@ export const hidActionsThunk = {
         );
         return;
       }
-      const layoutOptionValue = layoutOptionsResult.value!;
+      let layoutOptionValue = layoutOptionsResult.value!;
       const layoutLabels = entities.keyboardDefinition!.layouts.labels || [];
       const layoutValueBitLengths = createLayoutValueBitLengths(layoutLabels);
+      // The Dilemma / Corne Procyon36 has knobs at the outer thumb positions;
+      // its definition offers them as "... Encoder" on/off options that the
+      // firmware leaves at 0 (keys). Show the knobs unless the user has
+      // chosen options in Matrix (then the stored value is not 0).
+      if (
+        layoutOptionValue === 0 &&
+        keyboardHasTouchpad(entities.keyboardDefinition)
+      ) {
+        layoutOptionValue = encoderOptionsValue(
+          layoutLabels,
+          layoutValueBitLengths
+        );
+      }
       const layoutOptions = createLayoutOptions(
         layoutOptionValue,
         layoutValueBitLengths
@@ -880,6 +894,23 @@ const createLayoutValueBitLengths = (
     }
   }
   return result;
+};
+
+// Layout option value with every on/off option named "... Encoder" on.
+const encoderOptionsValue = (
+  labels: (string | string[])[],
+  bitLengths: number[]
+): number => {
+  let value = 0;
+  let shifted = 0;
+  for (let i = bitLengths.length - 1; i >= 0; i--) {
+    const label = labels[i];
+    if (typeof label === 'string' && /encoder/i.test(label)) {
+      value |= 1 << shifted;
+    }
+    shifted += bitLengths[i];
+  }
+  return value;
 };
 
 const createLayoutOptions = (
