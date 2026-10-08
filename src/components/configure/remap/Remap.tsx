@@ -36,6 +36,9 @@ type OwnState = {
 
 // Horizontal room kept around the keyboard for the side toolbar.
 const MIN_SIDE_MENU_WIDTH = 32;
+// Keycaps are drawn at 85% of Remap's size, like Conductor Studio's compact
+// keyboard; narrow screens shrink them further.
+const KEYBOARD_SCALE = 0.85;
 
 export default class Remap extends React.Component<RemapPropType, OwnState> {
   private readonly keyboardWrapperRef: React.RefObject<HTMLDivElement>;
@@ -47,7 +50,10 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     const main = this.editorMainRef.current;
     if (!main || !this.state.minWidth) return;
     const available = main.clientWidth - 8;
-    const zoom = Math.max(0.3, Math.min(1, available / this.state.minWidth));
+    const zoom = Math.max(
+      0.3,
+      Math.min(KEYBOARD_SCALE, available / this.state.minWidth)
+    );
     if (Math.abs(zoom - this.state.zoom) > 0.01) this.setState({ zoom });
   }
 
@@ -58,7 +64,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     this.state = {
       minWidth: 0,
       view: 'keymap',
-      zoom: 1,
+      zoom: KEYBOARD_SCALE,
     };
     this.editorMainRef = React.createRef();
   }
@@ -131,7 +137,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
                 minWidth: this.state.minWidth,
                 // CSS zoom keeps the layout (and the popovers' positions)
                 // consistent, unlike a transform.
-                zoom: this.state.zoom < 1 ? this.state.zoom : undefined,
+                zoom: this.state.zoom,
               }}
               ref={this.keyboardWrapperRef}
             >
