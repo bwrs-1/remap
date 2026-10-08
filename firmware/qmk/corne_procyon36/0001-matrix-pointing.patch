@@ -1,4 +1,4 @@
-From 9f83a48393e0bceae80fea55288af6685fcae8d4 Mon Sep 17 00:00:00 2001
+From 8ed3f98ddbf7cadbb85400b7854231a676b8ad40 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
 Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
@@ -19,22 +19,22 @@ Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- keyboards/corne_procyon36/config.h            |   50 +
+ keyboards/corne_procyon36/config.h            |   53 +
  keyboards/corne_procyon36/digitizer_user.c    |   99 +-
  keyboards/corne_procyon36/keyboard.json       |    2 +-
  .../corne_procyon36/keymaps/default/keymap.c  |   26 +-
- keyboards/corne_procyon36/matrix_pointing.c   | 1060 +++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.c   | 1066 +++++++++++++++++
  keyboards/corne_procyon36/matrix_pointing.h   |   80 ++
  keyboards/corne_procyon36/rules.mk            |   11 +-
- 7 files changed, 1229 insertions(+), 99 deletions(-)
+ 7 files changed, 1238 insertions(+), 99 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
 diff --git a/keyboards/corne_procyon36/config.h b/keyboards/corne_procyon36/config.h
-index e074887..06f0b2d 100644
+index e074887..49edfee 100644
 --- a/keyboards/corne_procyon36/config.h
 +++ b/keyboards/corne_procyon36/config.h
-@@ -81,3 +81,53 @@
+@@ -81,3 +81,56 @@
   * Auto Mouse Layer 設定
   * ============================================================================ */
  #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -60,6 +60,9 @@ index e074887..06f0b2d 100644
 +#define MATRIX_POINTING_CPI_MIN 100
 +#define MATRIX_POINTING_CPI_MAX 3000
 +#define MATRIX_POINTING_DEFAULT_CPI 600
++/* 2 本指スクロール：フォークは指 1mm（100 カウント）でホイール約 10 回分を送るため、Matrix の
++ * 「スクロール速度」全体を 1/30 にする（標準設定 8 で約 3mm ごとに 1 回分） */
++#define MATRIX_POINTING_SCROLL_SCALE 30
 +#define MATRIX_POINTING_DEFAULT_TAP_TERM 150      // ドライバ既定のタップ判定時間と同じ
 +#ifndef __ASSEMBLER__
 +#    include <stdint.h>
@@ -295,10 +298,10 @@ index 2784405..b110ef8 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..16e9b1b
+index 0000000..4df0762
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
-@@ -0,0 +1,1060 @@
+@@ -0,0 +1,1066 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +// See matrix_pointing.h and README.md next to this file.
 +//
@@ -416,6 +419,9 @@ index 0000000..16e9b1b
 +#endif
 +#ifndef MATRIX_POINTING_DEFAULT_CPI
 +#    define MATRIX_POINTING_DEFAULT_CPI 1600
++#endif
++#ifndef MATRIX_POINTING_SCROLL_SCALE
++#    define MATRIX_POINTING_SCROLL_SCALE 1
 +#endif
 +#ifndef MATRIX_POINTING_DEFAULT_TAP_TERM
 +#    define MATRIX_POINTING_DEFAULT_TAP_TERM 200
@@ -1300,10 +1306,13 @@ index 0000000..16e9b1b
 +    }
 +    acc_h += h * 8;
 +    acc_v += v * 8;
-+    r.h = mp_clamp_hv(acc_h / mp_config.scroll_divisor);
-+    r.v = mp_clamp_hv(acc_v / mp_config.scroll_divisor);
-+    acc_h %= mp_config.scroll_divisor;
-+    acc_v %= mp_config.scroll_divisor;
++    // MATRIX_POINTING_SCROLL_SCALE slows every speed setting down for
++    // sensors that report a lot of scroll per finger movement.
++    const int32_t divisor = (int32_t)mp_config.scroll_divisor * MATRIX_POINTING_SCROLL_SCALE;
++    r.h                   = mp_clamp_hv(acc_h / divisor);
++    r.v                   = mp_clamp_hv(acc_v / divisor);
++    acc_h %= divisor;
++    acc_v %= divisor;
 +    return r;
 +}
 +#else

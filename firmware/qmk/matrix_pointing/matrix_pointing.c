@@ -116,6 +116,9 @@ _Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t 
 #ifndef MATRIX_POINTING_DEFAULT_CPI
 #    define MATRIX_POINTING_DEFAULT_CPI 1600
 #endif
+#ifndef MATRIX_POINTING_SCROLL_SCALE
+#    define MATRIX_POINTING_SCROLL_SCALE 1
+#endif
 #ifndef MATRIX_POINTING_DEFAULT_TAP_TERM
 #    define MATRIX_POINTING_DEFAULT_TAP_TERM 200
 #endif
@@ -999,10 +1002,13 @@ report_mouse_t matrix_pointing_task(report_mouse_t r) {
     }
     acc_h += h * 8;
     acc_v += v * 8;
-    r.h = mp_clamp_hv(acc_h / mp_config.scroll_divisor);
-    r.v = mp_clamp_hv(acc_v / mp_config.scroll_divisor);
-    acc_h %= mp_config.scroll_divisor;
-    acc_v %= mp_config.scroll_divisor;
+    // MATRIX_POINTING_SCROLL_SCALE slows every speed setting down for
+    // sensors that report a lot of scroll per finger movement.
+    const int32_t divisor = (int32_t)mp_config.scroll_divisor * MATRIX_POINTING_SCROLL_SCALE;
+    r.h                   = mp_clamp_hv(acc_h / divisor);
+    r.v                   = mp_clamp_hv(acc_v / divisor);
+    acc_h %= divisor;
+    acc_v %= divisor;
     return r;
 }
 #else

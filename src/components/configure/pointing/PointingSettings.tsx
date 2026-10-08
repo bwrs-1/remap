@@ -157,7 +157,8 @@ const touchpadSections = (): SectionSpec[] => [
         key: 'scrollDivisor',
         label: t('Scroll speed'),
         help: t('Smaller values scroll faster (divisor)'),
-        format: (v) => `1/${v}`,
+        // 8 is the standard speed; larger values scroll slower.
+        format: (v) => `×${(8 / v).toFixed(2)}`,
       },
       {
         key: 'naturalScroll',
