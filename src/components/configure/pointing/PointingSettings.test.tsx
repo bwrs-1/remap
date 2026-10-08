@@ -77,8 +77,8 @@ describe('PointingSettings', () => {
       name: 'Invert X axis',
     });
     fireEvent.click(invertX);
-    const save = screen.getByRole('button', { name: 'Preview (not saved)' });
-    expect((save as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText('Preview (not saved)')).toBeTruthy();
+    await new Promise((r) => setTimeout(r, 600));
     expect(ctx.sent).toEqual([]);
   });
 
@@ -89,10 +89,12 @@ describe('PointingSettings', () => {
     });
     await waitFor(() => expect(screen.getAllByText('1600 cpi')).toBeTruthy());
     fireEvent.click(invertX);
-    fireEvent.click(screen.getByRole('button', { name: 'Save to keyboard' }));
-    await waitFor(() => expect(ctx.saved()).toEqual(1));
+    // Saved automatically shortly after the change.
+    await waitFor(() => expect(ctx.saved()).toEqual(1), { timeout: 2000 });
     expect(ctx.sent).toEqual([[0x05, 1]]);
-    expect(ctx.notifySuccess).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.getByText('Saved in the keyboard')).toBeTruthy()
+    );
   });
 
   test('auto mouse: opens the keymap of the target layer', async () => {
@@ -116,8 +118,7 @@ describe('PointingSettings', () => {
     }) as HTMLSelectElement;
     expect(Number(left.value)).toEqual(0x00d3);
     fireEvent.change(left, { target: { value: String(0x0150) } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save to keyboard' }));
-    await waitFor(() => expect(ctx.saved()).toEqual(1));
+    await waitFor(() => expect(ctx.saved()).toEqual(1), { timeout: 2000 });
     expect(ctx.sent).toEqual([
       [0x30, 250],
       [0x31, 0],

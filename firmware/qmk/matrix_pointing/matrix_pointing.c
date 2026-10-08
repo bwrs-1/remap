@@ -48,6 +48,10 @@
 #endif
 
 #define MP_MAGIC 0x4D58 // 'MX'
+// Read-only value 0x7C: revision of this module, so the editor can tell that
+// the keyboard runs an older build. Bump it with every behaviour change.
+#define MP_REVISION_VALUE_ID 0x7C
+#define MP_REVISION 9
 #define MP_VERSION 4
 // Bytes of mp_config_t that earlier versions stored (index = version).
 static const uint8_t mp_version_size[] = {0, 28, 39, 47};
@@ -841,6 +845,11 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
             if (*value_id == 0x00) {
                 value_data[0] = MP_MAGIC >> 8;
                 value_data[1] = MP_MAGIC & 0xFF;
+                return;
+            }
+            if (*value_id == MP_REVISION_VALUE_ID) {
+                value_data[0] = MP_REVISION >> 8;
+                value_data[1] = MP_REVISION & 0xFF;
                 return;
             }
             if (*value_id == MP_CAPABILITIES_VALUE_ID) {

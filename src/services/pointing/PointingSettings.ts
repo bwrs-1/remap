@@ -256,3 +256,16 @@ export async function applySettings<K extends string>(
   if (!changed) return { success: true };
   return keyboard.saveCustomValues();
 }
+
+// Revision of the matrix_pointing firmware module (value 0x7C). Firmware
+// before revision 9 does not report it (0 here).
+export const FIRMWARE_REVISION_VALUE_ID = 0x7c;
+export const LATEST_FIRMWARE_REVISION = 9;
+
+export async function fetchFirmwareRevision(
+  keyboard: IKeyboard
+): Promise<number> {
+  const result = await keyboard.fetchCustomValue(FIRMWARE_REVISION_VALUE_ID, 2);
+  if (!result.success || result.unhandled) return 0;
+  return result.value!;
+}

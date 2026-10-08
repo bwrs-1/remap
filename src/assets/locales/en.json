@@ -628,5 +628,11 @@
   "Download and run Zadig:": "Download and run Zadig:",
   "In Zadig, turn on Options → List All Devices.": "In Zadig, turn on Options → List All Devices.",
   "Choose \"RP2 Boot (Interface 1)\" (not Interface 0, which is the drive), select WinUSB and press \"Install Driver\" (or \"Replace Driver\").": "Choose \"RP2 Boot (Interface 1)\" (not Interface 0, which is the drive), select WinUSB and press \"Install Driver\" (or \"Replace Driver\").",
-  "Reload this page and use \"Write directly over USB\". This is needed only once per computer.": "Reload this page and use \"Write directly over USB\". This is needed only once per computer."
+  "Reload this page and use \"Write directly over USB\". This is needed only once per computer.": "Reload this page and use \"Write directly over USB\". This is needed only once per computer.",
+  "Not saved": "Not saved",
+  "Saving to the keyboard...": "Saving to the keyboard...",
+  "Saved in the keyboard": "Saved in the keyboard",
+  "The firmware on the keyboard is older than the latest Matrix-ready firmware, so some values here may not take effect. Write the latest firmware.": "The firmware on the keyboard is older than the latest Matrix-ready firmware, so some values here may not take effect. Write the latest firmware.",
+  "Latest": "Latest",
+  "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.": "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into."
 }

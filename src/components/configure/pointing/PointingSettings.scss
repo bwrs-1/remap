@@ -381,3 +381,31 @@
     color: variables.$cfg-text-dim;
   }
 }
+
+.pointing-settings {
+  .pointing-save-state {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e8f5ee;
+    color: #1d7a46;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    &.busy {
+      background: #ececee;
+      color: variables.$cfg-text-dim;
+    }
+    &.error {
+      background: #fdecec;
+      color: #b42318;
+    }
+  }
+  .pointing-outdated {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+    background: #fff4e5;
+    border-color: #f3c27a;
+  }
+}

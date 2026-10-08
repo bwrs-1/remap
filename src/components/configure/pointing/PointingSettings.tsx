@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './PointingSettings.scss';
 import {
   Button,
@@ -28,7 +28,9 @@ import {
   LED_COLORS,
   LED_LAYER_COUNT,
   fetchCapabilities,
+  fetchFirmwareRevision,
   isSettingApplied,
+  LATEST_FIRMWARE_REVISION,
 } from '../../../services/pointing/PointingSettings';
 import { layerName, useLayerMeta } from '../../../services/layers/LayerMeta';
 import { SWIPE_KEYCODE_OPTIONS } from '../../../services/pointing/SwipeKeycodes';
@@ -324,6 +326,10 @@ export default function PointingSettings(props: PointingSettingsProps) {
   const [values, setValues] = useState<Values>(defaultValues(defs));
   // Which settings the firmware applies (null: unknown, assume all).
   const [capabilities, setCapabilities] = useState<number | null>(null);
+  const [revision, setRevision] = useState<number | null>(null);
+  const [saveError, setSaveError] = useState<boolean>(false);
+  // Changes are written to the keyboard automatically, one save at a time.
+  const savingRef = useRef(false);
   const layerMeta = useLayerMeta(props.keyboard?.getInformation());
 
   useEffect(() => {
@@ -341,6 +347,9 @@ export default function PointingSettings(props: PointingSettingsProps) {
       const caps = await fetchCapabilities(props.keyboard!);
       if (cancelled) return;
       setCapabilities(caps);
+      const rev = await fetchFirmwareRevision(props.keyboard!);
+      if (cancelled) return;
+      setRevision(rev);
       const result = await fetchSettings(props.keyboard!, defs);
       if (cancelled) return;
       setLoading(false);
@@ -360,6 +369,43 @@ export default function PointingSettings(props: PointingSettingsProps) {
       cancelled = true;
     };
   }, [props.keyboard, props.mode, retry]);
+
+  // Write changes to the keyboard shortly after the last edit (no separate
+  // save step), then read the values back: the firmware may clamp them.
+  useEffect(() => {
+    if (support !== 'supported' || loading || !props.keyboard) return;
+    if (!defs.some((d) => values[d.key] !== stored[d.key])) return;
+    if (savingRef.current) return; // re-runs when the current save ends
+    const snapshot = values;
+    const timer = setTimeout(async () => {
+      savingRef.current = true;
+      setSaving(true);
+      const result = await applySettings(
+        props.keyboard!,
+        defs,
+        stored,
+        snapshot
+      );
+      if (result.success) {
+        setSaveError(false);
+        const reread = await fetchSettings(props.keyboard!, defs);
+        const actual = reread.success ? reread.values! : snapshot;
+        setStored(actual);
+        // Keep edits made while saving; otherwise show what was stored.
+        setValues((current) => (current === snapshot ? actual : current));
+      } else {
+        setSaveError(true);
+        setStored(snapshot); // do not retry in a loop; the next edit retries
+        props.notifyError!(
+          t('Failed to save the settings to the keyboard'),
+          result.cause
+        );
+      }
+      savingRef.current = false;
+      setSaving(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [values, stored, support, loading, saving]);
 
   const titles: Record<PointingSettingsMode, string> = {
     touchpad: t('Touchpad'),
@@ -453,27 +499,6 @@ export default function PointingSettings(props: PointingSettingsProps) {
   const update = (key: string, value: number) =>
     setValues({ ...values, [key]: value });
   const dirty = defs.some((d) => values[d.key] !== stored[d.key]);
-
-  const onSave = async () => {
-    setSaving(true);
-    const result = await applySettings(props.keyboard!, defs, stored, values);
-    setSaving(false);
-    if (result.success) {
-      // Read back: the firmware may clamp values to its own range
-      // (e.g. the digitizer driver limits CPI to 1200).
-      const reread = await fetchSettings(props.keyboard!, defs);
-      const actual = reread.success ? reread.values! : { ...values };
-      setStored(actual);
-      setValues(actual);
-      props.notifySuccess!(t('Saved the settings to the keyboard'));
-    } else {
-      props.notifyError!(
-        t('Failed to save the settings to the keyboard'),
-        result.cause
-      );
-    }
-  };
-
   const layerCount = Number.isNaN(props.layerCount) ? 4 : props.layerCount!;
   const sections =
     props.mode === 'touchpad'
@@ -501,21 +526,46 @@ export default function PointingSettings(props: PointingSettingsProps) {
           >
             {t('Reset to defaults')}
           </Button>
+          <span
+            className={[
+              'pointing-save-state',
+              live && (saving || dirty) ? 'busy' : '',
+              saveError ? 'error' : '',
+            ]
+              .join(' ')
+              .trim()}
+            role="status"
+          >
+            {!live
+              ? t('Preview (not saved)')
+              : saveError
+                ? t('Not saved')
+                : saving || dirty
+                  ? t('Saving to the keyboard...')
+                  : t('Saved in the keyboard')}
+          </span>
+        </div>
+      </div>
+
+      {live && revision !== null && revision < LATEST_FIRMWARE_REVISION && (
+        <div className="pointing-preview-banner pointing-outdated" role="alert">
+          <span>
+            {t(
+              'The firmware on the keyboard is older than the latest Matrix-ready firmware, so some values here may not take effect. Write the latest firmware.'
+            )}{' '}
+            ({t('Keyboard')}: r{revision || '?'} / {t('Latest')}: r
+            {LATEST_FIRMWARE_REVISION})
+          </span>
           <Button
             variant="contained"
             size="small"
             disableElevation
-            disabled={!live || loading || saving || !dirty}
-            onClick={onSave}
+            onClick={() => firmwareFlasherStore.open(props.keyboard || null)}
           >
-            {!live
-              ? t('Preview (not saved)')
-              : dirty
-                ? t('Save to keyboard')
-                : t('Saved')}
+            {t('Write firmware')}
           </Button>
         </div>
-      </div>
+      )}
 
       {!live && (
         <div className="pointing-preview-banner" role="status">
@@ -530,7 +580,7 @@ export default function PointingSettings(props: PointingSettingsProps) {
           <h2>{t('How the settings reach the keyboard')}</h2>
           <p>
             {t(
-              '"Save to keyboard" writes the settings into the keyboard, so they stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.'
+              'Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.'
             )}
           </p>
           {capabilities !== null &&

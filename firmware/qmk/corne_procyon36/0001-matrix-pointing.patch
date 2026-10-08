@@ -1,4 +1,4 @@
-From 8ed3f98ddbf7cadbb85400b7854231a676b8ad40 Mon Sep 17 00:00:00 2001
+From de6ca5b5035cae892f236d085d5cbe4e84de51dc Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
 Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
@@ -23,10 +23,10 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
  keyboards/corne_procyon36/digitizer_user.c    |   99 +-
  keyboards/corne_procyon36/keyboard.json       |    2 +-
  .../corne_procyon36/keymaps/default/keymap.c  |   26 +-
- keyboards/corne_procyon36/matrix_pointing.c   | 1066 +++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.c   | 1075 +++++++++++++++++
  keyboards/corne_procyon36/matrix_pointing.h   |   80 ++
  keyboards/corne_procyon36/rules.mk            |   11 +-
- 7 files changed, 1238 insertions(+), 99 deletions(-)
+ 7 files changed, 1247 insertions(+), 99 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
@@ -298,10 +298,10 @@ index 2784405..b110ef8 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..4df0762
+index 0000000..d7fa246
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
-@@ -0,0 +1,1066 @@
+@@ -0,0 +1,1075 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +// See matrix_pointing.h and README.md next to this file.
 +//
@@ -352,6 +352,10 @@ index 0000000..4df0762
 +#endif
 +
 +#define MP_MAGIC 0x4D58 // 'MX'
++// Read-only value 0x7C: revision of this module, so the editor can tell that
++// the keyboard runs an older build. Bump it with every behaviour change.
++#define MP_REVISION_VALUE_ID 0x7C
++#define MP_REVISION 9
 +#define MP_VERSION 4
 +// Bytes of mp_config_t that earlier versions stored (index = version).
 +static const uint8_t mp_version_size[] = {0, 28, 39, 47};
@@ -1145,6 +1149,11 @@ index 0000000..4df0762
 +            if (*value_id == 0x00) {
 +                value_data[0] = MP_MAGIC >> 8;
 +                value_data[1] = MP_MAGIC & 0xFF;
++                return;
++            }
++            if (*value_id == MP_REVISION_VALUE_ID) {
++                value_data[0] = MP_REVISION >> 8;
++                value_data[1] = MP_REVISION & 0xFF;
 +                return;
 +            }
 +            if (*value_id == MP_CAPABILITIES_VALUE_ID) {

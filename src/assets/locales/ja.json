@@ -721,5 +721,11 @@
   "Download and run Zadig:": "Zadig をダウンロードして起動します：",
   "In Zadig, turn on Options → List All Devices.": "Zadig のメニュー「Options」→「List All Devices」にチェックを入れます。",
   "Choose \"RP2 Boot (Interface 1)\" (not Interface 0, which is the drive), select WinUSB and press \"Install Driver\" (or \"Replace Driver\").": "一覧から「RP2 Boot (Interface 1)」を選び（Interface 0 はドライブなので選ばない）、WinUSB を選んで「Install Driver」（または「Replace Driver」）を押します。",
-  "Reload this page and use \"Write directly over USB\". This is needed only once per computer.": "このページを再読み込みして「USB で直接書き込む」を使います。この設定はパソコンごとに 1 回だけ必要です。"
+  "Reload this page and use \"Write directly over USB\". This is needed only once per computer.": "このページを再読み込みして「USB で直接書き込む」を使います。この設定はパソコンごとに 1 回だけ必要です。",
+  "Not saved": "保存できませんでした",
+  "Saving to the keyboard...": "キーボードに保存中…",
+  "Saved in the keyboard": "キーボードに保存済み（自動保存）",
+  "The firmware on the keyboard is older than the latest Matrix-ready firmware, so some values here may not take effect. Write the latest firmware.": "キーボードのファームウェアが最新の Matrix 対応版より古いため、ここで変えた数値の一部が反映されない可能性があります。最新のファームウェアを書き込んでください。",
+  "Latest": "最新",
+  "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.": "数値を変えるとすぐにキーボードへ書き込まれ（自動保存）、その場で反映されます。USB を抜いても設定は残ります。タッチパッドは右手側にありますが、USB を左右どちらに挿していても設定はタッチパッド側に届きます。"
 }
