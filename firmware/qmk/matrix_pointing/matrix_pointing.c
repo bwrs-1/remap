@@ -913,15 +913,21 @@ report_mouse_t matrix_pointing_task(report_mouse_t r) {
 #ifdef MATRIX_POINTING_NATIVE_CPI
     // Scale to the chosen speed, carrying the remainder so slow movement is
     // not lost.
-    static int32_t rem_x = 0, rem_y = 0;
-    const int32_t  native = MATRIX_POINTING_NATIVE_CPI;
-    int32_t        sx     = x * (int32_t)mp_config.cpi + rem_x;
-    int32_t        sy     = y * (int32_t)mp_config.cpi + rem_y;
-    x                     = sx / native;
-    y                     = sy / native;
-    rem_x                 = sx % native;
-    rem_y                 = sy % native;
-    if (r.x == 0 && r.y == 0) rem_x = rem_y = 0; // finger lifted / stopped
+    // Reports without movement arrive between sensor scans, so the
+    // remainder is only dropped after a pause (not on every empty report).
+    static int32_t  rem_x = 0, rem_y = 0;
+    static uint16_t last_motion = 0;
+    const int32_t   native = MATRIX_POINTING_NATIVE_CPI;
+    if (x != 0 || y != 0) {
+        if (timer_elapsed(last_motion) > 100) rem_x = rem_y = 0;
+        last_motion = timer_read();
+        int32_t sx  = x * (int32_t)mp_config.cpi + rem_x;
+        int32_t sy  = y * (int32_t)mp_config.cpi + rem_y;
+        x           = sx / native;
+        y           = sy / native;
+        rem_x       = sx % native;
+        rem_y       = sy % native;
+    }
 #endif
     r.x = mp_clamp_xy(x);
     r.y = mp_clamp_xy(y);

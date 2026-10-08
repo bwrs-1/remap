@@ -1,4 +1,4 @@
-From 08ea17d019df2e685546a6e69a4f02565e81130d Mon Sep 17 00:00:00 2001
+From c4572b0f637251dae10e2418275e86edb3679165 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
 Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
@@ -19,19 +19,19 @@ Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- keyboards/corne_procyon36/config.h            |  50 +
- keyboards/corne_procyon36/digitizer_user.c    |   7 +-
- keyboards/corne_procyon36/keyboard.json       |   2 +-
- .../corne_procyon36/keymaps/default/keymap.c  |  26 +-
- keyboards/corne_procyon36/matrix_pointing.c   | 997 ++++++++++++++++++
- keyboards/corne_procyon36/matrix_pointing.h   |  80 ++
- keyboards/corne_procyon36/rules.mk            |  11 +-
- 7 files changed, 1159 insertions(+), 14 deletions(-)
+ keyboards/corne_procyon36/config.h            |   50 +
+ keyboards/corne_procyon36/digitizer_user.c    |   99 +-
+ keyboards/corne_procyon36/keyboard.json       |    2 +-
+ .../corne_procyon36/keymaps/default/keymap.c  |   26 +-
+ keyboards/corne_procyon36/matrix_pointing.c   | 1003 +++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.h   |   80 ++
+ keyboards/corne_procyon36/rules.mk            |   11 +-
+ 7 files changed, 1172 insertions(+), 99 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
 diff --git a/keyboards/corne_procyon36/config.h b/keyboards/corne_procyon36/config.h
-index e074887..ed5663d 100644
+index e074887..06f0b2d 100644
 --- a/keyboards/corne_procyon36/config.h
 +++ b/keyboards/corne_procyon36/config.h
 @@ -81,3 +81,53 @@
@@ -54,12 +54,12 @@ index e074887..ed5663d 100644
 +
 +/* マルチタッチ版 QMK（george-norton/qmk_firmware multitouch_experiment）の digitizer ドライバ向け */
 +/* カーソル速度はソフトウェアで調整する（ドライバの CPI を変えるとスワイプ・タップの判定距離も変わるため固定）。
-+ * センサーは 100 カウント/mm = 2540 CPI（ドライバ 1200 = 等倍）、digitizer_user.c で ×2 → 5080 CPI 相当。 */
-+#define MATRIX_POINTING_NATIVE_CPI 5080
++ * センサーは 100 カウント/mm = 2540 CPI（ドライバ 1200 = 等倍）。 */
++#define MATRIX_POINTING_NATIVE_CPI 2540
 +#define MATRIX_POINTING_DRIVER_CPI 1200
 +#define MATRIX_POINTING_CPI_MIN 100
 +#define MATRIX_POINTING_CPI_MAX 3000
-+#define MATRIX_POINTING_DEFAULT_CPI 800
++#define MATRIX_POINTING_DEFAULT_CPI 600
 +#define MATRIX_POINTING_DEFAULT_TAP_TERM 150      // ドライバ既定のタップ判定時間と同じ
 +#ifndef __ASSEMBLER__
 +#    include <stdint.h>
@@ -89,19 +89,66 @@ index e074887..ed5663d 100644
 +#define COMBO_TERM_PER_COMBO
 +#define COMBO_SHOULD_TRIGGER
 diff --git a/keyboards/corne_procyon36/digitizer_user.c b/keyboards/corne_procyon36/digitizer_user.c
-index d827269..0d95e53 100644
+index d827269..453760b 100644
 --- a/keyboards/corne_procyon36/digitizer_user.c
 +++ b/keyboards/corne_procyon36/digitizer_user.c
-@@ -13,6 +13,7 @@
+@@ -5,111 +5,36 @@
+  * カスタム処理を提供します。
+  * 
+  * 主な機能：
+- * ・CPI を 1600 に設定（デフォルト 400 の 4倍、かくつき対策で最適化）
+- * ・digitizerの移動量に適切なゲインを掛け、指数移動平均フィルタで
+- *   カクツキを緩和します（応答性と安定性のバランスを改善）
++ * ・ドライバの CPI は固定（スワイプ・タップの判定距離を一定に保つため）
++ * ・カーソル速度・回転・加速などは Matrix の設定（matrix_pointing.c）で処理します
+  * ・QMKの標準的なポインティングデバイス処理とは独立して動作
+  * ============================================================================ */
  
  #include "digitizer.h"
  #include "pointing_device.h"
+-#include <limits.h>
+-
+-/* ============================================================================
+- * 設定パラメータ（カーソルかくつき対策で最適化済み）
+- * ============================================================================ */
+-#define CUSTOM_CPI         1600             // カスタムCPI設定（デフォルト400の4倍）
+-#define MOVEMENT_GAIN      2                // 移動量のゲイン倍率（ノイズ削減のため削減）
+-#define SMOOTHING_SHIFT    1                // 平滑化係数（α = 1/2 = 1/2^1、応答性向上）
+-#define STOP_THRESHOLD     8                // 停止判定の閾値（尾引き防止強化）
+-#define INPUT_DEADZONE     5                // 入力デッドゾーン（ノイズ除去強化）
+-
+-/* ============================================================================
+- * ユーティリティ関数
+- * ============================================================================ */
+-/**
+- * 32ビット整数の絶対値を計算
+- * @param v 入力値
+- * @return 絶対値
+- */
+-static inline int32_t iabs32(int32_t v) {
+-    return (v < 0) ? -v : v;
+-}
+-
+-/**
+- * 32ビット整数を16ビット範囲にクランプ（オーバーフロー防止）
+- * @param v 入力値
+- * @return クランプされた16ビット値
+- */
+-static inline int16_t clamp16(int32_t v) {
+-    if (v > INT16_MAX) return INT16_MAX;
+-    if (v < INT16_MIN) return INT16_MIN;
+-    return (int16_t)v;
+-}
 +#include "matrix_pointing.h"
- #include <limits.h>
  
  /* ============================================================================
-@@ -56,7 +57,8 @@ static inline int16_t clamp16(int32_t v) {
-  * @return カスタムCPI値（1600、かくつき対策で最適化済み）
+  * デジタイザー設定関数
+  * ============================================================================ */
+ /**
+- * カスタムCPI値を取得
+- * QMKの標準的なCPI設定をオーバーライドします
+- * @return カスタムCPI値（1600、かくつき対策で最適化済み）
++ * ドライバの CPI を返す（固定値。カーソル速度は Matrix の設定で調整）
   */
  uint16_t digitizer_get_cpi_user(void) {
 -    return CUSTOM_CPI;
@@ -110,12 +157,63 @@ index d827269..0d95e53 100644
  }
  
  /* ============================================================================
-@@ -111,5 +113,6 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
-     mouse_report.x = clamp16(out_x);
-     mouse_report.y = clamp16(out_y);
- 
+  * ポインティングデバイス処理関数
+  * ============================================================================ */
+ /**
+- * ポインティングデバイスのタスク処理
+- * トラックパッドの入力に対して以下の処理を適用します：
+- * 1. 移動量ゲイン適用（ノイズ削減のため削減）
+- * 2. 入力デッドゾーン処理（強化）
+- * 3. 指数移動平均フィルタ（IIR、応答性向上）
+- * 4. 尾引き防止処理（強化）
+- * 5. 出力値のクランプ
+- * 
+- * @param mouse_report 入力マウスレポート
+- * @return 処理済みマウスレポート
++ * ポインティングデバイスのタスク処理（Matrix の設定を適用）
+  */
+ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+-    // フィルタ状態を保持する静的変数
+-    static int32_t filt_x = 0;
+-    static int32_t filt_y = 0;
+-
+-    // 移動量にゲインを適用（32ビットで計算してオーバーフローを防止）
+-    int32_t raw_x = (int32_t)mouse_report.x * MOVEMENT_GAIN;
+-    int32_t raw_y = (int32_t)mouse_report.y * MOVEMENT_GAIN;
+-
+-    // 入力デッドゾーン処理（微小なノイズをゼロとして扱う）
+-    if (iabs32(raw_x) < INPUT_DEADZONE) raw_x = 0;
+-    if (iabs32(raw_y) < INPUT_DEADZONE) raw_y = 0;
+-
+-    // 指数移動平均フィルタ（IIR: Infinite Impulse Response）
+-    // 負数の丸めの差異を避けるため、演算は除算で行う（0方向に丸め）
+-    const int32_t smoothing_denom = (1 << SMOOTHING_SHIFT);
+-    filt_x += (raw_x - filt_x) / smoothing_denom;
+-    filt_y += (raw_y - filt_y) / smoothing_denom;
+-
+-    // 出力はフィルタ値をそのまま使用（重ねがけのシフトはしない）
+-    int32_t out_x = filt_x;
+-    int32_t out_y = filt_y;
+-
+-    // 尾引き防止処理：入力がゼロ付近なら強制的にゼロにリセット
+-    if (iabs32(raw_x) <= INPUT_DEADZONE && (out_x > -STOP_THRESHOLD && out_x < STOP_THRESHOLD)) {
+-        out_x = 0;
+-        filt_x = 0;  // フィルタ状態もリセット
+-    }
+-    if (iabs32(raw_y) <= INPUT_DEADZONE && (out_y > -STOP_THRESHOLD && out_y < STOP_THRESHOLD)) {
+-        out_y = 0;
+-        filt_y = 0;  // フィルタ状態もリセット
+-    }
+-
+-    // 16ビット範囲にクランプして出力
+-    mouse_report.x = clamp16(out_x);
+-    mouse_report.y = clamp16(out_y);
+-
 -    return mouse_report;
-+    // Matrix エディタの設定（回転・反転・加速・スクロール）を適用
++    // 以前はここで移動量 ×2・デッドゾーン・指数移動平均・停止判定をかけていたが、
++    // センサーの読み取りの合間に来る「移動 0」の報告で平滑化が崩れ、ゆっくり動かすと
++    // 動きが途切れたり飛んだりしていた（Windows がタッチパッドとして扱う間は使われていなかった）。
++    // 速度の調整と端数の持ち越しは Matrix の設定で matrix_pointing_task() が行う。
 +    return matrix_pointing_task(mouse_report);
  }
 diff --git a/keyboards/corne_procyon36/keyboard.json b/keyboards/corne_procyon36/keyboard.json
@@ -197,10 +295,10 @@ index 2784405..b110ef8 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..d54ff6e
+index 0000000..664cce1
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
-@@ -0,0 +1,997 @@
+@@ -0,0 +1,1003 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +// See matrix_pointing.h and README.md next to this file.
 +//
@@ -1116,15 +1214,21 @@ index 0000000..d54ff6e
 +#ifdef MATRIX_POINTING_NATIVE_CPI
 +    // Scale to the chosen speed, carrying the remainder so slow movement is
 +    // not lost.
-+    static int32_t rem_x = 0, rem_y = 0;
-+    const int32_t  native = MATRIX_POINTING_NATIVE_CPI;
-+    int32_t        sx     = x * (int32_t)mp_config.cpi + rem_x;
-+    int32_t        sy     = y * (int32_t)mp_config.cpi + rem_y;
-+    x                     = sx / native;
-+    y                     = sy / native;
-+    rem_x                 = sx % native;
-+    rem_y                 = sy % native;
-+    if (r.x == 0 && r.y == 0) rem_x = rem_y = 0; // finger lifted / stopped
++    // Reports without movement arrive between sensor scans, so the
++    // remainder is only dropped after a pause (not on every empty report).
++    static int32_t  rem_x = 0, rem_y = 0;
++    static uint16_t last_motion = 0;
++    const int32_t   native = MATRIX_POINTING_NATIVE_CPI;
++    if (x != 0 || y != 0) {
++        if (timer_elapsed(last_motion) > 100) rem_x = rem_y = 0;
++        last_motion = timer_read();
++        int32_t sx  = x * (int32_t)mp_config.cpi + rem_x;
++        int32_t sy  = y * (int32_t)mp_config.cpi + rem_y;
++        x           = sx / native;
++        y           = sy / native;
++        rem_x       = sx % native;
++        rem_y       = sy % native;
++    }
 +#endif
 +    r.x = mp_clamp_xy(x);
 +    r.y = mp_clamp_xy(y);
