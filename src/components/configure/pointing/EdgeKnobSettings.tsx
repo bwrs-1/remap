@@ -563,7 +563,7 @@ export function SmoothnessCard(props: { keyboard: IKeyboard }) {
         </h2>
         <span>
           {t(
-            'The touchpad reports a few hundred times a second while the computer reads the keyboard every millisecond. Smooth movement fills the gaps so the cursor glides instead of stepping. Two-finger scrolling and the knobs scroll in small steps (high-resolution wheel).'
+            'The touchpad reports a few hundred times a second while the computer reads the keyboard every millisecond. Smooth movement fills the gaps so the cursor glides instead of stepping.'
           )}
         </span>
       </div>

@@ -863,7 +863,7 @@
   "Spreads each touchpad report over the next few milliseconds (adds about 3 ms of delay).": "タッチパッドからの報告を次の報告までの数ミリ秒に分けて送ります（約 3ms 遅れます）。",
   "Step distance": "1 回分の距離",
   "Switch tabs (Ctrl+Tab)": "タブ切り替え（Ctrl+Tab）",
-  "The touchpad reports a few hundred times a second while the computer reads the keyboard every millisecond. Smooth movement fills the gaps so the cursor glides instead of stepping. Two-finger scrolling and the knobs scroll in small steps (high-resolution wheel).": "タッチパッドの報告は毎秒数百回ですが、パソコンはキーボードを 1 ミリ秒ごとに読み取ります。なめらか補間はその間を埋めて、カーソルがカクカクせずに滑るように動かします。2 本指スクロールとノブのスクロールも細かい単位（高解像度ホイール）で送ります。",
+  "The touchpad reports a few hundred times a second while the computer reads the keyboard every millisecond. Smooth movement fills the gaps so the cursor glides instead of stepping.": "タッチパッドの報告は毎秒数百回ですが、パソコンはキーボードを 1 ミリ秒ごとに読み取ります。なめらか補間はその間を埋めて、カーソルがカクカクせずに滑るように動かします。",
   "This needs newer firmware (Matrix r12 or later). Write the latest firmware to both halves.": "この機能には新しいファームウェア（Matrix r12 以降）が必要です。左右両方に最新のファームウェアを書き込んでください。",
   "Tip: on Windows, turn off \"Enhance pointer precision\" (Settings > Bluetooth & devices > Mouse > Additional mouse settings > Pointer Options) so the acceleration here is not applied twice.": "ヒント：Windows では「ポインターの精度を高める」（設定 > Bluetooth とデバイス > マウス > マウスの追加設定 > ポインター オプション）をオフにすると、ここでの加速と二重にかからなくなります。",
   "Top edge": "上の縁",

@@ -51,7 +51,7 @@
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 12
+#define MP_REVISION 13
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -701,11 +701,13 @@ uint8_t matrix_pointing_swipe(uint8_t direction) {
 // The sensor reports every few milliseconds while USB takes a report every
 // millisecond, so each sensor report is spread over the time until the next
 // one (with "smooth" on). Acceleration follows the finger speed per
-// millisecond. With POINTING_DEVICE_HIRES_SCROLL_ENABLE the host reads the
-// wheel in 1/120 notches: touchpad scrolling, wheel keycodes (knobs, edge
-// sliders, mouse keys on a layer) and momentum after a two-finger flick all
-// go through the same scroll queue. QMK's mouse keys would send only 1/120
-// notch per step there, so wheel keycodes are handled here instead.
+// millisecond. Touchpad scrolling and momentum after a two-finger flick go
+// through one scroll queue in wheel notches. With
+// POINTING_DEVICE_HIRES_SCROLL_ENABLE the units are 1/120 notches and wheel
+// keycodes (knobs, edge sliders, mouse keys) go through it too (QMK's mouse
+// keys would send 1/120 notch per step). QMK always sends the fine units
+// without checking that the host turned the multiplier on; a host that does
+// not scrolls 120 times too far, so it is off for the Corne Procyon36.
 #if defined(POINTING_DEVICE_ENABLE) && defined(MATRIX_POINTING_NATIVE_CPI)
 #    define MP_SMOOTH
 #endif
@@ -713,22 +715,34 @@ uint8_t matrix_pointing_swipe(uint8_t direction) {
 #    define MP_HIRES
 #endif
 
-#ifdef MP_HIRES
-static int32_t  mp_scroll_pend_h = 0, mp_scroll_pend_v = 0; // 1/120 notch units
+#ifdef MP_SMOOTH
+// Scroll queue in wheel units (notches, or 1/120 notches with the
+// high-resolution wheel).
+static int32_t  mp_scroll_pend_h = 0, mp_scroll_pend_v = 0;
 static uint16_t mp_scroll_until  = 0;
+static int32_t  mp_momentum_h = 0, mp_momentum_v = 0; // units per ms x65536
+
+static int32_t mp_notch(void) {
+#    ifdef MP_HIRES
+    return pointing_device_get_hires_scroll_resolution();
+#    else
+    return 1;
+#    endif
+}
+#endif
+
+#ifdef MP_HIRES
 static int8_t   mp_wheel_hold_h = 0, mp_wheel_hold_v = 0;
 static uint16_t mp_wheel_hold_since = 0;
 static int32_t  mp_wheel_hold_acc   = 0;
-static int32_t  mp_momentum_h = 0, mp_momentum_v = 0; // units per ms x256
-
-static int32_t mp_notch(void) {
-    return pointing_device_get_hires_scroll_resolution();
-}
 
 static bool mp_is_wheel_keycode(uint16_t keycode) {
     return keycode >= QK_MOUSE_WHEEL_UP && keycode <= QK_MOUSE_WHEEL_RIGHT;
 }
 
+#endif // MP_HIRES
+
+#ifdef MP_SMOOTH
 static void mp_scroll_queue(int32_t h, int32_t v, uint16_t spread_ms) {
     const uint16_t now   = timer_read();
     const uint16_t until = now + spread_ms;
@@ -741,7 +755,9 @@ static void mp_scroll_queue(int32_t h, int32_t v, uint16_t spread_ms) {
     mp_scroll_pend_h += h;
     mp_scroll_pend_v += v;
 }
+#endif // MP_SMOOTH
 
+#ifdef MP_HIRES
 static void mp_wheel_direction(uint16_t keycode, int8_t *h, int8_t *v) {
     *h = *v = 0;
     switch (keycode) {
@@ -1760,25 +1776,24 @@ static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
     // the base speed.
     static int32_t acc_h = 0, acc_v = 0;
     const int32_t  divisor = (int32_t)mp_config.scroll_divisor * MATRIX_POINTING_SCROLL_SCALE;
-#    ifdef MP_HIRES
     const int32_t notch = mp_notch();
-#    else
-    const int32_t notch = 1;
-#    endif
     acc_h += h * 8 * notch;
     acc_v += v * 8 * notch;
     const int32_t sh = acc_h / divisor, sv = acc_v / divisor;
     acc_h %= divisor;
     acc_v %= divisor;
-#    ifdef MP_HIRES
     static uint16_t last_scroll = 0;
-    static int32_t  vel_h = 0, vel_v = 0; // units per ms x256
+    static int32_t  vel_h = 0, vel_v = 0; // units per ms x65536
     if (h || v) {
-        const uint16_t gap = now - last_scroll;
+        const uint16_t gap  = now - last_scroll;
         const int32_t  span = (dt >= 1 && dt <= 40) ? dt : frame_x16 / 16;
         if (gap > 100) vel_h = vel_v = 0;
-        vel_h += (sh * 256 / span - vel_h) / 2;
-        vel_v += (sv * 256 / span - vel_v) / 2;
+        // From the unrounded amount, so slow scrolling in whole notches
+        // still has a speed.
+        const int32_t fh = (int32_t)((int64_t)h * 8 * notch * 65536 / divisor / span);
+        const int32_t fv = (int32_t)((int64_t)v * 8 * notch * 65536 / divisor / span);
+        vel_h += (fh - vel_h) / 2;
+        vel_v += (fv - vel_v) / 2;
         last_scroll   = now;
         mp_momentum_h = mp_momentum_v = 0;
         mp_scroll_queue(sh, sv, smooth ? (uint16_t)(frame_x16 / 16) : 0);
@@ -1791,7 +1806,8 @@ static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
     if (fingers != 0xFF) {
         if (fingers > 0 || x || y) {
             mp_momentum_h = mp_momentum_v = 0;
-        } else if (last_fingers > 0 && mp_config.glide && timer_elapsed(last_scroll) < 60 && (abs(vel_v) > 256 || abs(vel_h) > 256)) {
+        } else if (last_fingers > 0 && mp_config.glide && timer_elapsed(last_scroll) < 60 && (abs(vel_v) > notch * 65536 / 120 || abs(vel_h) > notch * 65536 / 120)) {
+            // faster than about 8 notches per second
             mp_momentum_h = vel_h;
             mp_momentum_v = vel_v;
             vel_h = vel_v = 0;
@@ -1804,15 +1820,18 @@ static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
         for (uint16_t i = 0; i < elapsed; i++) {
             mrem_h += mp_momentum_h;
             mrem_v += mp_momentum_v;
-            mp_momentum_h = mp_momentum_h * 299 / 300;
-            mp_momentum_v = mp_momentum_v * 299 / 300;
+            mp_momentum_h = (int32_t)((int64_t)mp_momentum_h * 199 / 200); // ~200 ms time constant
+            mp_momentum_v = (int32_t)((int64_t)mp_momentum_v * 199 / 200);
         }
-        mp_scroll_pend_h += mrem_h / 256;
-        mp_scroll_pend_v += mrem_v / 256;
-        mrem_h %= 256;
-        mrem_v %= 256;
-        if (abs(mp_momentum_h) < 32 && abs(mp_momentum_v) < 32) mp_momentum_h = mp_momentum_v = 0;
+        mp_scroll_pend_h += mrem_h / 65536;
+        mp_scroll_pend_v += mrem_v / 65536;
+        mrem_h %= 65536;
+        mrem_v %= 65536;
+        // below about 1 notch per second: stop
+        const int32_t stop = notch * 65536 / 1000;
+        if (abs(mp_momentum_h) < stop && abs(mp_momentum_v) < stop) mp_momentum_h = mp_momentum_v = 0;
     }
+#    ifdef MP_HIRES
     // Wheel keys held down: after 300 ms keep scrolling, faster over time
     // (12 to 40 notches per second).
     if ((mp_wheel_hold_h || mp_wheel_hold_v) && timer_elapsed(mp_wheel_hold_since) > 300) {
@@ -1823,6 +1842,7 @@ static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
         mp_wheel_hold_acc %= 1000;
         mp_scroll_queue(mp_wheel_hold_h * units, mp_wheel_hold_v * units, 0);
     }
+#    endif
     int32_t oh = mp_spread(mp_scroll_pend_h, mp_scroll_until, now, elapsed);
     int32_t ov = mp_spread(mp_scroll_pend_v, mp_scroll_until, now, elapsed);
     const int32_t hv_max = sizeof(mouse_hv_report_t) == 1 ? INT8_MAX : INT16_MAX;
@@ -1834,10 +1854,6 @@ static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
     mp_scroll_pend_v -= ov;
     r.h = oh;
     r.v = ov;
-#    else
-    r.h = mp_clamp_hv(sh);
-    r.v = mp_clamp_hv(sv);
-#    endif
     return r;
 }
 #endif // MP_SMOOTH
