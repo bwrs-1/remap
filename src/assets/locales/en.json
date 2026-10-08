@@ -617,5 +617,16 @@
   "Connection mode": "Connection mode",
   "How the computer sees the touchpad": "How the computer sees the touchpad",
   "Act as a Windows precision touchpad": "Act as a Windows precision touchpad",
-  "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.": "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode."
+  "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.": "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.",
+  "Write": "Write",
+  "Write to the RPI-RP2 drive (no driver needed)": "Write to the RPI-RP2 drive (no driver needed)",
+  "In the folder dialog, choose the \"RPI-RP2\" drive and allow editing. The keyboard restarts by itself when writing finishes.": "In the folder dialog, choose the \"RPI-RP2\" drive and allow editing. The keyboard restarts by itself when writing finishes.",
+  "Write directly over USB": "Write directly over USB",
+  "The chosen folder is not the RPI-RP2 drive. Put the keyboard into flash mode and choose the RPI-RP2 drive.": "The chosen folder is not the RPI-RP2 drive. Put the keyboard into flash mode and choose the RPI-RP2 drive.",
+  "Windows: one-time setup for writing directly over USB": "Windows: one-time setup for writing directly over USB",
+  "Put the keyboard into flash mode.": "Put the keyboard into flash mode.",
+  "Download and run Zadig:": "Download and run Zadig:",
+  "In Zadig, turn on Options → List All Devices.": "In Zadig, turn on Options → List All Devices.",
+  "Choose \"RP2 Boot (Interface 1)\" (not Interface 0, which is the drive), select WinUSB and press \"Install Driver\" (or \"Replace Driver\").": "Choose \"RP2 Boot (Interface 1)\" (not Interface 0, which is the drive), select WinUSB and press \"Install Driver\" (or \"Replace Driver\").",
+  "Reload this page and use \"Write directly over USB\". This is needed only once per computer.": "Reload this page and use \"Write directly over USB\". This is needed only once per computer."
 }

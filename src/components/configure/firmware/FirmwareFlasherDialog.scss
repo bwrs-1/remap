@@ -95,8 +95,20 @@
     margin: 8px 0 4px;
     padding-left: 20px;
     line-height: 1.7;
+    list-style: decimal;
+    li {
+      display: list-item;
+    }
   }
   a {
     font-weight: 600;
   }
+}
+
+.firmware-flasher-method {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 10px;
 }

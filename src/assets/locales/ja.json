@@ -710,5 +710,16 @@
   "Connection mode": "接続モード",
   "How the computer sees the touchpad": "パソコンからタッチパッドがどう見えるか",
   "Act as a Windows precision touchpad": "Windows の高精度タッチパッドとして動作",
-  "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.": "オフ（推奨）：マウスとして動作し、マウスレイヤーの自動切替や Matrix の設定がすべて効きます。オン：Windows 標準のタッチパッド操作（ジェスチャーなど）が使えますが、USB をタッチパッド側に挿しているときは、マウスレイヤーの自動切替・速度・回転・スクロールの設定が効かなくなります。macOS では常にマウスとして動作します。"
+  "Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.": "オフ（推奨）：マウスとして動作し、マウスレイヤーの自動切替や Matrix の設定がすべて効きます。オン：Windows 標準のタッチパッド操作（ジェスチャーなど）が使えますが、USB をタッチパッド側に挿しているときは、マウスレイヤーの自動切替・速度・回転・スクロールの設定が効かなくなります。macOS では常にマウスとして動作します。",
+  "Write": "書き込む",
+  "Write to the RPI-RP2 drive (no driver needed)": "RPI-RP2 ドライブに書き込む（ドライバ不要・おすすめ）",
+  "In the folder dialog, choose the \"RPI-RP2\" drive and allow editing. The keyboard restarts by itself when writing finishes.": "フォルダ選択画面で「RPI-RP2」ドライブを選び、編集を許可してください。書き込みが終わるとキーボードが自動で再起動します。",
+  "Write directly over USB": "USB で直接書き込む",
+  "The chosen folder is not the RPI-RP2 drive. Put the keyboard into flash mode and choose the RPI-RP2 drive.": "選んだフォルダは RPI-RP2 ドライブではありません。キーボードを書き込みモードにしてから「RPI-RP2」ドライブを選んでください。",
+  "Windows: one-time setup for writing directly over USB": "Windows で「USB で直接書き込む」を使うための初回設定",
+  "Put the keyboard into flash mode.": "キーボードを書き込みモードにします。",
+  "Download and run Zadig:": "Zadig をダウンロードして起動します：",
+  "In Zadig, turn on Options → List All Devices.": "Zadig のメニュー「Options」→「List All Devices」にチェックを入れます。",
+  "Choose \"RP2 Boot (Interface 1)\" (not Interface 0, which is the drive), select WinUSB and press \"Install Driver\" (or \"Replace Driver\").": "一覧から「RP2 Boot (Interface 1)」を選び（Interface 0 はドライブなので選ばない）、WinUSB を選んで「Install Driver」（または「Replace Driver」）を押します。",
+  "Reload this page and use \"Write directly over USB\". This is needed only once per computer.": "このページを再読み込みして「USB で直接書き込む」を使います。この設定はパソコンごとに 1 回だけ必要です。"
 }

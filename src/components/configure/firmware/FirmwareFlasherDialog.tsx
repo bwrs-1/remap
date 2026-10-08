@@ -16,6 +16,11 @@ import {
 } from './firmwareFlasherStore';
 import { parseUf2, Uf2Image } from '../../../services/firmware/rp2040/Uf2';
 import {
+  isMassStorageWriteSupported,
+  MassStorageError,
+  writeUf2ToDrive,
+} from '../../../services/firmware/rp2040/MassStorage';
+import {
   flashImage,
   FlashProgress,
   PicobootConnection,
@@ -61,6 +66,8 @@ export default function FirmwareFlasherDialog() {
   const { open, keyboard } = useFirmwareFlasher();
   const [fileName, setFileName] = useState<string>('');
   const [image, setImage] = useState<Uf2Image | null>(null);
+  // The .uf2 file as loaded, for writing it onto the RPI-RP2 drive.
+  const [rawData, setRawData] = useState<Uint8Array | null>(null);
   const [fileError, setFileError] = useState<string>('');
   const [bootMessage, setBootMessage] = useState<string>('');
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
@@ -69,6 +76,9 @@ export default function FirmwareFlasherDialog() {
   const cancelledRef = useRef(false);
 
   const webUsbSupported = typeof navigator !== 'undefined' && !!navigator.usb;
+  const driveWriteSupported = isMassStorageWriteSupported();
+  const isWindows =
+    typeof navigator !== 'undefined' && /Windows/.test(navigator.userAgent);
   const busy = status.kind === 'flashing';
 
   const reset = () => {
@@ -98,7 +108,9 @@ export default function FirmwareFlasherDialog() {
     try {
       const response = await fetch(firmware.url);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      setImage(parseUf2(new Uint8Array(await response.arrayBuffer())));
+      const data = new Uint8Array(await response.arrayBuffer());
+      setImage(parseUf2(data));
+      setRawData(data);
     } catch (e: any) {
       setFileError(e?.message || String(e));
     }
@@ -113,6 +125,7 @@ export default function FirmwareFlasherDialog() {
     try {
       const data = new Uint8Array(await file.arrayBuffer());
       setImage(parseUf2(data));
+      setRawData(data);
     } catch (e: any) {
       setFileError(e?.message || String(e));
     }
@@ -128,6 +141,30 @@ export default function FirmwareFlasherDialog() {
             'This firmware cannot switch to flash mode from the browser. Double-tap the reset button on the keyboard instead.'
           )
     );
+  };
+
+  const onWriteToDrive = async () => {
+    if (!rawData) return;
+    setStatus({ kind: 'flashing', progress: null });
+    try {
+      await writeUf2ToDrive(rawData);
+      setStatus({ kind: 'done' });
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        setStatus({ kind: 'idle' });
+      } else {
+        setStatus({
+          kind: 'error',
+          message:
+            e instanceof MassStorageError && e.reason === 'not-rp2'
+              ? t(
+                  'The chosen folder is not the RPI-RP2 drive. Put the keyboard into flash mode and choose the RPI-RP2 drive.'
+                )
+              : e?.message || String(e),
+          driverHint: false,
+        });
+      }
+    }
   };
 
   const onFlash = async () => {
@@ -275,19 +312,40 @@ export default function FirmwareFlasherDialog() {
           </li>
 
           <li>
-            <span className="step-title">{t('Write over USB')}</span>
-            <span className="firmware-flasher-note">
-              {t('Choose "RP2 Boot" in the dialog that the browser shows.')}
-            </span>
-            <Button
-              variant="contained"
-              size="small"
-              disableElevation
-              disabled={!image || busy || !webUsbSupported}
-              onClick={onFlash}
-            >
-              {t('Start writing')}
-            </Button>
+            <span className="step-title">{t('Write')}</span>
+            {driveWriteSupported && (
+              <div className="firmware-flasher-method">
+                <Button
+                  variant="contained"
+                  size="small"
+                  disableElevation
+                  disabled={!rawData || busy}
+                  onClick={onWriteToDrive}
+                >
+                  {t('Write to the RPI-RP2 drive (no driver needed)')}
+                </Button>
+                <span className="firmware-flasher-note">
+                  {t(
+                    'In the folder dialog, choose the "RPI-RP2" drive and allow editing. The keyboard restarts by itself when writing finishes.'
+                  )}
+                </span>
+              </div>
+            )}
+            <div className="firmware-flasher-method">
+              <Button
+                variant={driveWriteSupported ? 'outlined' : 'contained'}
+                size="small"
+                disableElevation
+                disabled={!image || busy || !webUsbSupported}
+                onClick={onFlash}
+              >
+                {t('Write directly over USB')}
+              </Button>
+              <span className="firmware-flasher-note">
+                {t('Choose "RP2 Boot" in the dialog that the browser shows.')}
+              </span>
+              {isWindows && <WinUsbSetupHelp />}
+            </div>
           </li>
         </ol>
 
@@ -369,6 +427,39 @@ function DragDropHelp(props: { emphasize: boolean }) {
           )}
         </li>
         <li>{t('For a split keyboard, do the same for the other half.')}</li>
+      </ol>
+    </details>
+  );
+}
+
+// Windows has no driver that lets the browser use the RP2040 bootrom's
+// PICOBOOT interface; it can be installed once with Zadig (as picotool's
+// documentation describes for RP2040).
+function WinUsbSetupHelp() {
+  return (
+    <details className="firmware-flasher-dragdrop">
+      <summary>
+        {t('Windows: one-time setup for writing directly over USB')}
+      </summary>
+      <ol>
+        <li>
+          {t('Put the keyboard into flash mode.')}{' '}
+          {t('Download and run Zadig:')}{' '}
+          <a href="https://zadig.akeo.ie/" target="_blank" rel="noreferrer">
+            https://zadig.akeo.ie/
+          </a>
+        </li>
+        <li>{t('In Zadig, turn on Options → List All Devices.')}</li>
+        <li>
+          {t(
+            'Choose "RP2 Boot (Interface 1)" (not Interface 0, which is the drive), select WinUSB and press "Install Driver" (or "Replace Driver").'
+          )}
+        </li>
+        <li>
+          {t(
+            'Reload this page and use "Write directly over USB". This is needed only once per computer.'
+          )}
+        </li>
       </ol>
     </details>
   );
