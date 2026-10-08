@@ -25,27 +25,35 @@ export default function HeaderActions() {
   const dispatch = useDispatch<any>();
   const keyboard = useSelector((s: RootState) => s.entities.keyboard);
   const remaps = useSelector((s: RootState) => s.app.remaps);
+  const remapsBaseline = useSelector((s: RootState) => s.app.remapsBaseline);
   const labelLang = useSelector((s: RootState) => s.app.labelLang);
   const info = keyboard?.getInformation();
   const layerMeta = useLayerMeta(info);
   const [, forceRender] = useState(0);
   const importRef = useRef<HTMLInputElement>(null);
 
+  // A different keyboard, or remaps re-initialised from the device (connect,
+  // flash, reset keymap, new definition), starts a fresh history. Declared
+  // before the observer so that the re-initialisation is not recorded as an
+  // undoable change.
+  useEffect(() => {
+    history.reset(store.getState().app.remaps as Remaps);
+    forceRender((n) => n + 1);
+  }, [keyboard, remapsBaseline]);
   // Record every change of the pending remaps.
   useEffect(() => {
     history.observe(remaps as Remaps);
     forceRender((n) => n + 1);
   }, [remaps]);
-  // A different keyboard starts a fresh history.
-  useEffect(() => {
-    history.reset(store.getState().app.remaps as Remaps);
-    forceRender((n) => n + 1);
-  }, [keyboard]);
 
   if (!keyboard) return null;
 
   const restore = (snapshot: Remaps | null) => {
-    if (snapshot) dispatch(AppActions.remapsSetKeys(snapshot));
+    // Never restore a snapshot with another layer count (it would leave
+    // layers without remaps).
+    if (snapshot && snapshot.length === store.getState().app.remaps.length) {
+      dispatch(AppActions.remapsSetKeys(snapshot));
+    }
   };
 
   const setLang = (lang: KeyboardLabelLang) => {

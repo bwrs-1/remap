@@ -258,8 +258,8 @@ export default class Keymap extends React.Component<
     const selectedLayer = this.props.selectedLayer!;
     const deviceKeymaps = this.props.keymaps![selectedLayer];
     const deviceEncodersKeymaps = this.props.encodersKeymaps![selectedLayer];
-    const remaps = this.props.remaps![selectedLayer];
-    const encodersRemap = this.props.encodersRemaps![selectedLayer];
+    const remaps = this.props.remaps![selectedLayer] || {};
+    const encodersRemap = this.props.encodersRemaps![selectedLayer] || {};
     const keyboardViewContent = this.state.keyboardModel.getKeymap(
       this.props.selectedKeyboardOptions!
     );

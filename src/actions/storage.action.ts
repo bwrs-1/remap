@@ -211,6 +211,11 @@ export const storageActionsThunk = {
       getState: () => RootState
     ) => {
       const { entities } = getState();
+      // Remember it like a first upload, so a reload keeps the new file.
+      const info = entities.keyboard?.getInformation();
+      if (info) {
+        saveLocalDefinition(info.vendorId, info.productId, keyboardDefinition);
+      }
       dispatch(
         LayoutOptionsActions.initSelectedOptions(
           keyboardDefinition.layouts.labels

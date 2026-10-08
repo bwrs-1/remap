@@ -322,6 +322,9 @@ export type RootState = {
       // remap candidates and show keydiff for clickable keys
       [pos: string]: IKeymap;
     }[];
+    // Incremented whenever remaps are re-initialised from the device
+    // (connect, flash, reset): undo history must not cross it.
+    remapsBaseline: number;
     encodersRemaps: {
       // remap candidates and show keydiff for encoders
       [id: number]: {
@@ -601,6 +604,7 @@ export const INIT_STATE: RootState = {
     buildNumber: buildInfo.buildNumber,
     setupPhase: SetupPhase.init,
     remaps: [],
+    remapsBaseline: 0,
     encodersRemaps: [],
     testedMatrix: [],
     currentTestMatrix: [],

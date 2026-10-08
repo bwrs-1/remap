@@ -240,7 +240,10 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
                 {t('Flash')}
               </button>
             </div>
-            <ProfileIcon logout={() => this.props.logout!()} />
+            {/* Sign-in needs Firebase, which this build may not have. */}
+            {this.props.auth && (
+              <ProfileIcon logout={() => this.props.logout!()} />
+            )}
           </div>
           {(this.props.draggingKey || this.props.testMatrix) && (
             <div className="dragMask header-height"></div>

@@ -19,6 +19,8 @@ const mapStateToProps = (state: RootState) => {
     labelLang: state.app.labelLang,
     remaps: state.app.remaps,
     encoderRemaps: state.app.encodersRemaps,
+    // Saved keymaps live in Firebase, which this build may not have.
+    cloudAvailable: state.storage.instance !== null,
   };
 };
 export type KeymapMenuStateType = ReturnType<typeof mapStateToProps>;
@@ -27,7 +29,10 @@ export type KeymapMenuStateType = ReturnType<typeof mapStateToProps>;
 const mapDispatchToProps = (_dispatch: any) => {
   return {
     clearAllRemaps: (layerCount: number) => {
-      _dispatch(AppActions.remapsInit(layerCount));
+      // Set (not init) so that the clear can be undone.
+      _dispatch(
+        AppActions.remapsSetKeys(Array.from({ length: layerCount }, () => ({})))
+      );
       _dispatch(AppActions.encodersRemapsInit(layerCount));
       _dispatch(KeydiffActions.clearKeydiff());
     },
