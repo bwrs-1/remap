@@ -25,35 +25,11 @@ import {
   EditorSidebarStateType,
 } from './EditorSidebar.container';
 
-export type EditorView =
-  | 'keymap'
-  | 'touchpad'
-  | 'autoMouse'
-  | 'timing'
-  | 'combos'
-  | 'leds';
-
-type OwnProps = {
-  views: EditorView[];
-  view: EditorView;
-  // eslint-disable-next-line no-unused-vars
-  onChangeView: (view: EditorView) => void;
-};
-
-type EditorSidebarProps = OwnProps &
-  Partial<EditorSidebarStateType> &
+type EditorSidebarProps = Partial<EditorSidebarStateType> &
   Partial<EditorSidebarActionsType>;
 
 export default function EditorSidebar(props: EditorSidebarProps) {
   const layerCount = Number.isNaN(props.layerCount) ? 0 : props.layerCount!;
-  const viewLabels: Record<EditorView, string> = {
-    keymap: t('Keymap'),
-    touchpad: t('Touchpad'),
-    autoMouse: t('Mouse Layer'),
-    timing: t('Timing & gestures'),
-    combos: t('Combos'),
-    leds: t('Layer LED colors'),
-  };
   const device = props.keyboard?.getInformation();
   const meta = useLayerMeta(device);
   // Layers in use / added by the user; the keyboard has layerCount in all.
@@ -69,7 +45,6 @@ export default function EditorSidebar(props: EditorSidebarProps) {
     if (visible >= layerCount) return;
     setLayerCount(device, visible + 1);
     props.onClickLayer!(visible);
-    props.onChangeView('keymap');
   };
 
   const removeLastLayer = () => {
@@ -103,6 +78,22 @@ export default function EditorSidebar(props: EditorSidebarProps) {
           >
             {visible} / {layerCount}
           </span>
+          <button
+            type="button"
+            className="editor-sidebar-add"
+            aria-label={t('Add layer')}
+            title={
+              visible >= layerCount
+                ? t(
+                    'The firmware has no more layers. The latest Matrix-ready firmware has 8.'
+                  )
+                : t('Add layer')
+            }
+            disabled={visible >= layerCount}
+            onClick={addLayer}
+          >
+            +
+          </button>
         </div>
         {layers.map((layer) => (
           <LayerRow
@@ -113,12 +104,9 @@ export default function EditorSidebar(props: EditorSidebarProps) {
             colorIndex={LAYER_ACCENT_COLORS.indexOf(
               layerColor(meta, layer) as (typeof LAYER_ACCENT_COLORS)[number]
             )}
-            selected={props.view === 'keymap' && props.selectedLayer === layer}
+            selected={props.selectedLayer === layer}
             changed={changedCount(layer)}
-            onSelect={() => {
-              props.onClickLayer!(layer);
-              props.onChangeView('keymap');
-            }}
+            onSelect={() => props.onClickLayer!(layer)}
             onRename={(name) => setLayerName(device, layer, name)}
             onColor={(color) => setLayerColor(device, layer, color)}
             onRemove={
@@ -126,21 +114,6 @@ export default function EditorSidebar(props: EditorSidebarProps) {
             }
           />
         ))}
-        <button
-          type="button"
-          className="editor-sidebar-add-layer"
-          disabled={visible >= layerCount}
-          title={
-            visible >= layerCount
-              ? t(
-                  'The firmware has no more layers. The latest Matrix-ready firmware has 8.'
-                )
-              : undefined
-          }
-          onClick={addLayer}
-        >
-          + {t('Add layer')}
-        </button>
         {visible >= layerCount && layerCount < 8 && (
           <span className="editor-sidebar-note">
             {t(
@@ -150,38 +123,19 @@ export default function EditorSidebar(props: EditorSidebarProps) {
         )}
       </section>
 
-      {props.views.length > 1 && (
-        <section className="editor-sidebar-section">
-          <div className="editor-sidebar-heading">
-            <h2>{t('Keyboard')}</h2>
-          </div>
-          {props.views.map((view) => (
-            <button
-              key={view}
-              type="button"
-              className={[
-                'editor-sidebar-item',
-                props.view === view ? 'selected' : '',
-              ]
-                .join(' ')
-                .trim()}
-              aria-current={props.view === view ? 'page' : undefined}
-              onClick={() => props.onChangeView(view)}
-            >
-              <span className="layer-name">{viewLabels[view]}</span>
-            </button>
-          ))}
-          <button
-            type="button"
-            className="editor-sidebar-item"
-            onClick={() => firmwareFlasherStore.open(props.keyboard || null)}
-          >
-            <span className="layer-name">{t('Write firmware')}</span>
-          </button>
-        </section>
-      )}
-      <SavedDefinition keyboard={props.keyboard} />
-      <div className="editor-sidebar-license">
+      <div className="editor-sidebar-connection">
+        <div className="editor-sidebar-connection-state">
+          <span className="connection-dot" aria-hidden="true" />
+          <span>USB · {t('Connected')}</span>
+        </div>
+        <button
+          type="button"
+          className="editor-sidebar-primary"
+          onClick={() => firmwareFlasherStore.open(props.keyboard || null)}
+        >
+          {t('Write firmware')}
+        </button>
+        <SavedDefinition keyboard={props.keyboard} />
         <LicenseLink />
       </div>
     </nav>

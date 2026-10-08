@@ -645,5 +645,6 @@
   "Layers shown / layers the firmware has": "Layers shown / layers the firmware has",
   "The firmware has no more layers. The latest Matrix-ready firmware has 8.": "The firmware has no more layers. The latest Matrix-ready firmware has 8.",
   "Add layer": "Add layer",
-  "Remove layer": "Remove layer"
+  "Remove layer": "Remove layer",
+  "Key Config": "Key Config"
 }

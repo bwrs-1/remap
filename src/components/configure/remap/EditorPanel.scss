@@ -1,0 +1,183 @@
+// Conductor Studio style editor: canvas with the layer pill, the keyboard,
+// and a tabbed settings card below it; a status bar at the very bottom.
+@use '../../../variables';
+
+$footer-height: 30px;
+
+.configure-root {
+  .editor-layout {
+    height: calc(100vh - var(--key-height) - #{$footer-height});
+  }
+
+  .editor-main {
+    background-color: variables.$cfg-canvas-bg;
+    padding-bottom: 16px;
+  }
+
+  // Layer pill centred above the keyboard.
+  .layer-bar {
+    justify-content: center;
+    margin: 14px 12px 4px;
+    .layer-bar-step {
+      border-color: transparent;
+      background: transparent;
+      color: variables.$cfg-text-dim;
+      &:hover:not(:disabled) {
+        background: #ececee;
+      }
+    }
+    .layer-bar-dot {
+      margin-left: 6px;
+    }
+    .layer-bar-name {
+      padding-right: 2px;
+    }
+    .layer-bar-diff {
+      margin-left: 8px;
+    }
+  }
+
+  // Remap's keyboard view on the canvas, without a heavy card.
+  .keyboard-wrapper .keymap {
+    background-color: transparent;
+    border-color: transparent;
+  }
+
+  // Settings card below the keyboard.
+  .editor-panel {
+    flex: 1 0 auto;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    margin: 0 16px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: variables.$cfg-radius-l;
+    background-color: variables.$cfg-panel-bg;
+    overflow: hidden;
+  }
+
+  .editor-tabs {
+    display: flex;
+    flex: none;
+    border-bottom: 1px solid variables.$cfg-panel-border;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .editor-tab {
+    flex: 1 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 46px;
+    padding: 0 16px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    font-family: variables.$cfg-font;
+    font-size: 13px;
+    color: variables.$cfg-text-dim;
+    white-space: nowrap;
+    cursor: pointer;
+    &:hover {
+      color: variables.$cfg-text;
+    }
+    &.selected {
+      border-bottom-color: variables.$cfg-accent;
+      color: variables.$cfg-text;
+      font-weight: 600;
+    }
+    &:focus-visible {
+      outline: 2px solid variables.$cfg-accent;
+      outline-offset: -2px;
+    }
+  }
+
+  .editor-tab-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .editor-tab-panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    // Key Config: the selected key on top, the keycode palette below.
+    .key-inspector {
+      flex: none;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 12px 24px;
+      padding: 14px 20px;
+      border-left: 0;
+      border-bottom: 1px solid variables.$cfg-panel-border;
+      overflow: visible;
+      .key-inspector-heading {
+        flex: 1 0 100%;
+      }
+      .key-inspector-body {
+        flex: 1 1 520px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 20px;
+      }
+      .key-inspector-cap {
+        flex-basis: 52px;
+        height: 52px;
+      }
+      .key-inspector-desc {
+        flex: 1 1 240px;
+      }
+      .key-inspector-presets {
+        flex: 1 0 100%;
+        padding-top: 8px;
+      }
+      .key-inspector-preset-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      }
+      .key-inspector-meta {
+        display: none; // shown in the status bar
+      }
+      .key-inspector-empty {
+        margin: 0;
+      }
+    }
+
+    .keycode {
+      flex: 1 0 auto;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+    }
+
+    // Settings screens inside the card.
+    .pointing-settings {
+      max-width: none;
+      margin: 0;
+      padding: 16px 20px;
+      .pointing-title h1 {
+        font-size: 16px;
+      }
+    }
+  }
+
+  // Status bar at the bottom of the page.
+  .editor-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: $footer-height;
+    box-sizing: border-box;
+    align-items: center;
+    margin: 0;
+    padding: 0 16px;
+    background-color: variables.$cfg-panel-bg;
+    z-index: 2;
+  }
+}

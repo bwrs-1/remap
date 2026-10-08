@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 import React from 'react';
+import { t } from 'i18next';
 import './Remap.scss';
+import './EditorPanel.scss';
 import { hexadecimal } from '../../../utils/StringUtils';
 import Keycodes from '../keycodes/Keycodes.container';
 import Keymap from '../keymap/Keymap.container';
@@ -102,56 +104,104 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
   render() {
     const views = this.availableViews();
     const view = views.includes(this.state.view) ? this.state.view : 'keymap';
+    const tabLabels: Record<ConfigureView, string> = {
+      keymap: t('Key Config'),
+      touchpad: t('Touchpad'),
+      autoMouse: t('Mouse Layer'),
+      timing: t('Timing & gestures'),
+      combos: t('Combos'),
+      leds: t('Layer LED colors'),
+    };
     return (
       <React.Fragment>
         <div className="editor-layout">
-          <EditorSidebar
-            views={views}
-            view={view}
-            onChangeView={(v) => this.setState({ view: v })}
-          />
+          <EditorSidebar />
           <div className="editor-main" ref={this.editorMainRef}>
-            {view === 'keymap' ? (
-              <React.Fragment>
-                {!this.props.macroKey && <LayerBar />}
-                <div
-                  className="keyboard-wrapper"
-                  style={{
-                    minWidth: this.state.minWidth,
-                    // CSS zoom keeps the layout (and the popovers' positions)
-                    // consistent, unlike a transform.
-                    zoom: this.state.zoom < 1 ? this.state.zoom : undefined,
-                  }}
-                  ref={this.keyboardWrapperRef}
-                >
-                  <EditMode mode={this.props.macroKey ? 'macro' : 'keymap'} />
-                </div>
-                <div
-                  className="keycode"
-                  style={{
-                    minWidth: this.state.zoom < 1 ? 0 : this.state.minWidth,
-                  }}
-                  ref={this.keycodeRef}
-                >
-                  <Keycodes />
-                </div>
-              </React.Fragment>
-            ) : view === 'combos' ? (
-              <Combos />
-            ) : (
-              <PointingSettings
-                mode={view}
-                onEditLayer={this.onEditLayer.bind(this)}
-              />
-            )}
-            <EditorFooter />
+            {!this.props.macroKey && <LayerBar />}
+            <div
+              className="keyboard-wrapper"
+              style={{
+                minWidth: this.state.minWidth,
+                // CSS zoom keeps the layout (and the popovers' positions)
+                // consistent, unlike a transform.
+                zoom: this.state.zoom < 1 ? this.state.zoom : undefined,
+              }}
+              ref={this.keyboardWrapperRef}
+            >
+              <EditMode mode={this.props.macroKey ? 'macro' : 'keymap'} />
+            </div>
+
+            {/* Settings below the keyboard, in tabs (Conductor Studio style) */}
+            <section className="editor-panel">
+              <div className="editor-tabs" role="tablist">
+                {views.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="tab"
+                    aria-selected={view === v}
+                    className={['editor-tab', view === v ? 'selected' : '']
+                      .join(' ')
+                      .trim()}
+                    onClick={() => this.setState({ view: v })}
+                  >
+                    <TabIcon view={v} />
+                    <span>{tabLabels[v]}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="editor-tab-panel" role="tabpanel">
+                {view === 'keymap' ? (
+                  <React.Fragment>
+                    <KeyInspector />
+                    <div className="keycode" ref={this.keycodeRef}>
+                      <Keycodes />
+                    </div>
+                  </React.Fragment>
+                ) : view === 'combos' ? (
+                  <Combos />
+                ) : (
+                  <PointingSettings
+                    mode={view}
+                    onEditLayer={this.onEditLayer.bind(this)}
+                  />
+                )}
+              </div>
+            </section>
           </div>
-          {view === 'keymap' && <KeyInspector />}
         </div>
+        <EditorFooter />
         {view === 'keymap' && <Desc value={this.props.hoverKey} />}
       </React.Fragment>
     );
   }
+}
+
+// Small line icons for the settings tabs.
+function TabIcon(props: { view: ConfigureView }) {
+  const paths: Record<ConfigureView, string> = {
+    keymap: 'M3 5h14v10H3zM6 8h1M9 8h1M12 8h1M6 11h8',
+    touchpad: 'M4 4h12v12H4zM10 4v12',
+    autoMouse:
+      'M7 3h6a3 3 0 013 3v8a3 3 0 01-3 3H7a3 3 0 01-3-3V6a3 3 0 013-3zM10 3v5',
+    timing: 'M10 4a6 6 0 110 12 6 6 0 010-12zM10 7v3l2 2',
+    combos: 'M4 4h5v5H4zM11 11h5v5h-5zM9 6.5h4.5V11',
+    leds: 'M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.5 1.5M13.5 13.5L15 15M5 15l1.5-1.5M13.5 6.5L15 5M10 7a3 3 0 110 6 3 3 0 010-6z',
+  };
+  return (
+    <svg
+      className="editor-tab-icon"
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={paths[props.view]} />
+    </svg>
+  );
 }
 
 type EditModeType = {

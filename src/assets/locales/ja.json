@@ -738,5 +738,6 @@
   "Layers shown / layers the firmware has": "表示中のレイヤー数 / ファームウェアのレイヤー数",
   "The firmware has no more layers. The latest Matrix-ready firmware has 8.": "ファームウェアのレイヤー数の上限に達しています。最新の Matrix 対応ファームウェアでは 8 レイヤーまで使えます。",
   "Add layer": "レイヤーを追加",
-  "Remove layer": "レイヤーを削除"
+  "Remove layer": "レイヤーを削除",
+  "Key Config": "キー設定"
 }
