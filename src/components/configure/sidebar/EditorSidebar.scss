@@ -360,3 +360,40 @@
     }
   }
 }
+
+.editor-sidebar {
+  .layer-led-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    padding: 2px 6px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 999px;
+    background: #fff;
+    font-family: variables.$cfg-font-mono;
+    font-size: 9px;
+    color: variables.$cfg-text-dim;
+    cursor: pointer;
+    &:hover {
+      border-color: variables.$cfg-accent;
+    }
+  }
+  .layer-led-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    &.effect {
+      background: conic-gradient(
+        #e5484d,
+        #f5d90a,
+        #30a46c,
+        #05a2c2,
+        #3e63dd,
+        #d6409f,
+        #e5484d
+      ) !important;
+    }
+  }
+}

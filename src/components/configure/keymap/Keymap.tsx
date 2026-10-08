@@ -341,6 +341,11 @@ export default class Keymap extends React.Component<
               }}
               isCustomKeyOpen={Boolean(this.state.selectedPos)}
               touchpad={keyboardHasTouchpad(this.props.keyboardDefinition)}
+              baseLayerKeymaps={{
+                ...(this.props.keymaps![0] || {}),
+                ...(this.props.remaps![0] || {}),
+              }}
+              labelLang={this.props.labelLang!}
               onClickKeycap={(pos, key, keySwitchEventType, encoderId, ref) => {
                 if (this.props.testMatrix) {
                   this.onClickKeycapForTestMatrix(pos);

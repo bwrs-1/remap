@@ -23,6 +23,7 @@ import {
 import { probeProtocol } from '../../../services/pointing/PointingSettings';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 import { layerName, useLayerMeta } from '../../../services/layers/LayerMeta';
+import { matrixDeviceData } from '../../../services/matrix/MatrixDeviceData';
 
 type Status = 'checking' | 'ready' | 'unsupported' | 'outdated' | 'error';
 
@@ -66,6 +67,7 @@ export default function Combos() {
       if (cancelled) return;
       if (result.success) {
         setCombos(result.combos!);
+        matrixDeviceData.setCombos(result.combos!);
         setStatus('ready');
       } else {
         setStatus(result.outdated ? 'outdated' : 'error');
@@ -96,7 +98,9 @@ export default function Combos() {
     const result = await writeCombo(keyboard!, slot, combo);
     setSaving(false);
     if (result.success) {
-      setCombos(combos.map((c, i) => (i === slot ? combo : c)));
+      const next = combos.map((c, i) => (i === slot ? combo : c));
+      setCombos(next);
+      matrixDeviceData.setCombos(next);
       setEditing(null);
       dispatch(NotificationActions.addSuccess(message));
     } else {

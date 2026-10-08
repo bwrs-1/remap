@@ -41,6 +41,18 @@ $footer-height: 30px;
   .keyboard-wrapper .keymap {
     background-color: transparent;
     border-color: transparent;
+    // Compact canvas like Conductor Studio: the keyboard plus a thin strip.
+    margin: 4px 12px 0;
+    padding-bottom: 0;
+  }
+  .keyboard-wrapper .keydiff-wrapper {
+    height: 40px;
+    .diff {
+      margin-bottom: 0;
+    }
+    .label-lang {
+      padding: 0 8px;
+    }
   }
 
   // Settings card below the keyboard.

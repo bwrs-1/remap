@@ -17,6 +17,7 @@ import KeyInspector from '../inspector/KeyInspector.container';
 import Combos from '../combos/Combos';
 import LayerBar, { EditorFooter } from '../layerbar/LayerBar';
 import { OPEN_TOUCHPAD_SETTINGS_EVENT } from '../../../services/pointing/TouchpadLayout';
+import { OPEN_EDITOR_VIEW_EVENT } from '../../../services/matrix/MatrixDeviceData';
 import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
 
 type OwnProp = {};
@@ -63,9 +64,14 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
   }
 
   private readonly openTouchpad = () => this.setState({ view: 'touchpad' });
+  private readonly openView = (e: Event) => {
+    const view = (e as CustomEvent).detail as ConfigureView;
+    if (this.availableViews().includes(view)) this.setState({ view });
+  };
 
   componentDidMount() {
     window.addEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
+    window.addEventListener(OPEN_EDITOR_VIEW_EVENT, this.openView);
     if (typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(() => this.updateZoom());
       if (this.editorMainRef.current) {
@@ -76,6 +82,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
 
   componentWillUnmount() {
     window.removeEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
+    window.removeEventListener(OPEN_EDITOR_VIEW_EVENT, this.openView);
     this.resizeObserver?.disconnect();
   }
 

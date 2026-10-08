@@ -33,6 +33,7 @@ import {
   LATEST_FIRMWARE_REVISION,
 } from '../../../services/pointing/PointingSettings';
 import { layerName, useLayerMeta } from '../../../services/layers/LayerMeta';
+import { matrixDeviceData } from '../../../services/matrix/MatrixDeviceData';
 import { SWIPE_KEYCODE_OPTIONS } from '../../../services/pointing/SwipeKeycodes';
 import { hexadecimal } from '../../../utils/StringUtils';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
@@ -391,6 +392,9 @@ export default function PointingSettings(props: PointingSettingsProps) {
         const reread = await fetchSettings(props.keyboard!, defs);
         const actual = reread.success ? reread.values! : snapshot;
         setStored(actual);
+        if (props.mode === 'leds') {
+          matrixDeviceData.setLeds(LED_SETTINGS.map((d) => actual[d.key]));
+        }
         // Keep edits made while saving; otherwise show what was stored.
         setValues((current) => (current === snapshot ? actual : current));
       } else {

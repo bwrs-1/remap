@@ -646,6 +646,7 @@
   "Choose...": "選んでください",
   "Combo term": "判定時間",
   "Combos": "コンボ",
+  "Combo": "コンボ",
   "Combos are saved in the keyboard as soon as you save them (no \"Write\" needed). The trigger keys are the keys of layer 0 (Base): the combo fires when those keys are pressed together within the combo term, on any layer unless you limit it.": "コンボは保存した時点でキーボードに書き込まれます（「書き込み」ボタンは不要）。トリガーにはレイヤー 0（Base）のキーを使い、判定時間内に同時に押すと発動します。レイヤーを指定しなければ、どのレイヤーでも発動します。",
   "Combos need the Matrix-ready firmware. Write it from \"Write firmware\".": "コンボを使うには Matrix 対応ファームウェアが必要です。「ファームウェアを書き込む」から書き込んでください。",
   "Common keys": "よく使うキー",

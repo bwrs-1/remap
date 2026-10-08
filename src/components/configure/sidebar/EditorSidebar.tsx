@@ -4,6 +4,11 @@ import { t } from 'i18next';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 import LicenseLink from '../../common/license/LicenseLink';
 import {
+  openEditorView,
+  useMatrixDeviceData,
+} from '../../../services/matrix/MatrixDeviceData';
+import { LED_COLORS } from '../../../services/pointing/PointingSettings';
+import {
   hasSavedLocalDefinition,
   removeLocalDefinition,
 } from '../../../services/definitions/LocalDefinitions';
@@ -32,6 +37,7 @@ export default function EditorSidebar(props: EditorSidebarProps) {
   const layerCount = Number.isNaN(props.layerCount) ? 0 : props.layerCount!;
   const device = props.keyboard?.getInformation();
   const meta = useLayerMeta(device);
+  const deviceData = useMatrixDeviceData(props.keyboard);
   // Layers in use / added by the user; the keyboard has layerCount in all.
   const visible = visibleLayerCount(
     meta,
@@ -112,6 +118,11 @@ export default function EditorSidebar(props: EditorSidebarProps) {
             onRemove={
               layer === visible - 1 && layer > 0 ? removeLastLayer : undefined
             }
+            led={
+              deviceData.leds && layer < deviceData.leds.length
+                ? deviceData.leds[layer]
+                : undefined
+            }
           />
         ))}
         {visible >= layerCount && layerCount < 8 && (
@@ -156,6 +167,8 @@ type LayerRowProps = {
   onColor: (color: number) => void;
   // Only on the last layer.
   onRemove?: () => void;
+  // LED color index of this layer (firmware), when known.
+  led?: number;
 };
 
 // One layer: color dot (click to pick a color), name (double-click or the
@@ -213,6 +226,27 @@ function LayerRow(props: LayerRowProps) {
           >
             <span className="layer-name">{props.name}</span>
             <span className="layer-index">L{props.layer}</span>
+          </button>
+        )}
+        {props.led !== undefined && !editing && (
+          <button
+            type="button"
+            className="layer-led-chip"
+            title={`${t('Layer LED colors')}: ${t(
+              LED_COLORS.find((c) => c.value === props.led)?.label || ''
+            )}`}
+            onClick={() => openEditorView('leds')}
+          >
+            LED
+            <span
+              className={['layer-led-dot', props.led === 0 ? 'effect' : '']
+                .join(' ')
+                .trim()}
+              style={{
+                backgroundColor: LED_COLORS.find((c) => c.value === props.led)
+                  ?.css,
+              }}
+            />
           </button>
         )}
         {props.changed > 0 && !editing && (
