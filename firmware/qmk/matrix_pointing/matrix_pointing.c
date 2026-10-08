@@ -56,7 +56,7 @@ __attribute__((weak)) bool usb_hires_scroll_enabled(void);
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 15
+#define MP_REVISION 16
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -950,6 +950,13 @@ static bool       mp_touch_down[DIGITIZER_CONTACT_COUNT];
 // touchpad half's count from the split reply. 0xFF = not known.
 static uint8_t mp_fingers_local  = 0;
 static uint8_t mp_fingers_remote = 0xFF;
+// Finger movement seen by the touchpad (sensor units), for the auto mouse
+// layer while Windows reads the touchpad as a precision touchpad (no mouse
+// movement reaches QMK then). Fingers used as edge sliders are not counted.
+static int32_t  mp_touch_motion = 0;
+static uint16_t mp_touch_last_x[DIGITIZER_CONTACT_COUNT];
+static uint16_t mp_touch_last_y[DIGITIZER_CONTACT_COUNT];
+static bool     mp_touch_tracked[DIGITIZER_CONTACT_COUNT];
 
 // Edge summary the slave half gets from the master (it has no editor).
 static uint8_t mp_edge_width_synced = 12, mp_edge_step_synced = 6, mp_edge_mask_synced = 0, mp_corner_mask_synced = 0;
@@ -1171,7 +1178,29 @@ bool matrix_pointing_digitizer(digitizer_t *const state) {
             c->tip = 0; // hidden from the cursor and tap detection
         }
     }
+    // Movement of the fingers the host sees.
+    for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
+        const digitizer_contact_t *c = &state->contacts[i];
+        if (c->type == FINGER && c->tip) {
+            if (mp_touch_tracked[i]) {
+                const int32_t moved = abs((int32_t)c->x - mp_touch_last_x[i]) + abs((int32_t)c->y - mp_touch_last_y[i]);
+                if (mp_touch_motion < INT32_MAX - moved) mp_touch_motion += moved;
+            }
+            mp_touch_last_x[i]  = c->x;
+            mp_touch_last_y[i]  = c->y;
+            mp_touch_tracked[i] = true;
+        } else {
+            mp_touch_tracked[i] = false;
+        }
+    }
     return false;
+}
+
+// Finger movement since the last call (sensor units), then cleared.
+static int32_t mp_take_touch_motion(void) {
+    const int32_t moved = mp_touch_motion;
+    mp_touch_motion     = 0;
+    return moved;
 }
 
 #    ifndef MATRIX_POINTING_NO_DIGITIZER_HOOK
@@ -2112,19 +2141,32 @@ bool is_mouse_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
 // Overrides QMK's weak default to use the runtime threshold and delay.
 bool auto_mouse_activation(report_mouse_t mouse_report) {
-    static int32_t total_x = 0, total_y = 0, total_h = 0, total_v = 0;
+    static int32_t total_x = 0, total_y = 0, total_h = 0, total_v = 0, total_touch = 0;
+#    ifdef MP_EDGES
+    // Precision touchpad mode (revision 16): the host gets the fingers as a
+    // touchpad and QMK sees no mouse movement, so count the fingers'
+    // movement instead (converted to cursor counts).
+    int32_t touch = mp_take_touch_motion();
+#        ifdef MATRIX_POINTING_NATIVE_CPI
+    touch = touch * (int32_t)mp_config.cpi / MATRIX_POINTING_NATIVE_CPI;
+#        endif
+    if (!mp_config.precision_touchpad) touch = 0;
+#    else
+    const int32_t touch = 0;
+#    endif
     if (mp_key_pressed && timer_elapsed(mp_last_key_time) < mp_config.am_activation_delay) {
-        total_x = total_y = total_h = total_v = 0;
+        total_x = total_y = total_h = total_v = total_touch = 0;
         return false;
     }
     total_x += mouse_report.x;
     total_y += mouse_report.y;
     total_h += mouse_report.h;
     total_v += mouse_report.v;
+    total_touch += touch;
     const int32_t threshold = mp_config.am_threshold;
-    bool          activate  = abs(total_x) > threshold || abs(total_y) > threshold || abs(total_h) > threshold || abs(total_v) > threshold || mouse_report.buttons;
+    bool          activate  = abs(total_x) > threshold || abs(total_y) > threshold || abs(total_h) > threshold || abs(total_v) > threshold || total_touch > threshold || mouse_report.buttons;
     // Start counting again after each activation.
-    if (activate) total_x = total_y = total_h = total_v = 0;
+    if (activate) total_x = total_y = total_h = total_v = total_touch = 0;
     return activate;
 }
 #endif // POINTING_DEVICE_AUTO_MOUSE_ENABLE

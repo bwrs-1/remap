@@ -193,7 +193,7 @@ const touchpadSections = (): SectionSpec[] => [
         key: 'precisionTouchpad',
         label: t('Act as a Windows precision touchpad'),
         help: t(
-          'Off (recommended): the touchpad works as a mouse, so the auto mouse layer and all Matrix settings apply. On: Windows touchpad gestures work, but the auto mouse layer, speed, rotation and scroll settings no longer apply when the USB cable is on the touchpad half. macOS always uses the mouse mode.'
+          'On (recommended on Windows): Windows handles the cursor, scrolling and gestures itself, which feels smoothest; the speed, acceleration, tap, scroll and smoothness settings here are replaced by Windows touchpad settings. The auto mouse layer and edge sliders keep working (firmware r16+, USB cable on the touchpad half). Off: the touchpad works as a mouse and all settings here apply (macOS always uses this mode).'
         ),
       },
     ],
@@ -578,6 +578,14 @@ export default function PointingSettings(props: PointingSettingsProps) {
           >
             {t('Write firmware')}
           </Button>
+        </div>
+      )}
+
+      {live && props.mode === 'touchpad' && values.precisionTouchpad === 1 && (
+        <div className="pointing-preview-banner" role="status">
+          {t(
+            'Precision touchpad mode is on: on Windows, cursor speed, acceleration, taps, scrolling and smoothness follow Windows settings (Settings > Bluetooth & devices > Touchpad), not the settings below. Edge sliders, the auto mouse layer (r16+) and touch sensitivity still apply.'
+          )}
         </div>
       )}
 

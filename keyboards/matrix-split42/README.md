@@ -48,24 +48,24 @@ persist them (e.g. to EEPROM / `eeconfig_update_kb_datablock`).
 
 ### Touchpad (`matrix_touchpad`)
 
-| ID     | Key                 | Size | Range / meaning                                                                   | Default |
-| ------ | ------------------- | ---- | --------------------------------------------------------------------------------- | ------- |
-| `0x01` | `cpi`               | 2    | 400 – 3200                                                                        | 1600    |
-| `0x02` | `acceleration`      | 1    | 0 / 1                                                                             | 1       |
-| `0x03` | `glide`             | 1    | 0 / 1 (cursor glide / inertia)                                                    | 0       |
-| `0x04` | `rotation`          | 1    | 0: 0°, 1: 90°, 2: 180°, 3: 270°                                                   | 0       |
-| `0x05` | `invertX`           | 1    | 0 / 1                                                                             | 0       |
-| `0x06` | `invertY`           | 1    | 0 / 1                                                                             | 0       |
-| `0x07` | `tapToClick`        | 1    | 0 / 1                                                                             | 1       |
-| `0x08` | `twoFingerTap`      | 1    | 0 / 1 (right click, multi-touch sensors only)                                     | 1       |
-| `0x09` | `tapDrag`           | 1    | 0 / 1                                                                             | 0       |
-| `0x0A` | `tapTerm`           | 2    | 100 – 400 ms                                                                      | 200     |
-| `0x0B` | `scrollMode`        | 1    | 0: two finger, 1: circular, 2: edge                                               | 0       |
-| `0x0C` | `scrollDivisor`     | 1    | 1 – 32 (smaller = faster)                                                         | 8       |
-| `0x0D` | `naturalScroll`     | 1    | 0 / 1                                                                             | 0       |
-| `0x0E` | `horizontalScroll`  | 1    | 0 / 1                                                                             | 1       |
-| `0x0F` | `sensitivity`       | 1    | 0: 1x, 1: 2x, 2: 3x, 3: 4x                                                        | 1       |
-| `0x10` | `precisionTouchpad` | 1    | 0: always a mouse, 1: Windows precision touchpad when the host asks (protocol v4) | 0       |
+| ID     | Key                 | Size | Range / meaning                                                                   | Default                                                                                              |
+| ------ | ------------------- | ---- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `0x01` | `cpi`               | 2    | 400 – 3200                                                                        | 1600                                                                                                 |
+| `0x02` | `acceleration`      | 1    | 0 / 1                                                                             | 1                                                                                                    |
+| `0x03` | `glide`             | 1    | 0 / 1 (cursor glide / inertia)                                                    | 0                                                                                                    |
+| `0x04` | `rotation`          | 1    | 0: 0°, 1: 90°, 2: 180°, 3: 270°                                                   | 0                                                                                                    |
+| `0x05` | `invertX`           | 1    | 0 / 1                                                                             | 0                                                                                                    |
+| `0x06` | `invertY`           | 1    | 0 / 1                                                                             | 0                                                                                                    |
+| `0x07` | `tapToClick`        | 1    | 0 / 1                                                                             | 1                                                                                                    |
+| `0x08` | `twoFingerTap`      | 1    | 0 / 1 (right click, multi-touch sensors only)                                     | 1                                                                                                    |
+| `0x09` | `tapDrag`           | 1    | 0 / 1                                                                             | 0                                                                                                    |
+| `0x0A` | `tapTerm`           | 2    | 100 – 400 ms                                                                      | 200                                                                                                  |
+| `0x0B` | `scrollMode`        | 1    | 0: two finger, 1: circular, 2: edge                                               | 0                                                                                                    |
+| `0x0C` | `scrollDivisor`     | 1    | 1 – 32 (smaller = faster)                                                         | 8                                                                                                    |
+| `0x0D` | `naturalScroll`     | 1    | 0 / 1                                                                             | 0                                                                                                    |
+| `0x0E` | `horizontalScroll`  | 1    | 0 / 1                                                                             | 1                                                                                                    |
+| `0x0F` | `sensitivity`       | 1    | 0: 1x, 1: 2x, 2: 3x, 3: 4x                                                        | 1                                                                                                    |
+| `0x10` | `precisionTouchpad` | 1    | 0: always a mouse, 1: Windows precision touchpad when the host asks (protocol v4) | 0. Revision 16+: in this mode the auto mouse layer counts the fingers' movement on the touchpad half |
 
 ### Auto mouse layer (`matrix_auto_mouse_layer`)
 
