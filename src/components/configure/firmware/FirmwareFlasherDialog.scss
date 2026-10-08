@@ -80,3 +80,23 @@
   font-size: 12px;
   line-height: 1.6;
 }
+
+.firmware-flasher-dragdrop {
+  margin: 4px 0 12px;
+  padding: 8px 12px;
+  border: 1px solid #d9d9dd;
+  border-radius: 8px;
+  font-size: 13px;
+  summary {
+    font-weight: 600;
+    cursor: pointer;
+  }
+  ol {
+    margin: 8px 0 4px;
+    padding-left: 20px;
+    line-height: 1.7;
+  }
+  a {
+    font-weight: 600;
+  }
+}

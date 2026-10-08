@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import './FirmwareFlasherDialog.scss';
 import {
   Button,
@@ -19,6 +19,7 @@ import {
   flashImage,
   FlashProgress,
   PicobootConnection,
+  PicobootTimeoutError,
   RP2040_BOOT_PRODUCT_ID,
   RP2040_BOOT_VENDOR_ID,
 } from '../../../services/firmware/rp2040/Picoboot';
@@ -63,6 +64,9 @@ export default function FirmwareFlasherDialog() {
   const [fileError, setFileError] = useState<string>('');
   const [bootMessage, setBootMessage] = useState<string>('');
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
+  // The device being written, so "Cancel" can stop a write that hangs.
+  const deviceRef = useRef<USBDevice | null>(null);
+  const cancelledRef = useRef(false);
 
   const webUsbSupported = typeof navigator !== 'undefined' && !!navigator.usb;
   const busy = status.kind === 'flashing';
@@ -76,7 +80,12 @@ export default function FirmwareFlasherDialog() {
   };
 
   const onClose = () => {
-    if (busy) return;
+    if (busy) {
+      // Closing the device makes pending transfers fail, ending onFlash.
+      cancelledRef.current = true;
+      deviceRef.current?.close().catch(() => {});
+      return;
+    }
     reset();
     firmwareFlasherStore.close();
   };
@@ -124,6 +133,8 @@ export default function FirmwareFlasherDialog() {
   const onFlash = async () => {
     if (!image) return;
     let connection: PicobootConnection | null = null;
+    cancelledRef.current = false;
+    deviceRef.current = null;
     setStatus({ kind: 'flashing', progress: null });
     try {
       const device = await navigator.usb.requestDevice({
@@ -134,6 +145,7 @@ export default function FirmwareFlasherDialog() {
           },
         ],
       });
+      deviceRef.current = device;
       connection = await PicobootConnection.open(device);
       await flashImage(connection, image, (progress) =>
         setStatus({ kind: 'flashing', progress })
@@ -141,20 +153,35 @@ export default function FirmwareFlasherDialog() {
       setStatus({ kind: 'done' });
     } catch (e: any) {
       const name = e?.name || '';
-      if (name === 'NotFoundError') {
+      if (name === 'NotFoundError' && !deviceRef.current) {
         // The user closed the device chooser.
         setStatus({ kind: 'idle' });
+      } else if (cancelledRef.current) {
+        setStatus({
+          kind: 'error',
+          message: t('Cancelled.'),
+          driverHint: true,
+        });
       } else {
         setStatus({
           kind: 'error',
           message: e?.message || String(e),
-          // Claiming the interface fails like this when the OS has no
-          // driver that allows WebUSB access (typically Windows).
-          driverHint: name === 'SecurityError' || name === 'NetworkError',
+          // Claiming the interface fails like this, or the keyboard never
+          // answers, when the OS does not let the browser use the bootrom
+          // interface (typically Windows without a WinUSB driver).
+          driverHint:
+            name === 'SecurityError' ||
+            name === 'NetworkError' ||
+            e instanceof PicobootTimeoutError,
         });
       }
     } finally {
-      await connection?.close();
+      if (connection) {
+        await connection.close();
+      } else {
+        await deviceRef.current?.close().catch(() => {});
+      }
+      deviceRef.current = null;
     }
   };
 
@@ -164,7 +191,13 @@ export default function FirmwareFlasherDialog() {
       : undefined;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      // Clicking outside never stops a write; use the Stop button.
+      onClose={() => !busy && onClose()}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogTitle>{t('Write firmware')}</DialogTitle>
       <DialogContent className="firmware-flasher">
         {!webUsbSupported && (
@@ -258,6 +291,8 @@ export default function FirmwareFlasherDialog() {
           </li>
         </ol>
 
+        <DragDropHelp emphasize={status.kind === 'error'} />
+
         {status.kind === 'flashing' && (
           <div className="firmware-flasher-progress" role="status">
             <span>{phaseLabel(status.progress)}</span>
@@ -282,7 +317,7 @@ export default function FirmwareFlasherDialog() {
             {status.driverHint && (
               <p>
                 {t(
-                  'On Windows, the browser may need the WinUSB driver for the RP2 Boot interface (interface 1). It can be installed with a tool such as Zadig.'
+                  'The browser could not talk to the keyboard in flash mode (on Windows this needs a WinUSB driver). Use "Write by drag and drop" above instead: it works without any driver.'
                 )}
               </p>
             )}
@@ -295,10 +330,46 @@ export default function FirmwareFlasherDialog() {
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
-          {status.kind === 'done' ? t('Close') : t('Cancel')}
+        <Button onClick={onClose}>
+          {status.kind === 'done' ? t('Close') : busy ? t('Stop') : t('Cancel')}
         </Button>
       </DialogActions>
     </Dialog>
+  );
+}
+
+// Copying the .uf2 file to the RPI-RP2 drive works on every OS without a
+// driver; offered as the fallback to WebUSB.
+function DragDropHelp(props: { emphasize: boolean }) {
+  return (
+    <details className="firmware-flasher-dragdrop" open={props.emphasize}>
+      <summary>
+        {t('If writing does not start: write by drag and drop')}
+      </summary>
+      <ol>
+        <li>
+          {BUNDLED_FIRMWARES.map((firmware) => (
+            <a
+              key={firmware.url}
+              href={firmware.url}
+              download={firmware.fileName}
+            >
+              {t('Download the Matrix-ready firmware')} ({firmware.fileName})
+            </a>
+          ))}
+        </li>
+        <li>
+          {t(
+            'Put the keyboard into flash mode. A drive named "RPI-RP2" appears on the computer.'
+          )}
+        </li>
+        <li>
+          {t(
+            'Copy (drag and drop) the .uf2 file onto the RPI-RP2 drive. The keyboard restarts by itself when the copy finishes.'
+          )}
+        </li>
+        <li>{t('For a split keyboard, do the same for the other half.')}</li>
+      </ol>
+    </details>
   );
 }

@@ -62,9 +62,34 @@ export type FlashProgress = {
 
 export class PicobootError extends Error {}
 
+// A USB step that got no answer in time (the browser can wait forever, e.g.
+// when the operating system does not let it use the bootrom's interface).
+export class PicobootTimeoutError extends PicobootError {
+  constructor(readonly step: string) {
+    super(`No response from the keyboard (${step}).`);
+  }
+}
+
+const STEP_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(pending: Promise<T>, step: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([
+    pending,
+    new Promise<T>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new PicobootTimeoutError(step)),
+        STEP_TIMEOUT_MS
+      );
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
 // Thin wrapper over a claimed PICOBOOT interface.
 export class PicobootConnection {
   private token = 1;
+  // Name of the command in progress, for error messages.
+  private step = '';
 
   constructor(
     private readonly device: USBDevice,
@@ -74,9 +99,9 @@ export class PicobootConnection {
   ) {}
 
   static async open(device: USBDevice): Promise<PicobootConnection> {
-    await device.open();
+    await withTimeout(device.open(), 'open');
     if (device.configuration === null) {
-      await device.selectConfiguration(1);
+      await withTimeout(device.selectConfiguration(1), 'configuration');
     }
     const iface = device.configuration!.interfaces.find(
       (i) => i.alternates[0]?.interfaceClass === 0xff
@@ -90,7 +115,7 @@ export class PicobootConnection {
     if (!outEp || !inEp) {
       throw new PicobootError('PICOBOOT endpoints not found.');
     }
-    await device.claimInterface(iface.interfaceNumber);
+    await withTimeout(device.claimInterface(iface.interfaceNumber), 'claim');
     const connection = new PicobootConnection(
       device,
       iface.interfaceNumber,
@@ -102,13 +127,16 @@ export class PicobootConnection {
   }
 
   async reset(): Promise<void> {
-    await this.device.controlTransferOut({
-      requestType: 'vendor',
-      recipient: 'interface',
-      request: PICOBOOT_IF_RESET,
-      value: 0,
-      index: this.interfaceNumber,
-    });
+    await withTimeout(
+      this.device.controlTransferOut({
+        requestType: 'vendor',
+        recipient: 'interface',
+        request: PICOBOOT_IF_RESET,
+        value: 0,
+        index: this.interfaceNumber,
+      }),
+      'reset'
+    );
   }
 
   // Sends one command, its data phase, and waits for the zero-length ack
@@ -119,6 +147,7 @@ export class PicobootConnection {
     dataOut?: Uint8Array,
     readLength = 0
   ): Promise<Uint8Array | undefined> {
+    this.step = `0x${cmdId.toString(16)}`;
     const isIn = (cmdId & 0x80) !== 0;
     const transferLength = isIn ? readLength : dataOut?.length || 0;
     const cmd = buildCommand(this.token++, cmdId, args, transferLength);
@@ -150,7 +179,7 @@ export class PicobootConnection {
   private async expectOk<T extends { status?: USBTransferStatus }>(
     pending: Promise<T>
   ): Promise<T> {
-    const result = await pending;
+    const result = await withTimeout(pending, `command ${this.step}`);
     if (result.status && result.status !== 'ok') {
       // A stalled endpoint means the bootrom rejected the command.
       await this.reset().catch(() => {});
@@ -195,8 +224,11 @@ export class PicobootConnection {
   }
   async close(): Promise<void> {
     try {
-      await this.device.releaseInterface(this.interfaceNumber);
-      await this.device.close();
+      await withTimeout(
+        this.device.releaseInterface(this.interfaceNumber),
+        'release'
+      );
+      await withTimeout(this.device.close(), 'close');
     } catch {
       // The device may already be gone after a reboot.
     }

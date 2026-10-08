@@ -698,5 +698,13 @@
   "Yellow": "黄",
   "default": "既定",
   "or keycode (hex)": "またはキーコード（16進）",
-  "used": "件使用中"
+  "used": "件使用中",
+  "Cancelled.": "中止しました。",
+  "Stop": "中止",
+  "The browser could not talk to the keyboard in flash mode (on Windows this needs a WinUSB driver). Use \"Write by drag and drop\" above instead: it works without any driver.": "ブラウザが書き込みモードのキーボードと通信できませんでした（Windows では WinUSB ドライバが必要なためです）。上の「ドラッグ＆ドロップで書き込む」を使ってください。ドライバは不要です。",
+  "If writing does not start: write by drag and drop": "書き込みが始まらない場合：ドラッグ＆ドロップで書き込む（確実）",
+  "Download the Matrix-ready firmware": "Matrix 対応ファームウェアをダウンロード",
+  "Put the keyboard into flash mode. A drive named \"RPI-RP2\" appears on the computer.": "キーボードを書き込みモードにします。パソコンに「RPI-RP2」というドライブが表示されます。",
+  "Copy (drag and drop) the .uf2 file onto the RPI-RP2 drive. The keyboard restarts by itself when the copy finishes.": "ダウンロードした .uf2 ファイルを「RPI-RP2」ドライブにドラッグ＆ドロップ（コピー）します。コピーが終わるとキーボードが自動で再起動し、書き込み完了です。",
+  "For a split keyboard, do the same for the other half.": "分割キーボードは、反対側にも同じ手順で書き込んでください。"
 }

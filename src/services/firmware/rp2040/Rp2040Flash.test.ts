@@ -12,7 +12,9 @@ import {
   flashImage,
   PicobootCommand,
   PicobootConnection,
+  PicobootTimeoutError,
 } from './Picoboot';
+import { vi } from 'vitest';
 
 function uf2Block(
   addr: number,
@@ -183,5 +185,22 @@ describe('PICOBOOT', () => {
     await expect(flashImage(connection, image(), () => {})).rejects.toThrow(
       /Verification failed/
     );
+  });
+
+  test('a keyboard that never answers fails with a timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const { device } = fakeBootrom();
+      // The ack of EXCLUSIVE_ACCESS never arrives.
+      device.transferIn = () => new Promise(() => {});
+      const connection = new PicobootConnection(device as any, 1, 3, 4);
+      const result = flashImage(connection, image(), () => {});
+      const assertion =
+        expect(result).rejects.toBeInstanceOf(PicobootTimeoutError);
+      await vi.advanceTimersByTimeAsync(10000);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
