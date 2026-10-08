@@ -37,7 +37,7 @@ const BUNDLED_FIRMWARES: BundledFirmware[] = [
   {
     keyboard: 'Dilemma_3X6 (Corne Procyon36)',
     // Bump ?v= when the bundled file changes so browsers do not use a cached copy.
-    url: '/firmware/corne_procyon36_matrix.uf2?v=16',
+    url: '/firmware/corne_procyon36_matrix.uf2?v=17',
     fileName: 'corne_procyon36_matrix.uf2',
   },
 ];

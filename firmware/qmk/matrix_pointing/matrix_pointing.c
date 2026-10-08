@@ -56,7 +56,7 @@ __attribute__((weak)) bool usb_hires_scroll_enabled(void);
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 16
+#define MP_REVISION 17
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -249,8 +249,9 @@ static bool        mp_loaded = false;
 #define MP_CORNER_COUNT 4 // top-left, top-right, bottom-left, bottom-right
 #define MP_KNOB_COUNT 2
 #define MP_EXT_MAGIC 0x4D5A // 'MZ'
-#define MP_EXT_VERSION 2
+#define MP_EXT_VERSION 3
 #define MP_EXT_V1_SIZE 39 // bytes covered by version 1 (up to `smooth`)
+#define MP_EXT_V2_SIZE 45 // version 2 (up to `hyst_next`)
 #ifdef MXT_TOUCH_THRESHOLD
 #    define MP_DEFAULT_TOUCH_THRESHOLD MXT_TOUCH_THRESHOLD
 #else
@@ -284,9 +285,12 @@ typedef struct __attribute__((packed)) {
     uint8_t touch_threshold; // touch sensor: how hard a touch must be (lower = lighter)
     uint8_t hyst_initial;    // touch sensor: movement before a touch starts moving
     uint8_t hyst_next;       // touch sensor: movement between position updates
+    // version 3 (revision 17)
+    uint8_t precision_scale; // precision ("sniping") mode: % of the normal movement
 } mp_ext_t;
 _Static_assert(sizeof(mp_ext_t) <= 64, "mp_ext_t must fit 64 bytes");
 _Static_assert(offsetof(mp_ext_t, accel_slow) == MP_EXT_V1_SIZE, "extension version 1 layout changed");
+_Static_assert(offsetof(mp_ext_t, precision_scale) == MP_EXT_V2_SIZE, "extension version 2 layout changed");
 
 // Touch sensor tuning: written to the sensor from the housekeeping task on
 // the half it is wired to (the slave half gets the values over the split
@@ -321,6 +325,7 @@ static const mp_ext_t mp_ext_defaults = {
     .touch_threshold = MP_DEFAULT_TOUCH_THRESHOLD,
     .hyst_initial    = MP_DEFAULT_HYST_INITIAL,
     .hyst_next       = MP_DEFAULT_HYST_NEXT,
+    .precision_scale = 33,
 };
 static mp_ext_t mp_ext = {0};
 
@@ -341,13 +346,18 @@ static uint8_t mp_ext_checksum(const mp_ext_t *e) {
 static void mp_ext_save(void);
 static void mp_ext_load(void) {
     eeconfig_read_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
-    // Version 1 (revisions 12-13): keep its settings, new fields get defaults.
-    if (mp_ext.magic == MP_EXT_MAGIC && mp_ext.version == 1 && mp_ext.checksum == mp_ext_checksum_n(&mp_ext, MP_EXT_V1_SIZE)) {
-        mp_ext_t migrated = mp_ext_defaults;
-        memcpy((uint8_t *)&migrated + 4, (const uint8_t *)&mp_ext + 4, MP_EXT_V1_SIZE - 4);
-        mp_ext = migrated;
-        mp_ext_save();
-        return;
+    // Older versions (1: revisions 12-13, 2: 14-16): keep their settings,
+    // new fields get defaults.
+    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE};
+    if (mp_ext.magic == MP_EXT_MAGIC && mp_ext.version >= 1 && mp_ext.version < MP_EXT_VERSION) {
+        const uint8_t size = old_sizes[mp_ext.version];
+        if (mp_ext.checksum == mp_ext_checksum_n(&mp_ext, size)) {
+            mp_ext_t migrated = mp_ext_defaults;
+            memcpy((uint8_t *)&migrated + 4, (const uint8_t *)&mp_ext + 4, size - 4);
+            mp_ext = migrated;
+            mp_ext_save();
+            return;
+        }
     }
     // Fresh, or bytes left over from the dynamic keymap that used to be here.
     if (mp_ext.magic != MP_EXT_MAGIC || mp_ext.version != MP_EXT_VERSION || mp_ext.checksum != mp_ext_checksum(&mp_ext)) {
@@ -508,6 +518,9 @@ static uint32_t mp_capabilities(void) {
     caps |= 1UL << 27; // acceleration curve / momentum tuning (0x93..0x95)
 #endif
     if (maxtouch_tune) caps |= 1UL << 26; // touch sensor tuning (0x96..0x98)
+#ifdef MP_EDGES
+    caps |= 1UL << 28; // precision mode keys (QK_KB_0..5) and scale (0x99)
+#endif
     return caps;
 }
 
@@ -540,6 +553,7 @@ static const mp_field_t mp_ext_fields[] = {
     MP_EXT_FIELD(0x96, touch_threshold, 10, 80),
     MP_EXT_FIELD(0x97, hyst_initial, 0, 40),
     MP_EXT_FIELD(0x98, hyst_next, 0, 40),
+    MP_EXT_FIELD(0x99, precision_scale, 10, 90),
 };
 
 static const mp_field_t *mp_find_ext_field(uint8_t id) {
@@ -1203,6 +1217,74 @@ static int32_t mp_take_touch_motion(void) {
     return moved;
 }
 
+// Precision ("sniping") mode (revision 17): the touchpad's coordinates are
+// scaled down with the fork's digitizer_set_scale(), which works for the
+// mouse and the precision touchpad modes alike (it keeps a finger that is
+// down where it is when the scale changes). On while Sniping Mode (QK_KB_4)
+// is held or after Sniping Toggle (QK_KB_5). The slave half gets the scale
+// from the master over the split sync.
+static bool    mp_precision_hold    = false;
+static bool    mp_precision_toggle  = false;
+static uint8_t mp_precision_remote  = 100;
+static uint8_t mp_precision_applied = 100;
+
+static uint8_t mp_precision_wanted(void) {
+    if (!mp_edge_is_master()) return mp_precision_remote;
+    return (mp_precision_hold || mp_precision_toggle) ? mp_ext.precision_scale : 100;
+}
+
+static void mp_precision_task(void) {
+    if (!mp_edge_on_this_side()) return;
+    const uint8_t want = mp_precision_wanted();
+    if (want != mp_precision_applied) {
+        digitizer_set_scale(want);
+        mp_precision_applied = want;
+    }
+}
+
+// Custom keycodes of the keyboard definition (QK_KB_0..5): DPI+/-,
+// Sniping+/-, Sniping Mode, Sniping Toggle.
+static bool mp_precision_process(uint16_t keycode, keyrecord_t *record) {
+    const bool pressed = record->event.pressed;
+    switch (keycode) {
+        case QK_KB_4: // Sniping Mode: while held
+            mp_precision_hold = pressed;
+            mp_config_changed();
+            return false;
+        case QK_KB_5: // Sniping Toggle
+            if (pressed) {
+                mp_precision_toggle = !mp_precision_toggle;
+                mp_config_changed();
+            }
+            return false;
+        case QK_KB_2: // Sniping+: less precise (faster)
+        case QK_KB_3: // Sniping-: more precise
+            if (pressed) {
+                int16_t scale = mp_ext.precision_scale + (keycode == QK_KB_2 ? 10 : -10);
+                if (scale < 10) scale = 10;
+                if (scale > 90) scale = 90;
+                mp_ext.precision_scale = (uint8_t)scale;
+                mp_ext_save();
+                mp_config_changed();
+            }
+            return false;
+        case QK_KB_0: // DPI+ (cursor speed in the mouse mode)
+        case QK_KB_1: // DPI-
+            if (pressed) {
+                const mp_field_t *cpi = mp_find_field(0x01);
+                if (cpi) {
+                    mp_write_field(cpi, mp_config.cpi + (keycode == QK_KB_0 ? 100 : -100));
+                    mp_apply();
+                    MP_EEPROM_WRITE(mp_config);
+                    mp_config_changed();
+                }
+            }
+            return false;
+        default:
+            return true;
+    }
+}
+
 #    ifndef MATRIX_POINTING_NO_DIGITIZER_HOOK
 bool digitizer_task_user(digitizer_t *const state) {
     return matrix_pointing_digitizer(state);
@@ -1309,9 +1391,10 @@ static void mp_config_changed(void) {
 
 // Payload: mp_config_t, then (revision 12) the edge summary: width, step,
 // edge keycode mask, corner mask; (revision 14) the touch sensor tuning:
-// threshold, initial / next movement hysteresis, 1 = valid. Older slaves
-// read only what they know.
-#    define MP_SYNC_SIZE (sizeof(mp_config_t) + 8)
+// threshold, initial / next movement hysteresis, 1 = valid; (revision 17)
+// the precision mode scale (100 = off). Older slaves read only what they
+// know.
+#    define MP_SYNC_SIZE (sizeof(mp_config_t) + 9)
 _Static_assert(MP_SYNC_SIZE <= RPC_M2S_BUFFER_SIZE, "Set RPC_M2S_BUFFER_SIZE to at least 64 in config.h");
 
 static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
@@ -1330,6 +1413,9 @@ static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len
     if (in_len >= MP_SYNC_SIZE) {
         const uint8_t *extra = (const uint8_t *)in + sizeof(mp_config_t);
         if (extra[7] == 1) mp_sensor_request(extra[4], extra[5], extra[6]);
+#    ifdef MP_EDGES
+        if (extra[8] >= 10 && extra[8] <= 100) mp_precision_remote = extra[8];
+#    endif
     }
 #    ifdef POINTING_DEVICE_DRIVER_digitizer
     extern bool digitizer_taps_as_clicks;
@@ -1405,6 +1491,11 @@ static void mp_split_housekeeping(void) {
         payload[sizeof(mp_config_t) + 5] = mp_ext.hyst_initial;
         payload[sizeof(mp_config_t) + 6] = mp_ext.hyst_next;
         payload[sizeof(mp_config_t) + 7] = 1;
+#    ifdef MP_EDGES
+        payload[sizeof(mp_config_t) + 8] = mp_precision_wanted();
+#    else
+        payload[sizeof(mp_config_t) + 8] = 100;
+#    endif
         if (transaction_rpc_send(MP_SYNC_CONFIG, sizeof(payload), payload)) {
             mp_synced_generation = mp_generation;
         }
@@ -1514,6 +1605,9 @@ void matrix_pointing_housekeeping(void) {
     mp_drain();
     mp_split_housekeeping();
     mp_sensor_task();
+#ifdef MP_EDGES
+    mp_precision_task();
+#endif
 }
 
 #ifndef MATRIX_POINTING_NO_HOUSEKEEPING
@@ -2109,6 +2203,10 @@ bool matrix_pointing_process_record(uint16_t keycode, keyrecord_t *record) {
 #ifdef MP_KNOBS
     mp_ensure_loaded();
     if (!mp_knob_process(keycode, record)) return false;
+#endif
+#ifdef MP_EDGES
+    mp_ensure_loaded();
+    if (!mp_precision_process(keycode, record)) return false;
 #endif
 #ifdef MP_SMOOTH
     if (mp_is_mod_wheel(keycode)) {

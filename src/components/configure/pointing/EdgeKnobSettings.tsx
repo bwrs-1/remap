@@ -23,6 +23,7 @@ import {
 import {
   CAP_ACCEL_TUNING,
   CAP_EDGE_ZONES,
+  CAP_PRECISION_MODE,
   CAP_KNOB_PRESS_TURN,
   CAP_SENSOR_TUNING,
   CAP_SMOOTHING,
@@ -678,6 +679,16 @@ const TUNING_ROWS: TuningRow[] = [
     def: 20,
     cap: CAP_ACCEL_TUNING,
     format: (v) => `${(v / 100).toFixed(2)} s`,
+  },
+  {
+    id: 0x99,
+    label: 'Precision mode speed',
+    help: 'Cursor movement while precision mode is on: hold the "Sniping Mode" key, or press "Sniping Toggle" (Key Config > custom keys). Works in the precision touchpad mode too.',
+    min: 10,
+    max: 90,
+    def: 33,
+    cap: CAP_PRECISION_MODE,
+    format: (v) => `${v}%`,
   },
 ];
 

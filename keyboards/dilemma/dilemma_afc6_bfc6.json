@@ -9,42 +9,42 @@
   "customKeycodes": [
     {
       "name": "Default DPI Forward",
-      "title": "Default DPI Forward",
+      "title": "カーソル速度を上げる（DPI+、マウスモードのみ）",
       "shortName": "DPI+"
     },
     {
       "name": "Default DPI Reverse",
-      "title": "Default DPI Reverse",
+      "title": "カーソル速度を下げる（DPI-、マウスモードのみ）",
       "shortName": "DPI-"
     },
     {
       "name": "Sniping DPI Forward",
-      "title": "Sniping DPI Forward",
+      "title": "精密モードを速くする（+10%）",
       "shortName": "Sniping+"
     },
     {
       "name": "Sniping DPI Reverse",
-      "title": "Sniping DPI Reverse",
+      "title": "精密モードを遅くする（-10%）",
       "shortName": "Sniping-"
     },
     {
       "name": "Sniping Mode",
-      "title": "Sniping Mode",
+      "title": "押している間だけ精密モード（カーソルをゆっくり動かす）",
       "shortName": "SnipeMO"
     },
     {
       "name": "Sniping Toggle",
-      "title": "Sniping Toggle",
+      "title": "精密モードのオン／オフを切り替え",
       "shortName": "SnipeTG"
     },
     {
       "name": "Dragscroll Mode",
-      "title": "Dragscroll Mode",
+      "title": "ドラッグスクロール（このファームウェアでは未対応）",
       "shortName": "DragScl"
     },
     {
       "name": "Dragscroll Toggle",
-      "title": "Dragscroll Toggle",
+      "title": "ドラッグスクロール切り替え（このファームウェアでは未対応）",
       "shortName": "DragTog"
     }
   ],
