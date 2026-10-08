@@ -24,6 +24,15 @@ describe('EdgeKnob presets', () => {
       0x00da, 0x00d9,
     ]);
   });
+  test('zoom uses the keypad keys (any keyboard layout)', () => {
+    // Ctrl + keypad - / Ctrl + keypad +; counter-clockwise zooms out
+    expect(presetKeycodes(preset('zoom'), 'other', false)).toEqual([
+      0x0156, 0x0157,
+    ]);
+    // knobs set before still show as the US-layout zoom
+    const m = matchPair([0x012d, 0x012e], 'other');
+    expect(m.kind === 'preset' && m.preset.id).toBe('zoomUs');
+  });
   test('stored keycodes are recognised', () => {
     expect(matchPair([0, 0], 'other')).toEqual({ kind: 'none' });
     const m = matchPair([0x00aa, 0x00a9], 'sideEdge');

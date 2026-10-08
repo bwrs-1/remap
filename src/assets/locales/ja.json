@@ -905,5 +905,7 @@
   "Touch sensitivity threshold": "タッチの感度（しきい値）",
   "Warning": "警告",
   "Write anyway": "このまま書き込む",
-  "{{count}} keys on layer 0 are transparent (▽), so they do nothing.": "レイヤー 0 の {{count}} 個のキーが透過（▽）になっていて、押しても何も起きません。"
+  "{{count}} keys on layer 0 are transparent (▽), so they do nothing.": "レイヤー 0 の {{count}} 個のキーが透過（▽）になっていて、押しても何も起きません。",
+  "Zoom (Ctrl + keypad + / -)": "ズーム（Ctrl + テンキー + / -）",
+  "Zoom (Ctrl + = / -, US layout only)": "ズーム（Ctrl + = / -、US 配列のみ）"
 }

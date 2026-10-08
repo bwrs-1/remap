@@ -70,9 +70,17 @@ export const PAIR_PRESETS: PairPreset[] = [
     kind: 'motion',
     pair: [0x00db, 0x00dc],
   },
+  // Keypad + / - are the same on every keyboard layout (Ctrl + "=" is "^"
+  // on a Japanese layout, so it did not zoom in there).
   {
     id: 'zoom',
-    label: 'Zoom (Ctrl + / -)',
+    label: 'Zoom (Ctrl + keypad + / -)',
+    kind: 'value',
+    pair: [CTL | 0x0056, CTL | 0x0057],
+  },
+  {
+    id: 'zoomUs',
+    label: 'Zoom (Ctrl + = / -, US layout only)',
     kind: 'value',
     pair: [CTL | 0x002d, CTL | 0x002e],
   },

@@ -212,6 +212,8 @@ const KEYCODE_NAMES: { [code: number]: string } = {
   0x00dc: 'Scroll right',
   0x012d: 'Zoom out',
   0x012e: 'Zoom in',
+  0x0156: 'Zoom out',
+  0x0157: 'Zoom in',
   0x032b: 'Previous tab',
   0x012b: 'Next tab',
   0x011d: 'Undo',

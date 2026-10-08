@@ -812,5 +812,7 @@
   "Touch sensitivity threshold": "Touch sensitivity threshold",
   "Warning": "Warning",
   "Write anyway": "Write anyway",
-  "{{count}} keys on layer 0 are transparent (▽), so they do nothing.": "{{count}} keys on layer 0 are transparent (▽), so they do nothing."
+  "{{count}} keys on layer 0 are transparent (▽), so they do nothing.": "{{count}} keys on layer 0 are transparent (▽), so they do nothing.",
+  "Zoom (Ctrl + keypad + / -)": "Zoom (Ctrl + keypad + / -)",
+  "Zoom (Ctrl + = / -, US layout only)": "Zoom (Ctrl + = / -, US layout only)"
 }
