@@ -51,7 +51,7 @@
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 11
+#define MP_REVISION 12
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -221,6 +221,94 @@ static const mp_config_t mp_defaults = {
 static mp_config_t mp_config;
 static bool        mp_loaded = false;
 
+// ---------------------------------------------------------------------------
+// Extension block (revision 12): touchpad edge sliders / corner taps and
+// knob press-and-turn. It has its own block after the combos
+// (MATRIX_POINTING_EXT_EEPROM_OFFSET), so the older layout stays put.
+//
+// config.h:
+//   #define MATRIX_POINTING_EXT_EEPROM_OFFSET 320   // after settings + combos
+//   #define EECONFIG_USER_DATA_SIZE 384             // + 64
+//   #define EECONFIG_USER_DATA_VERSION 320          // keep the stored block valid
+//   #define MATRIX_POINTING_EDGE_ZONES              // digitizer touchpads
+//   #define MATRIX_POINTING_KNOB_KEYS { {3, 2}, {7, 3} } // {row, col} of each
+//                                                // encoder's push switch
+#if defined(MATRIX_POINTING_EDGE_ZONES) && defined(POINTING_DEVICE_DRIVER_digitizer) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
+#    define MP_EDGES
+#endif
+#if defined(MATRIX_POINTING_KNOB_KEYS) && defined(ENCODER_MAP_ENABLE) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
+#    define MP_KNOBS
+#endif
+
+#define MP_EDGE_COUNT 4   // left, right, top, bottom (as the user sees the pad)
+#define MP_CORNER_COUNT 4 // top-left, top-right, bottom-left, bottom-right
+#define MP_KNOB_COUNT 2
+#define MP_EXT_MAGIC 0x4D5A // 'MZ'
+#define MP_EXT_VERSION 1
+
+typedef struct __attribute__((packed)) {
+    uint16_t magic;
+    uint8_t  version;
+    uint8_t  checksum;
+    uint8_t  edge_width;                // % of the pad from each side
+    uint8_t  edge_step;                 // % of the pad per keycode
+    uint16_t edge_kc[MP_EDGE_COUNT][2]; // [0] moving up / left, [1] down / right
+    uint16_t corner_kc[MP_CORNER_COUNT];
+    uint16_t knob_kc[MP_KNOB_COUNT][2]; // while pushed: [0] counter-clockwise, [1] clockwise
+    uint8_t  smooth;                    // spread each sensor report over the next frame
+} mp_ext_t;
+_Static_assert(sizeof(mp_ext_t) <= 64, "mp_ext_t must fit 64 bytes");
+
+static const mp_ext_t mp_ext_defaults = {
+    .magic      = MP_EXT_MAGIC,
+    .version    = MP_EXT_VERSION,
+    .edge_width = 12,
+    .edge_step  = 6,
+    .smooth     = 1,
+};
+static mp_ext_t mp_ext = {0};
+
+#ifdef MATRIX_POINTING_EXT_EEPROM_OFFSET
+#    if (EECONFIG_USER_DATA_SIZE) < (MATRIX_POINTING_EXT_EEPROM_OFFSET + 64)
+#        error "Set EECONFIG_USER_DATA_SIZE to MATRIX_POINTING_EXT_EEPROM_OFFSET + 64"
+#    endif
+static uint8_t mp_ext_checksum(const mp_ext_t *e) {
+    const uint8_t *b   = (const uint8_t *)e;
+    uint8_t        sum = 0xA5;
+    for (uint8_t i = 4; i < sizeof(mp_ext_t); i++) sum = (uint8_t)((sum << 1 | sum >> 7) ^ b[i]);
+    return sum;
+}
+
+static void mp_ext_save(void);
+static void mp_ext_load(void) {
+    eeconfig_read_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
+    // Fresh, or bytes left over from the dynamic keymap that used to be here.
+    if (mp_ext.magic != MP_EXT_MAGIC || mp_ext.version != MP_EXT_VERSION || mp_ext.checksum != mp_ext_checksum(&mp_ext)) {
+        mp_ext = mp_ext_defaults;
+#    ifdef MATRIX_POINTING_NATIVE_CPI
+        // First start with revision 12: turn on the smooth acceleration curve
+        // and momentum scrolling once (they were plain / unused before).
+        mp_config.acceleration = 1;
+        mp_config.glide        = 1;
+        MP_EEPROM_WRITE(mp_config);
+#    endif
+        mp_ext_save();
+    }
+}
+
+static void mp_ext_save(void) {
+    mp_ext.magic    = MP_EXT_MAGIC;
+    mp_ext.version  = MP_EXT_VERSION;
+    mp_ext.checksum = mp_ext_checksum(&mp_ext);
+    eeconfig_update_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
+}
+#else
+static void mp_ext_load(void) {
+    mp_ext = mp_ext_defaults;
+}
+static void mp_ext_save(void) {}
+#endif
+
 // Writing any value to 0x7F reboots into the bootloader (RP2040: BOOTSEL),
 // so the editor can flash new firmware over WebUSB.
 #define MP_BOOTLOADER_VALUE_ID 0x7F
@@ -337,7 +425,74 @@ static uint32_t mp_capabilities(void) {
 #ifdef RGB_MATRIX_ENABLE
     caps |= 1UL << 22; // RGB Matrix effect count (0x7B)
 #endif
+#ifdef MP_EDGES
+    caps |= 1UL << 23; // touchpad edge sliders / corner taps (0x80..0x8D)
+#endif
+#ifdef MP_KNOBS
+    caps |= 1UL << 24; // knob press-and-turn (0x8E..0x91)
+#endif
+#if defined(MATRIX_POINTING_NATIVE_CPI) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
+    caps |= 1UL << 25; // smoothing (0x92)
+#endif
+#ifdef MP_EDGES
+    caps |= MP_CAP(0x03); // momentum scrolling (needs the finger count)
+#endif
     return caps;
+}
+
+// Values 0x80..0x91 (revision 12): the extension block, same encoding.
+#define MP_EXT_FIELD(_id, _field, _min, _max) \
+    { .id = (_id), .size = sizeof(((mp_ext_t *)0)->_field), .min = (_min), .max = (_max), .offset = offsetof(mp_ext_t, _field) }
+static const mp_field_t mp_ext_fields[] = {
+    MP_EXT_FIELD(0x80, edge_width, 5, 30),
+    MP_EXT_FIELD(0x81, edge_step, 2, 25),
+    MP_EXT_FIELD(0x82, edge_kc[0][0], 0, 0xFFFF),
+    MP_EXT_FIELD(0x83, edge_kc[0][1], 0, 0xFFFF),
+    MP_EXT_FIELD(0x84, edge_kc[1][0], 0, 0xFFFF),
+    MP_EXT_FIELD(0x85, edge_kc[1][1], 0, 0xFFFF),
+    MP_EXT_FIELD(0x86, edge_kc[2][0], 0, 0xFFFF),
+    MP_EXT_FIELD(0x87, edge_kc[2][1], 0, 0xFFFF),
+    MP_EXT_FIELD(0x88, edge_kc[3][0], 0, 0xFFFF),
+    MP_EXT_FIELD(0x89, edge_kc[3][1], 0, 0xFFFF),
+    MP_EXT_FIELD(0x8A, corner_kc[0], 0, 0xFFFF),
+    MP_EXT_FIELD(0x8B, corner_kc[1], 0, 0xFFFF),
+    MP_EXT_FIELD(0x8C, corner_kc[2], 0, 0xFFFF),
+    MP_EXT_FIELD(0x8D, corner_kc[3], 0, 0xFFFF),
+    MP_EXT_FIELD(0x8E, knob_kc[0][0], 0, 0xFFFF),
+    MP_EXT_FIELD(0x8F, knob_kc[0][1], 0, 0xFFFF),
+    MP_EXT_FIELD(0x90, knob_kc[1][0], 0, 0xFFFF),
+    MP_EXT_FIELD(0x91, knob_kc[1][1], 0, 0xFFFF),
+    MP_EXT_FIELD(0x92, smooth, 0, 1),
+};
+
+static const mp_field_t *mp_find_ext_field(uint8_t id) {
+#if defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
+    for (uint8_t i = 0; i < ARRAY_SIZE(mp_ext_fields); i++) {
+        if (mp_ext_fields[i].id == id) return &mp_ext_fields[i];
+    }
+#endif
+    return NULL;
+}
+
+static uint16_t mp_read_field_at(const void *block, const mp_field_t *field) {
+    const uint8_t *base = (const uint8_t *)block + field->offset;
+    if (field->size == 2) {
+        uint16_t value;
+        memcpy(&value, base, sizeof(value));
+        return value;
+    }
+    return *base;
+}
+
+static void mp_write_field_at(void *block, const mp_field_t *field, uint16_t value) {
+    if (value < field->min) value = field->min;
+    if (value > field->max) value = field->max;
+    uint8_t *base = (uint8_t *)block + field->offset;
+    if (field->size == 2) {
+        memcpy(base, &value, sizeof(value));
+    } else {
+        *base = (uint8_t)value;
+    }
 }
 
 static const mp_field_t *mp_find_field(uint8_t id) {
@@ -441,6 +596,10 @@ static void mp_load(void) {
     for (uint8_t i = 0; i < ARRAY_SIZE(mp_fields); i++) {
         mp_write_field(&mp_fields[i], mp_read_field(&mp_fields[i]));
     }
+    mp_ext_load();
+    for (uint8_t i = 0; i < ARRAY_SIZE(mp_ext_fields); i++) {
+        mp_write_field_at(&mp_ext, &mp_ext_fields[i], mp_read_field_at(&mp_ext, &mp_ext_fields[i]));
+    }
 }
 
 // Drivers may ask for settings before keyboard_post_init_user() runs.
@@ -538,6 +697,415 @@ uint8_t matrix_pointing_swipe(uint8_t direction) {
 }
 
 // ---------------------------------------------------------------------------
+// Smooth movement and scrolling (revision 12, MATRIX_POINTING_NATIVE_CPI).
+// The sensor reports every few milliseconds while USB takes a report every
+// millisecond, so each sensor report is spread over the time until the next
+// one (with "smooth" on). Acceleration follows the finger speed per
+// millisecond. With POINTING_DEVICE_HIRES_SCROLL_ENABLE the host reads the
+// wheel in 1/120 notches: touchpad scrolling, wheel keycodes (knobs, edge
+// sliders, mouse keys on a layer) and momentum after a two-finger flick all
+// go through the same scroll queue. QMK's mouse keys would send only 1/120
+// notch per step there, so wheel keycodes are handled here instead.
+#if defined(POINTING_DEVICE_ENABLE) && defined(MATRIX_POINTING_NATIVE_CPI)
+#    define MP_SMOOTH
+#endif
+#if defined(MP_SMOOTH) && defined(POINTING_DEVICE_HIRES_SCROLL_ENABLE)
+#    define MP_HIRES
+#endif
+
+#ifdef MP_HIRES
+static int32_t  mp_scroll_pend_h = 0, mp_scroll_pend_v = 0; // 1/120 notch units
+static uint16_t mp_scroll_until  = 0;
+static int8_t   mp_wheel_hold_h = 0, mp_wheel_hold_v = 0;
+static uint16_t mp_wheel_hold_since = 0;
+static int32_t  mp_wheel_hold_acc   = 0;
+static int32_t  mp_momentum_h = 0, mp_momentum_v = 0; // units per ms x256
+
+static int32_t mp_notch(void) {
+    return pointing_device_get_hires_scroll_resolution();
+}
+
+static bool mp_is_wheel_keycode(uint16_t keycode) {
+    return keycode >= QK_MOUSE_WHEEL_UP && keycode <= QK_MOUSE_WHEEL_RIGHT;
+}
+
+static void mp_scroll_queue(int32_t h, int32_t v, uint16_t spread_ms) {
+    const uint16_t now   = timer_read();
+    const uint16_t until = now + spread_ms;
+    // Extend the running spread, or start a new one (also when the old
+    // deadline is long past and the 16-bit timer may have wrapped).
+    const int16_t left = (int16_t)(mp_scroll_until - now);
+    if ((mp_scroll_pend_h == 0 && mp_scroll_pend_v == 0) || left <= 0 || left > 200 || (int16_t)(until - mp_scroll_until) > 0) {
+        mp_scroll_until = until;
+    }
+    mp_scroll_pend_h += h;
+    mp_scroll_pend_v += v;
+}
+
+static void mp_wheel_direction(uint16_t keycode, int8_t *h, int8_t *v) {
+    *h = *v = 0;
+    switch (keycode) {
+        case QK_MOUSE_WHEEL_UP: *v = 1; break;
+        case QK_MOUSE_WHEEL_DOWN: *v = -1; break;
+        case QK_MOUSE_WHEEL_LEFT: *h = -1; break;
+        case QK_MOUSE_WHEEL_RIGHT: *h = 1; break;
+        default: break;
+    }
+}
+
+// One wheel notch, scrolled smoothly over 50 ms.
+static void mp_wheel_notch(uint16_t keycode) {
+    int8_t h, v;
+    mp_wheel_direction(keycode, &h, &v);
+    mp_momentum_h = mp_momentum_v = 0;
+    mp_scroll_queue(h * mp_notch(), v * mp_notch(), 50);
+}
+
+// Wheel keycode pressed / released (keys and encoder steps).
+static void mp_wheel_key(uint16_t keycode, bool pressed) {
+    int8_t h, v;
+    mp_wheel_direction(keycode, &h, &v);
+    if (pressed) {
+        mp_wheel_notch(keycode);
+        mp_wheel_hold_h     = h;
+        mp_wheel_hold_v     = v;
+        mp_wheel_hold_since = timer_read();
+        mp_wheel_hold_acc   = 0;
+    } else if (mp_wheel_hold_h == h && mp_wheel_hold_v == v) {
+        mp_wheel_hold_h = mp_wheel_hold_v = 0;
+    }
+}
+#endif // MP_HIRES
+
+// ---------------------------------------------------------------------------
+// Touchpad edge sliders and corner taps (revision 12, digitizer touchpads).
+// A single finger that lands within edge_width % of a side whose keycodes
+// are set becomes a slider: every edge_step % it moves along the side taps
+// that side's keycode, and the finger is hidden from the mouse fallback (no
+// cursor movement, no tap click). A finger that lands in a corner with a
+// keycode taps it when lifted quickly without moving. Moving well into the
+// pad before the first step, or a second finger, gives the touch back to the
+// cursor. Edges are as the user sees the pad (after rotation / inversion).
+#ifdef MP_EDGES
+#    include "digitizer.h"
+
+#    define MP_EDGE_SCALE 1000            // positions in 1/1000 of the pad
+#    define MP_EDGE_RELEASE_DISTANCE 150 // into the pad before a step: cursor
+#    define MP_CORNER_MOVE 80            // a corner tap moves less than this
+#    define MP_CORNER_TAP_MS 300
+
+enum { MP_TOUCH_NONE = 0, MP_TOUCH_EDGE, MP_TOUCH_CORNER, MP_TOUCH_PASS };
+
+typedef struct {
+    uint8_t  mode;
+    uint8_t  zone; // edge or corner index
+    bool     stepped;
+    int16_t  start_a, start_p; // along / across the edge (corner: x / y)
+    int16_t  last_a;
+    int16_t  travel;
+    uint16_t time;
+} mp_touch_t;
+
+static mp_touch_t mp_touch[DIGITIZER_CONTACT_COUNT];
+static bool       mp_touch_down[DIGITIZER_CONTACT_COUNT];
+// Fingers on the pad (for momentum scrolling): this half's count, or the
+// touchpad half's count from the split reply. 0xFF = not known.
+static uint8_t mp_fingers_local  = 0;
+static uint8_t mp_fingers_remote = 0xFF;
+
+// Edge summary the slave half gets from the master (it has no editor).
+static uint8_t mp_edge_width_synced = 12, mp_edge_step_synced = 6, mp_edge_mask_synced = 0, mp_corner_mask_synced = 0;
+
+static uint8_t mp_edge_mask(void) {
+    uint8_t mask = 0;
+    for (uint8_t e = 0; e < MP_EDGE_COUNT; e++) {
+        for (uint8_t d = 0; d < 2; d++) {
+            if (mp_ext.edge_kc[e][d]) mask |= 1 << (e * 2 + d);
+        }
+    }
+    return mask;
+}
+
+static uint8_t mp_corner_mask(void) {
+    uint8_t mask = 0;
+    for (uint8_t c = 0; c < MP_CORNER_COUNT; c++) {
+        if (mp_ext.corner_kc[c]) mask |= 1 << c;
+    }
+    return mask;
+}
+
+static bool mp_edge_is_master(void) {
+#    ifdef SPLIT_KEYBOARD
+    return is_keyboard_master();
+#    else
+    return true;
+#    endif
+}
+
+static uint8_t mp_edge_width_now(void) {
+    return mp_edge_is_master() ? mp_ext.edge_width : mp_edge_width_synced;
+}
+static uint8_t mp_edge_step_now(void) {
+    return mp_edge_is_master() ? mp_ext.edge_step : mp_edge_step_synced;
+}
+static uint8_t mp_edge_mask_now(void) {
+    return mp_edge_is_master() ? mp_edge_mask() : mp_edge_mask_synced;
+}
+static uint8_t mp_corner_mask_now(void) {
+    return mp_edge_is_master() ? mp_corner_mask() : mp_corner_mask_synced;
+}
+
+#    if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
+static volatile int8_t  mp_pending_edge[MP_EDGE_COUNT] = {0}; // on the slave half
+static volatile uint8_t mp_pending_corners             = 0;
+#    endif
+
+// Taps the keycode on the USB half; the other half queues it for the
+// master (collected with the swipes in mp_split_housekeeping()).
+static void mp_edge_emit(uint8_t edge, uint8_t forward) {
+#    if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
+    if (!mp_edge_is_master()) {
+        int8_t n = mp_pending_edge[edge];
+        if (forward && n < 100) mp_pending_edge[edge] = n + 1;
+        if (!forward && n > -100) mp_pending_edge[edge] = n - 1;
+        return;
+    }
+#    endif
+    const uint16_t keycode = mp_ext.edge_kc[edge][forward ? 1 : 0];
+#    ifdef MP_HIRES
+    if (mp_is_wheel_keycode(keycode)) {
+        mp_wheel_notch(keycode);
+        return;
+    }
+#    endif
+    if (keycode != KC_NO && keycode <= QK_MODS_MAX) tap_code16(keycode);
+}
+
+static void mp_corner_emit(uint8_t corner) {
+#    if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
+    if (!mp_edge_is_master()) {
+        mp_pending_corners |= 1 << corner;
+        return;
+    }
+#    endif
+    const uint16_t keycode = mp_ext.corner_kc[corner];
+    if (keycode != KC_NO && keycode <= QK_MODS_MAX) tap_code16(keycode);
+}
+
+static bool mp_edge_on_this_side(void) {
+#    if defined(SPLIT_KEYBOARD) && defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_LEFT)
+    return is_keyboard_left();
+#    elif defined(SPLIT_KEYBOARD) && defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_RIGHT)
+    return !is_keyboard_left();
+#    else
+    return true;
+#    endif
+}
+
+static uint8_t mp_fingers_now(void) {
+    return mp_edge_on_this_side() ? mp_fingers_local : mp_fingers_remote;
+}
+
+// Sensor position to the user's view of the pad (0..MP_EDGE_SCALE), with
+// the same rotation / inversion as the cursor.
+static void mp_edge_position(const digitizer_contact_t *c, int16_t *u, int16_t *v) {
+    int32_t x = (int32_t)c->x * MP_EDGE_SCALE / DIGITIZER_RESOLUTION_X - MP_EDGE_SCALE / 2;
+    int32_t y = (int32_t)c->y * MP_EDGE_SCALE / DIGITIZER_RESOLUTION_Y - MP_EDGE_SCALE / 2;
+    switch (mp_config.rotation) {
+        case 1: { int32_t t = x; x = y;  y = -t; break; }
+        case 2: { x = -x; y = -y; break; }
+        case 3: { int32_t t = x; x = -y; y = t;  break; }
+        default: break;
+    }
+    if (mp_config.invert_x) x = -x;
+    if (mp_config.invert_y) y = -y;
+    *u = (int16_t)(x + MP_EDGE_SCALE / 2);
+    *v = (int16_t)(y + MP_EDGE_SCALE / 2);
+}
+
+// Along / across coordinates of an edge (left 0, right 1, top 2, bottom 3).
+static void mp_edge_axes(uint8_t edge, int16_t u, int16_t v, int16_t *along, int16_t *across) {
+    if (edge < 2) {
+        *along  = v;
+        *across = u;
+    } else {
+        *along  = u;
+        *across = v;
+    }
+}
+
+static void mp_touch_start(uint8_t i, int16_t u, int16_t v, uint8_t fingers) {
+    mp_touch_t *t = &mp_touch[i];
+    memset(t, 0, sizeof(*t));
+    t->mode = MP_TOUCH_PASS;
+    if (fingers != 1) return;
+    const int16_t w      = (int16_t)mp_edge_width_now() * (MP_EDGE_SCALE / 100);
+    const bool    left   = u < w;
+    const bool    right  = u > MP_EDGE_SCALE - w;
+    const bool    top    = v < w;
+    const bool    bottom = v > MP_EDGE_SCALE - w;
+    if ((left || right) && (top || bottom)) {
+        const uint8_t corner = (bottom ? 2 : 0) + (right ? 1 : 0);
+        if (mp_corner_mask_now() & (1 << corner)) {
+            t->mode    = MP_TOUCH_CORNER;
+            t->zone    = corner;
+            t->start_a = u;
+            t->start_p = v;
+            t->time    = timer_read();
+            return;
+        }
+    }
+    const uint8_t mask     = mp_edge_mask_now();
+    const bool    inside[] = {left, right, top, bottom};
+    // Prefer the sides (left / right) over top / bottom where they meet.
+    static const uint8_t order[] = {1, 0, 3, 2};
+    for (uint8_t k = 0; k < MP_EDGE_COUNT; k++) {
+        const uint8_t e = order[k];
+        if (!inside[e] || !(mask & (3 << (e * 2)))) continue;
+        t->mode = MP_TOUCH_EDGE;
+        t->zone = e;
+        mp_edge_axes(e, u, v, &t->start_a, &t->start_p);
+        t->last_a = t->start_a;
+        return;
+    }
+}
+
+bool matrix_pointing_digitizer(digitizer_t *const state) {
+    if (!mp_edge_on_this_side()) return false;
+    mp_ensure_loaded();
+    uint8_t fingers = 0;
+    for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
+        if (state->contacts[i].type == FINGER && state->contacts[i].tip) fingers++;
+    }
+    mp_fingers_local = fingers;
+    for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
+        digitizer_contact_t *c    = &state->contacts[i];
+        mp_touch_t          *t    = &mp_touch[i];
+        const bool           down = c->type == FINGER && c->tip;
+        if (!down) {
+            if (mp_touch_down[i] && t->mode == MP_TOUCH_CORNER && timer_elapsed(t->time) < MP_CORNER_TAP_MS) {
+                mp_corner_emit(t->zone);
+            }
+            mp_touch_down[i] = false;
+            t->mode          = MP_TOUCH_NONE;
+            continue;
+        }
+        int16_t u, v;
+        mp_edge_position(c, &u, &v);
+        if (!mp_touch_down[i]) {
+            mp_touch_down[i] = true;
+            mp_touch_start(i, u, v, fingers);
+        } else if (fingers > 1 && t->mode != MP_TOUCH_PASS) {
+            t->mode = MP_TOUCH_PASS; // two fingers: scrolling etc.
+        }
+        if (t->mode == MP_TOUCH_CORNER) {
+            if (abs(u - t->start_a) > MP_CORNER_MOVE || abs(v - t->start_p) > MP_CORNER_MOVE) {
+                t->mode = MP_TOUCH_PASS;
+            }
+        } else if (t->mode == MP_TOUCH_EDGE) {
+            int16_t a, p;
+            mp_edge_axes(t->zone, u, v, &a, &p);
+            if (!t->stepped && abs(p - t->start_p) > MP_EDGE_RELEASE_DISTANCE && abs(p - t->start_p) > abs(a - t->start_a)) {
+                t->mode = MP_TOUCH_PASS;
+            } else {
+                const int16_t step = (int16_t)mp_edge_step_now() * (MP_EDGE_SCALE / 100);
+                t->travel += a - t->last_a;
+                t->last_a = a;
+                while (t->travel >= step) {
+                    t->travel -= step;
+                    t->stepped = true;
+                    mp_edge_emit(t->zone, 1);
+                }
+                while (t->travel <= -step) {
+                    t->travel += step;
+                    t->stepped = true;
+                    mp_edge_emit(t->zone, 0);
+                }
+            }
+        }
+        if (t->mode == MP_TOUCH_EDGE || t->mode == MP_TOUCH_CORNER) {
+            c->tip = 0; // hidden from the cursor and tap detection
+        }
+    }
+    return false;
+}
+
+#    ifndef MATRIX_POINTING_NO_DIGITIZER_HOOK
+bool digitizer_task_user(digitizer_t *const state) {
+    return matrix_pointing_digitizer(state);
+}
+#    endif
+#endif // MP_EDGES
+
+// ---------------------------------------------------------------------------
+// Knob press-and-turn (revision 12): while an encoder's push switch is held,
+// turning it sends knob_kc instead of the encoder map. A push switch whose
+// knob has such keycodes acts on release (and only when the knob was not
+// turned), so pushing to turn does not also fire it. Push keycodes that are
+// not plain keys (layer keys, mod-taps, ...) keep acting on press.
+#ifdef MP_KNOBS
+typedef struct {
+    uint8_t row, col;
+} mp_knob_key_t;
+static const mp_knob_key_t mp_knob_keys[] = MATRIX_POINTING_KNOB_KEYS;
+#    define MP_KNOBS_USED (ARRAY_SIZE(mp_knob_keys) < MP_KNOB_COUNT ? ARRAY_SIZE(mp_knob_keys) : MP_KNOB_COUNT)
+
+static bool     mp_knob_held[MP_KNOB_COUNT]     = {0};
+static bool     mp_knob_turned[MP_KNOB_COUNT]   = {0};
+static bool     mp_knob_deferred[MP_KNOB_COUNT] = {0};
+static uint16_t mp_knob_sent[MP_KNOB_COUNT][2]  = {{0}};
+
+static bool mp_knob_has_alt(uint8_t knob) {
+    return mp_ext.knob_kc[knob][0] || mp_ext.knob_kc[knob][1];
+}
+
+static bool mp_knob_process(uint16_t keycode, keyrecord_t *record) {
+    const keyevent_t *ev = &record->event;
+    if (IS_ENCODEREVENT(*ev)) {
+        const uint8_t knob = ev->key.col; // encoder index
+        if (knob >= MP_KNOBS_USED || !mp_knob_held[knob]) return true;
+        const uint8_t dir = ev->type == ENCODER_CW_EVENT ? 1 : 0;
+        if (ev->pressed) {
+            mp_knob_turned[knob] = true;
+            const uint16_t alt   = mp_ext.knob_kc[knob][dir];
+            if (alt == KC_NO) return true; // not set: the usual keycode
+#    ifdef MP_HIRES
+            if (mp_is_wheel_keycode(alt)) {
+                mp_wheel_notch(alt);
+                return false;
+            }
+#    endif
+            mp_knob_sent[knob][dir] = alt;
+            register_code16(alt);
+            return false;
+        }
+        if (mp_knob_sent[knob][dir]) {
+            unregister_code16(mp_knob_sent[knob][dir]);
+            mp_knob_sent[knob][dir] = 0;
+            return false;
+        }
+        return true;
+    }
+    if (ev->type != KEY_EVENT) return true;
+    for (uint8_t k = 0; k < MP_KNOBS_USED; k++) {
+        if (ev->key.row != mp_knob_keys[k].row || ev->key.col != mp_knob_keys[k].col) continue;
+        if (ev->pressed) {
+            mp_knob_held[k]     = true;
+            mp_knob_turned[k]   = false;
+            mp_knob_deferred[k] = mp_knob_has_alt(k) && keycode <= QK_MODS_MAX;
+            return !mp_knob_deferred[k];
+        }
+        mp_knob_held[k] = false;
+        if (!mp_knob_deferred[k]) return true;
+        mp_knob_deferred[k] = false;
+        if (!mp_knob_turned[k] && keycode != KC_NO) tap_code16(keycode);
+        return false;
+    }
+    return true;
+}
+#endif // MP_KNOBS
+
+// ---------------------------------------------------------------------------
 // Split keyboards: the touchpad's gestures run on the half it is wired to.
 // When USB is on the other half, settings changed from the editor only reach
 // the master, so the master sends them over (and collects swipes).
@@ -560,10 +1128,24 @@ static void mp_config_changed(void) {
     mp_generation++;
 }
 
+// Payload: mp_config_t, then (revision 12) the edge summary: width, step,
+// edge keycode mask, corner mask. Older slaves read only mp_config_t.
+#    define MP_SYNC_SIZE (sizeof(mp_config_t) + 4)
+_Static_assert(MP_SYNC_SIZE <= RPC_M2S_BUFFER_SIZE, "Set RPC_M2S_BUFFER_SIZE to at least 64 in config.h");
+
 static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
     if (in_len < sizeof(mp_config_t)) return;
     memcpy(&mp_config, in, sizeof(mp_config_t));
     mp_loaded = true;
+#    ifdef MP_EDGES
+    if (in_len >= MP_SYNC_SIZE) {
+        const uint8_t *extra  = (const uint8_t *)in + sizeof(mp_config_t);
+        mp_edge_width_synced  = extra[0];
+        mp_edge_step_synced   = extra[1];
+        mp_edge_mask_synced   = extra[2];
+        mp_corner_mask_synced = extra[3];
+    }
+#    endif
 #    ifdef POINTING_DEVICE_DRIVER_digitizer
     extern bool digitizer_taps_as_clicks;
     digitizer_taps_as_clicks = mp_config.tap_to_click;
@@ -572,11 +1154,12 @@ static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len
 #    endif
 }
 
-// Reply: [pending swipe + 1, marker, revision (2), build ID (2)]. Builds
-// before revision 11 only fill byte 0, so the master sees no marker (the
-// rest of the slave's RPC buffer is never written and stays 0).
+// Reply: [pending swipe + 1, marker, revision (2), build ID (2), edge steps
+// (4 x int8, + = down / right), corner taps (bit mask), fingers + 1]. Builds before
+// revision 11 only fill byte 0, so the master sees no marker (the rest of
+// the slave's RPC buffer is never written and stays 0); revision 11 fills 6.
 #    define MP_PEER_MARKER 0xA5
-#    define MP_PEER_REPLY_SIZE 6
+#    define MP_PEER_REPLY_SIZE 12
 static void mp_sync_swipe_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
     if (out_len < 1) return;
     uint8_t *o       = (uint8_t *)out;
@@ -589,6 +1172,22 @@ static void mp_sync_swipe_slave(uint8_t in_len, const void *in, uint8_t out_len,
         o[3]                 = MP_REVISION & 0xFF;
         o[4]                 = build >> 8;
         o[5]                 = build & 0xFF;
+        for (uint8_t e = 0; e < 4; e++) {
+#    ifdef MP_EDGES
+            o[6 + e]           = (uint8_t)mp_pending_edge[e];
+            mp_pending_edge[e] = 0;
+#    else
+            o[6 + e] = 0;
+#    endif
+        }
+#    ifdef MP_EDGES
+        o[10]              = mp_pending_corners;
+        mp_pending_corners = 0;
+        o[11]              = mp_edge_on_this_side() ? mp_fingers_local + 1 : 0;
+#    else
+        o[10] = 0;
+        o[11] = 0;
+#    endif
     }
 }
 
@@ -607,7 +1206,17 @@ static void mp_split_housekeeping(void) {
     // Send on change, and every 2 s in case the other half restarted.
     if (mp_synced_generation != mp_generation || timer_elapsed(mp_last_sync) > 2000) {
         mp_last_sync = timer_read();
-        if (transaction_rpc_send(MP_SYNC_CONFIG, sizeof(mp_config_t), &mp_config)) {
+        uint8_t payload[MP_SYNC_SIZE];
+        memcpy(payload, &mp_config, sizeof(mp_config_t));
+#    ifdef MP_EDGES
+        payload[sizeof(mp_config_t) + 0] = mp_ext.edge_width;
+        payload[sizeof(mp_config_t) + 1] = mp_ext.edge_step;
+        payload[sizeof(mp_config_t) + 2] = mp_edge_mask();
+        payload[sizeof(mp_config_t) + 3] = mp_corner_mask();
+#    else
+        memset(payload + sizeof(mp_config_t), 0, 4);
+#    endif
+        if (transaction_rpc_send(MP_SYNC_CONFIG, sizeof(payload), payload)) {
             mp_synced_generation = mp_generation;
         }
     }
@@ -623,6 +1232,18 @@ static void mp_split_housekeeping(void) {
                 mp_peer_state    = 1;
                 mp_peer_revision = (reply[2] << 8) | reply[3];
                 mp_peer_build    = (reply[4] << 8) | reply[5];
+#    ifdef MP_EDGES
+                // Keycodes from the touchpad half (see mp_edge_emit()).
+                for (uint8_t e = 0; e < MP_EDGE_COUNT; e++) {
+                    int8_t n = (int8_t)reply[6 + e];
+                    for (; n > 0; n--) mp_edge_emit(e, 1);
+                    for (; n < 0; n++) mp_edge_emit(e, 0);
+                }
+                for (uint8_t c = 0; c < MP_CORNER_COUNT; c++) {
+                    if (reply[10] & (1 << c)) mp_corner_emit(c);
+                }
+                if (reply[11]) mp_fingers_remote = reply[11] - 1;
+#    endif
             } else {
                 mp_peer_state = 2;
             }
@@ -945,11 +1566,16 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
             }
             if (mp_combo_get_value(*value_id, value_data, length - 3)) return;
             const mp_field_t *field = mp_find_field(*value_id);
+            const void       *block = &mp_config;
+            if (field == NULL) {
+                field = mp_find_ext_field(*value_id);
+                block = &mp_ext;
+            }
             if (field == NULL) {
                 *command_id = id_unhandled;
                 return;
             }
-            uint16_t value = mp_read_field(field);
+            uint16_t value = mp_read_field_at(block, field);
             if (field->size == 2) {
                 value_data[0] = value >> 8;
                 value_data[1] = value & 0xFF;
@@ -968,12 +1594,17 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                 return;
             }
             const mp_field_t *field = mp_find_field(*value_id);
+            void             *block = &mp_config;
+            if (field == NULL) {
+                field = mp_find_ext_field(*value_id);
+                block = &mp_ext;
+            }
             if (field == NULL) {
                 *command_id = id_unhandled;
                 return;
             }
             uint16_t value = field->size == 2 ? (uint16_t)((value_data[0] << 8) | value_data[1]) : value_data[0];
-            mp_write_field(field, value);
+            mp_write_field_at(block, field, value);
             mp_apply();
             mp_config_changed();
             return;
@@ -981,6 +1612,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
         case id_custom_save:
             MP_EEPROM_WRITE(mp_config);
             mp_combos_save();
+            mp_ext_save();
             return;
         default:
             *command_id = id_unhandled;
@@ -1006,7 +1638,7 @@ static mouse_xy_report_t mp_clamp_xy(int32_t v) {
     return (mouse_xy_report_t)v;
 }
 
-static mouse_hv_report_t mp_clamp_hv(int32_t v) {
+static __attribute__((unused)) mouse_hv_report_t mp_clamp_hv(int32_t v) {
     // mouse_hv_report_t is int8_t or int16_t depending on the build.
     const int32_t max = sizeof(mouse_hv_report_t) == 1 ? INT8_MAX : INT16_MAX;
     if (v < -max) return (mouse_hv_report_t)-max;
@@ -1037,6 +1669,179 @@ static uint8_t mp_filter_buttons(uint8_t buttons) {
     return buttons;
 }
 
+#ifdef MP_SMOOTH
+// Acceleration: gain (x256) for the finger speed (mm/s), interpolated:
+// slow movement is precise, fast movement goes far.
+static int32_t mp_accel_gain(int32_t mm_per_s) {
+    static const int16_t curve[][2] = {{0, 154}, {10, 154}, {50, 256}, {150, 460}, {400, 717}};
+    if (mm_per_s >= curve[ARRAY_SIZE(curve) - 1][0]) return curve[ARRAY_SIZE(curve) - 1][1];
+    for (uint8_t i = 1; i < ARRAY_SIZE(curve); i++) {
+        if (mm_per_s <= curve[i][0]) {
+            const int32_t x0 = curve[i - 1][0], g0 = curve[i - 1][1];
+            const int32_t x1 = curve[i][0], g1 = curve[i][1];
+            return g0 + (g1 - g0) * (mm_per_s - x0) / (x1 - x0);
+        }
+    }
+    return 256;
+}
+
+// Part of `pending` to send now: all of it once `until` has passed,
+// otherwise in proportion to the time elapsed since the last call.
+static int32_t mp_spread(int32_t pending, uint16_t until, uint16_t now, uint16_t elapsed) {
+    const int16_t left = (int16_t)(until - now);
+    if (left <= 0 || left > 200) return pending; // past (or a stale deadline)
+    if (elapsed == 0) return 0;
+    return (int32_t)((int64_t)pending * elapsed / (elapsed + left));
+}
+
+static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
+    static uint16_t last_call = 0, last_frame = 0, last_motion = 0;
+    static int32_t  frame_x16 = 8 * 16; // time between sensor reports (ms x16)
+    static int32_t  speed_x16 = 0;      // finger speed, sensor units per ms x16
+    static int32_t  pend_x = 0, pend_y = 0, rem_x = 0, rem_y = 0; // output units x256
+    static uint16_t pend_until = 0;
+    const uint16_t  now = timer_read();
+    uint16_t        elapsed = now - last_call;
+    if (elapsed > 50) elapsed = 50;
+    last_call = now;
+
+    const bool frame = x || y || r.h || r.v;
+    uint16_t   dt    = 0;
+    if (frame) {
+        dt         = now - last_frame;
+        last_frame = now;
+        if (dt >= 1 && dt <= 40) {
+            frame_x16 += ((int32_t)dt * 16 - frame_x16) / 4;
+            if (frame_x16 < 2 * 16) frame_x16 = 2 * 16;
+            if (frame_x16 > 20 * 16) frame_x16 = 20 * 16;
+        }
+    }
+    const bool smooth = mp_ext.smooth;
+
+    // ---- pointer
+    if (x || y) {
+        const int32_t ax = abs(x), ay = abs(y);
+        const int32_t distance = (ax > ay ? ax + ay / 2 : ay + ax / 2); // ~hypot
+        const int32_t span     = (dt >= 1 && dt <= 40) ? dt * 16 : frame_x16;
+        const int32_t instant  = distance * 256 / span; // units per ms x16
+        speed_x16 = timer_elapsed(last_motion) > 100 ? instant : speed_x16 + (instant - speed_x16) / 2;
+        if (timer_elapsed(last_motion) > 100) rem_x = rem_y = 0;
+        last_motion = now;
+        int32_t gain = 256;
+        if (mp_config.acceleration) {
+            // sensor units per mm = NATIVE_CPI / 25.4
+            gain = mp_accel_gain(speed_x16 * 25400 / 16 / MATRIX_POINTING_NATIVE_CPI);
+        }
+        const int64_t scale = (int64_t)mp_config.cpi * gain;
+        pend_x += (int32_t)(x * scale / MATRIX_POINTING_NATIVE_CPI);
+        pend_y += (int32_t)(y * scale / MATRIX_POINTING_NATIVE_CPI);
+        pend_until = now + (smooth ? (uint16_t)(frame_x16 / 16) : 0);
+    }
+    int32_t ex = mp_spread(pend_x, pend_until, now, elapsed);
+    int32_t ey = mp_spread(pend_y, pend_until, now, elapsed);
+    pend_x -= ex;
+    pend_y -= ey;
+    ex += rem_x;
+    ey += rem_y;
+    r.x   = mp_clamp_xy(ex / 256);
+    r.y   = mp_clamp_xy(ey / 256);
+    rem_x = ex % 256;
+    rem_y = ey % 256;
+
+    // ---- scroll
+    int32_t h = mp_config.horizontal_scroll ? r.h : 0;
+    int32_t v = r.v;
+    if (mp_config.natural_scroll) {
+        h = -h;
+        v = -v;
+    }
+    // MATRIX_POINTING_SCROLL_SCALE slows every speed setting down for
+    // sensors that report a lot of scroll per finger movement; divisor 8 is
+    // the base speed.
+    static int32_t acc_h = 0, acc_v = 0;
+    const int32_t  divisor = (int32_t)mp_config.scroll_divisor * MATRIX_POINTING_SCROLL_SCALE;
+#    ifdef MP_HIRES
+    const int32_t notch = mp_notch();
+#    else
+    const int32_t notch = 1;
+#    endif
+    acc_h += h * 8 * notch;
+    acc_v += v * 8 * notch;
+    const int32_t sh = acc_h / divisor, sv = acc_v / divisor;
+    acc_h %= divisor;
+    acc_v %= divisor;
+#    ifdef MP_HIRES
+    static uint16_t last_scroll = 0;
+    static int32_t  vel_h = 0, vel_v = 0; // units per ms x256
+    if (h || v) {
+        const uint16_t gap = now - last_scroll;
+        const int32_t  span = (dt >= 1 && dt <= 40) ? dt : frame_x16 / 16;
+        if (gap > 100) vel_h = vel_v = 0;
+        vel_h += (sh * 256 / span - vel_h) / 2;
+        vel_v += (sv * 256 / span - vel_v) / 2;
+        last_scroll   = now;
+        mp_momentum_h = mp_momentum_v = 0;
+        mp_scroll_queue(sh, sv, smooth ? (uint16_t)(frame_x16 / 16) : 0);
+    }
+#        ifdef MP_EDGES
+    // Momentum: two fingers lifted right after a scroll keep it going and
+    // slow it down (about like a trackpad); a touch stops it.
+    static uint8_t last_fingers = 0;
+    const uint8_t  fingers      = mp_fingers_now();
+    if (fingers != 0xFF) {
+        if (fingers > 0 || x || y) {
+            mp_momentum_h = mp_momentum_v = 0;
+        } else if (last_fingers > 0 && mp_config.glide && timer_elapsed(last_scroll) < 60 && (abs(vel_v) > 256 || abs(vel_h) > 256)) {
+            mp_momentum_h = vel_h;
+            mp_momentum_v = vel_v;
+            vel_h = vel_v = 0;
+        }
+        last_fingers = fingers;
+    }
+#        endif
+    if (mp_momentum_h || mp_momentum_v) {
+        static int32_t mrem_h = 0, mrem_v = 0;
+        for (uint16_t i = 0; i < elapsed; i++) {
+            mrem_h += mp_momentum_h;
+            mrem_v += mp_momentum_v;
+            mp_momentum_h = mp_momentum_h * 299 / 300;
+            mp_momentum_v = mp_momentum_v * 299 / 300;
+        }
+        mp_scroll_pend_h += mrem_h / 256;
+        mp_scroll_pend_v += mrem_v / 256;
+        mrem_h %= 256;
+        mrem_v %= 256;
+        if (abs(mp_momentum_h) < 32 && abs(mp_momentum_v) < 32) mp_momentum_h = mp_momentum_v = 0;
+    }
+    // Wheel keys held down: after 300 ms keep scrolling, faster over time
+    // (12 to 40 notches per second).
+    if ((mp_wheel_hold_h || mp_wheel_hold_v) && timer_elapsed(mp_wheel_hold_since) > 300) {
+        const int32_t held = timer_elapsed(mp_wheel_hold_since) - 300;
+        const int32_t rate = 12 + (held > 1500 ? 28 : held * 28 / 1500); // notches per s
+        mp_wheel_hold_acc += rate * notch * elapsed;
+        const int32_t units = mp_wheel_hold_acc / 1000;
+        mp_wheel_hold_acc %= 1000;
+        mp_scroll_queue(mp_wheel_hold_h * units, mp_wheel_hold_v * units, 0);
+    }
+    int32_t oh = mp_spread(mp_scroll_pend_h, mp_scroll_until, now, elapsed);
+    int32_t ov = mp_spread(mp_scroll_pend_v, mp_scroll_until, now, elapsed);
+    const int32_t hv_max = sizeof(mouse_hv_report_t) == 1 ? INT8_MAX : INT16_MAX;
+    if (oh > hv_max) oh = hv_max;
+    if (oh < -hv_max) oh = -hv_max;
+    if (ov > hv_max) ov = hv_max;
+    if (ov < -hv_max) ov = -hv_max;
+    mp_scroll_pend_h -= oh;
+    mp_scroll_pend_v -= ov;
+    r.h = oh;
+    r.v = ov;
+#    else
+    r.h = mp_clamp_hv(sh);
+    r.v = mp_clamp_hv(sv);
+#    endif
+    return r;
+}
+#endif // MP_SMOOTH
+
 report_mouse_t matrix_pointing_task(report_mouse_t r) {
     mp_ensure_loaded();
     mp_bootloader_check();
@@ -1055,6 +1860,9 @@ report_mouse_t matrix_pointing_task(report_mouse_t r) {
     if (mp_config.invert_x) x = -x;
     if (mp_config.invert_y) y = -y;
 
+#ifdef MP_SMOOTH
+    return mp_smooth(r, x, y);
+#else
     if (mp_config.acceleration) {
         // Up to 3x for fast movement: factor = 1 + min(speed, 32) / 16.
         int32_t speed = abs(x) + abs(y);
@@ -1062,25 +1870,6 @@ report_mouse_t matrix_pointing_task(report_mouse_t r) {
         x = x * (16 + speed) / 16;
         y = y * (16 + speed) / 16;
     }
-#ifdef MATRIX_POINTING_NATIVE_CPI
-    // Scale to the chosen speed, carrying the remainder so slow movement is
-    // not lost.
-    // Reports without movement arrive between sensor scans, so the
-    // remainder is only dropped after a pause (not on every empty report).
-    static int32_t  rem_x = 0, rem_y = 0;
-    static uint16_t last_motion = 0;
-    const int32_t   native = MATRIX_POINTING_NATIVE_CPI;
-    if (x != 0 || y != 0) {
-        if (timer_elapsed(last_motion) > 100) rem_x = rem_y = 0;
-        last_motion = timer_read();
-        int32_t sx  = x * (int32_t)mp_config.cpi + rem_x;
-        int32_t sy  = y * (int32_t)mp_config.cpi + rem_y;
-        x           = sx / native;
-        y           = sy / native;
-        rem_x       = sx % native;
-        rem_y       = sy % native;
-    }
-#endif
     r.x = mp_clamp_xy(x);
     r.y = mp_clamp_xy(y);
 
@@ -1102,6 +1891,7 @@ report_mouse_t matrix_pointing_task(report_mouse_t r) {
     acc_h %= divisor;
     acc_v %= divisor;
     return r;
+#endif
 }
 #else
 report_mouse_t matrix_pointing_task(report_mouse_t r) {
@@ -1121,6 +1911,16 @@ bool matrix_pointing_process_record(uint16_t keycode, keyrecord_t *record) {
         mp_last_key_time = timer_read();
         mp_key_pressed   = true;
     }
+#ifdef MP_KNOBS
+    mp_ensure_loaded();
+    if (!mp_knob_process(keycode, record)) return false;
+#endif
+#ifdef MP_HIRES
+    if (mp_is_wheel_keycode(keycode)) {
+        mp_wheel_key(keycode, record->event.pressed);
+        return false;
+    }
+#endif
     return true;
 }
 

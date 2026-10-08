@@ -41,9 +41,18 @@ uint16_t matrix_pointing_tap_term(void);
 // Call from pointing_device_task_user(); returns the transformed report.
 report_mouse_t matrix_pointing_task(report_mouse_t mouse_report);
 
-// Call from process_record_user() (before your own handling); always
-// returns true. Tracks key presses for the "delay after typing" setting.
+// Call from process_record_user() (before your own handling) and return
+// false when it does: it tracks key presses for the "delay after typing"
+// setting and handles knob press-and-turn (MATRIX_POINTING_KNOB_KEYS).
 bool matrix_pointing_process_record(uint16_t keycode, keyrecord_t *record);
+
+#if defined(MATRIX_POINTING_EDGE_ZONES) && defined(POINTING_DEVICE_DRIVER_digitizer)
+#    include "digitizer.h"
+// Touchpad edge sliders / corner taps. This module defines
+// digitizer_task_user() to call it (define MATRIX_POINTING_NO_DIGITIZER_HOOK
+// to write your own and call this from it).
+bool matrix_pointing_digitizer(digitizer_t *const state);
+#endif
 
 // Call from is_mouse_record_user() if you define it yourself; otherwise this
 // module defines is_mouse_record_user() (see MATRIX_POINTING_NO_MOUSE_RECORD).

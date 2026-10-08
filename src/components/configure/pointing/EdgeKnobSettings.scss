@@ -1,0 +1,193 @@
+@use '../../../variables';
+
+.edge-knob-card,
+.knob-panel {
+  .pointing-card-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    .pointing-save-state {
+      font-weight: 400;
+    }
+  }
+  .edge-knob-update {
+    flex: none;
+    margin-left: 12px;
+    height: 28px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 6px;
+    background-color: #92400e;
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .edge-knob-range {
+    flex-wrap: nowrap;
+    .MuiSlider-root {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .pointing-value {
+      min-width: 44px;
+    }
+  }
+  .knob-note {
+    margin: 0;
+    padding: 12px 18px 16px;
+    font-size: 12px;
+    color: variables.$cfg-text-dim;
+  }
+}
+
+.edge-knob-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  justify-content: flex-end;
+  .edge-knob-reverse {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .edge-knob-directions {
+    flex: 1 0 100%;
+    text-align: right;
+    font-size: 11px;
+    color: variables.$cfg-text-dim;
+  }
+}
+
+.edge-zones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 28px;
+  align-items: flex-start;
+  padding: 14px 18px;
+  border-bottom: 1px solid variables.$cfg-panel-border;
+}
+
+// The touchpad drawn like the real one, with clickable edges / corners.
+.edge-pad {
+  --edge: 12%;
+  position: relative;
+  flex: none;
+  width: 150px;
+  height: 200px;
+  border: 1px solid #1f2023;
+  border-radius: 10px;
+  background-color: #3a3b3f;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.06) 1px,
+    transparent 1px
+  );
+  background-size: 4px 4px;
+  overflow: hidden;
+  .edge-pad-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+  }
+  .edge-zone,
+  .edge-corner {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.18);
+    }
+    &.set {
+      background-color: rgba(124, 92, 255, 0.45);
+    }
+    &.selected {
+      outline: 2px solid #c4b5fd;
+      outline-offset: -2px;
+      z-index: 1;
+    }
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: -2px;
+    }
+  }
+  .edge-left {
+    left: 0;
+    top: var(--edge);
+    bottom: var(--edge);
+    width: var(--edge);
+  }
+  .edge-right {
+    right: 0;
+    top: var(--edge);
+    bottom: var(--edge);
+    width: var(--edge);
+  }
+  .edge-top {
+    top: 0;
+    left: var(--edge);
+    right: var(--edge);
+    height: var(--edge);
+  }
+  .edge-bottom {
+    bottom: 0;
+    left: var(--edge);
+    right: var(--edge);
+    height: var(--edge);
+  }
+  .edge-corner {
+    width: var(--edge);
+    height: var(--edge);
+  }
+  .corner-topLeft {
+    top: 0;
+    left: 0;
+  }
+  .corner-topRight {
+    top: 0;
+    right: 0;
+  }
+  .corner-bottomLeft {
+    bottom: 0;
+    left: 0;
+  }
+  .corner-bottomRight {
+    bottom: 0;
+    right: 0;
+  }
+}
+
+.edge-zone-settings {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  h3 {
+    margin: 0;
+    font-size: 14px;
+  }
+  .pointing-select {
+    align-self: flex-start;
+  }
+  .edge-knob-pair {
+    justify-content: flex-start;
+    .edge-knob-directions {
+      text-align: left;
+    }
+  }
+  .help {
+    margin: 0;
+    font-size: 12px;
+    color: variables.$cfg-text-dim;
+  }
+}

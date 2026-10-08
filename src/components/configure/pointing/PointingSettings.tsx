@@ -38,6 +38,7 @@ import { SWIPE_KEYCODE_OPTIONS } from '../../../services/pointing/SwipeKeycodes'
 import { hexadecimal } from '../../../utils/StringUtils';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 import RgbMatrixCard from '../lighting/RgbMatrixCard';
+import { EdgeZonesCard, SmoothnessCard } from './EdgeKnobSettings';
 
 export type PointingSettingsMode = 'touchpad' | 'autoMouse' | 'timing' | 'leds';
 
@@ -85,12 +86,16 @@ const touchpadSections = (): SectionSpec[] => [
       {
         key: 'acceleration',
         label: t('Acceleration'),
-        help: t('Moves the cursor further when you move faster'),
+        help: t(
+          'Slow movement is precise and fast movement goes far, like a trackpad'
+        ),
       },
       {
         key: 'glide',
         label: t('Glide (inertia)'),
-        help: t('The cursor keeps gliding briefly after you lift your finger'),
+        help: t(
+          'After a quick two-finger scroll, lifting the fingers lets the page keep scrolling and slow down (touch to stop)'
+        ),
       },
     ],
   },
@@ -610,6 +615,12 @@ export default function PointingSettings(props: PointingSettingsProps) {
 
       <div className="pointing-body">
         <div className="pointing-sections">
+          {props.mode === 'touchpad' && live && props.keyboard && (
+            <SmoothnessCard keyboard={props.keyboard} />
+          )}
+          {props.mode === 'touchpad' && live && props.keyboard && (
+            <EdgeZonesCard keyboard={props.keyboard} />
+          )}
           {props.mode === 'leds' && live && props.keyboard && (
             <RgbMatrixCard
               keyboard={props.keyboard}

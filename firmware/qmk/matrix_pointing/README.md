@@ -10,6 +10,32 @@ EEPROM のユーザー用データブロックに保存します。プロトコ�
 > 設定のバージョン 1→2 移行、タップ/ホールド判定、スワイプ）を実施済み。
 > マルチタッチ版 QMK フォークでの Corne Procyon36 向けビルドも確認済み。**実機での動作は未確認**です。
 
+## リビジョン 12 の追加機能（任意）
+
+`config.h` で有効にします（Corne Procyon36 の設定が実例です）。
+
+```c
+// 拡張領域（縁スライダー・ノブ・なめらか補間の設定）。設定 64 + コンボ 256 の後ろに 64 バイト
+#define EECONFIG_USER_DATA_SIZE 384
+#define EECONFIG_USER_DATA_VERSION 320           // 領域を広げても保存済みの設定・コンボを消さない
+#define MATRIX_POINTING_EXT_EEPROM_OFFSET 320
+#define MATRIX_POINTING_EDGE_ZONES               // タッチパッドの縁スライダー・四隅タップ（digitizer）
+#define MATRIX_POINTING_KNOB_KEYS { {3, 2}, {7, 3} } // ノブの押し込みスイッチ {行, 列}（ENCODER_MAP_ENABLE 必須）
+#define POINTING_DEVICE_HIRES_SCROLL_ENABLE      // 高解像度スクロール（1/120 目盛り）
+#define MOUSEKEY_WHEEL_DELTA 120                 // 念のため：マウスキーから漏れても 1 目盛りに
+```
+
+- **なめらか補間**（`MATRIX_POINTING_NATIVE_CPI` 使用時）: センサーの報告を次の報告までの
+  時間に分けて 1ms ごとに送ります。加速は 1ms あたりの指の速度から決まる曲線です。
+- **高解像度スクロール**: 2 本指スクロール・ホイールのキーコード（ノブ・縁スライダー・
+  レイヤー上のマウスキー）を同じ経路で 1/120 目盛り単位で送ります。ホイールのキーコードは
+  このモジュールが受け取るため、`process_record_user()` で
+  `return matrix_pointing_process_record(keycode, record);` としてください。
+- **慣性スクロール**（「慣性（グライド）」、0x03）: 2 本指で勢いよくスクロールして離すと
+  減速しながら続きます。指の本数は `digitizer_task_user()`（このモジュールが定義）で取得し、
+  分割キーボードではタッチパッド側から転送します。
+- 初めてリビジョン 12 で起動したときに一度だけ、加速と慣性スクロールをオンにします。
+
 ## 組み込み手順（キーマップに追加する場合）
 
 1. `matrix_pointing.c` と `matrix_pointing.h` をキーマップのフォルダにコピーします。
