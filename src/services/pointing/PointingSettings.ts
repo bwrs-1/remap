@@ -147,6 +147,8 @@ export const CAP_SWIPE = 1 << 17;
 export const CAP_LAYER_LED = 1 << 18;
 export const CAP_COMBOS = 1 << 19;
 export const CAP_PRECISION_TOUCHPAD = 1 << 20;
+export const CAP_SPLIT_INFO = 1 << 21;
+export const CAP_RGB_EFFECT_COUNT = 1 << 22;
 
 export async function fetchCapabilities(
   keyboard: IKeyboard
@@ -260,7 +262,7 @@ export async function applySettings<K extends string>(
 // Revision of the matrix_pointing firmware module (value 0x7C). Firmware
 // before revision 9 does not report it (0 here).
 export const FIRMWARE_REVISION_VALUE_ID = 0x7c;
-export const LATEST_FIRMWARE_REVISION = 10;
+export const LATEST_FIRMWARE_REVISION = 11;
 
 export async function fetchFirmwareRevision(
   keyboard: IKeyboard

@@ -927,6 +927,8 @@ export interface ICustomGetValueRequest extends ICommandRequest {
   // Bytes sent after the value ID (e.g. a slot index). The reply must echo
   // them to be matched.
   args?: number[];
+  // VIA channel; default: the keyboard's custom channel (0).
+  channel?: number;
 }
 
 export interface ICustomGetValueResponse extends ICommandResponse {
@@ -944,7 +946,7 @@ export class CustomGetValueCommand extends AbstractCommand<
   createReport(): Uint8Array {
     return new Uint8Array([
       id_custom_get_value,
-      id_custom_channel,
+      this.getRequest().channel ?? id_custom_channel,
       this.getRequest().valueId,
       ...(this.getRequest().args || []),
     ]);
@@ -969,7 +971,7 @@ export class CustomGetValueCommand extends AbstractCommand<
     return (
       (resultArray[0] === id_custom_get_value ||
         resultArray[0] === id_unhandled) &&
-      resultArray[1] === id_custom_channel &&
+      resultArray[1] === (this.getRequest().channel ?? id_custom_channel) &&
       resultArray[2] === this.getRequest().valueId &&
       args.every((b, i) => resultArray[3 + i] === b)
     );
@@ -982,6 +984,8 @@ export interface ICustomSetValueRequest extends ICommandRequest {
   size: 1 | 2;
   // Raw value data; when given, `value` / `size` are ignored.
   bytes?: number[];
+  // VIA channel; default: the keyboard's custom channel (0).
+  channel?: number;
 }
 
 export class CustomSetValueCommand extends AbstractCommand<
@@ -997,7 +1001,7 @@ export class CustomSetValueCommand extends AbstractCommand<
         : [req.value & 0xff];
     return new Uint8Array([
       id_custom_set_value,
-      id_custom_channel,
+      req.channel ?? id_custom_channel,
       req.valueId,
       ...data,
     ]);
@@ -1011,18 +1015,26 @@ export class CustomSetValueCommand extends AbstractCommand<
   isSameRequest(resultArray: Uint8Array): boolean {
     return (
       resultArray[0] === id_custom_set_value &&
-      resultArray[1] === id_custom_channel &&
+      resultArray[1] === (this.getRequest().channel ?? id_custom_channel) &&
       resultArray[2] === this.getRequest().valueId
     );
   }
 }
 
+export interface ICustomSaveRequest extends ICommandRequest {
+  // VIA channel; default: the keyboard's custom channel (0).
+  channel?: number;
+}
+
 export class CustomSaveCommand extends AbstractCommand<
-  ICommandRequest,
+  ICustomSaveRequest,
   ICommandResponse
 > {
   createReport(): Uint8Array {
-    return new Uint8Array([id_custom_save, id_custom_channel]);
+    return new Uint8Array([
+      id_custom_save,
+      this.getRequest().channel ?? id_custom_channel,
+    ]);
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -1032,7 +1044,8 @@ export class CustomSaveCommand extends AbstractCommand<
 
   isSameRequest(resultArray: Uint8Array): boolean {
     return (
-      resultArray[0] === id_custom_save && resultArray[1] === id_custom_channel
+      resultArray[0] === id_custom_save &&
+      resultArray[1] === (this.getRequest().channel ?? id_custom_channel)
     );
   }
 }

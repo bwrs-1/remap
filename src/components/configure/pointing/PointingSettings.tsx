@@ -37,6 +37,7 @@ import { matrixDeviceData } from '../../../services/matrix/MatrixDeviceData';
 import { SWIPE_KEYCODE_OPTIONS } from '../../../services/pointing/SwipeKeycodes';
 import { hexadecimal } from '../../../utils/StringUtils';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
+import RgbMatrixCard from '../lighting/RgbMatrixCard';
 
 export type PointingSettingsMode = 'touchpad' | 'autoMouse' | 'timing' | 'leds';
 
@@ -609,6 +610,12 @@ export default function PointingSettings(props: PointingSettingsProps) {
 
       <div className="pointing-body">
         <div className="pointing-sections">
+          {props.mode === 'leds' && live && props.keyboard && (
+            <RgbMatrixCard
+              keyboard={props.keyboard}
+              capabilities={capabilities}
+            />
+          )}
           {sections.map((section) => (
             <section className="pointing-card" key={section.title}>
               <div className="pointing-card-header">

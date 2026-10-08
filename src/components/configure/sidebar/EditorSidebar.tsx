@@ -3,6 +3,7 @@ import './EditorSidebar.scss';
 import { t } from 'i18next';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 import LicenseLink from '../../common/license/LicenseLink';
+import { SplitFirmwareLine } from '../split/SplitFirmwareStatus';
 import {
   openEditorView,
   useMatrixDeviceData,
@@ -139,6 +140,7 @@ export default function EditorSidebar(props: EditorSidebarProps) {
           <span className="connection-dot" aria-hidden="true" />
           <span>USB · {t('Connected')}</span>
         </div>
+        <SplitFirmwareLine keyboard={props.keyboard || null} />
         <button
           type="button"
           className="editor-sidebar-primary"

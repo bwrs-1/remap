@@ -19,6 +19,9 @@ import LayerBar, { EditorFooter } from '../layerbar/LayerBar';
 import { OPEN_TOUCHPAD_SETTINGS_EVENT } from '../../../services/pointing/TouchpadLayout';
 import { OPEN_EDITOR_VIEW_EVENT } from '../../../services/matrix/MatrixDeviceData';
 import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store/state';
+import { SplitFirmwareBanner } from '../split/SplitFirmwareStatus';
 
 type OwnProp = {};
 type RemapPropType = OwnProp &
@@ -163,6 +166,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
           <EditorSidebar />
           <div className="editor-main" ref={this.editorMainRef}>
             {!this.props.macroKey && <LayerBar />}
+            <SplitBanner />
             {!this.props.macroKey && (
               <div
                 className="keyboard-scale"
@@ -242,6 +246,11 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
       </React.Fragment>
     );
   }
+}
+
+function SplitBanner() {
+  const keyboard = useSelector((s: RootState) => s.entities.keyboard);
+  return <SplitFirmwareBanner keyboard={keyboard} />;
 }
 
 // Small line icons for the settings tabs.

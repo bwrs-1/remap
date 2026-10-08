@@ -51,7 +51,32 @@
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 10
+#define MP_REVISION 11
+// Read-only value 0x7D: the other half of a split keyboard —
+// [state, its revision (2), this build's ID (2), its build ID (2)];
+// state 0 = not known yet, 1 = known, 2 = it runs firmware without this
+// report (revision 10 or older), 3 = it is not connected.
+#define MP_SPLIT_INFO_VALUE_ID 0x7D
+// Read-only value 0x7B: RGB_MATRIX_EFFECT_MAX of this build, so the editor
+// can check that its effect list (VIA effect numbers = this build's enabled
+// effects, in QMK's order) matches.
+#define MP_RGB_EFFECTS_VALUE_ID 0x7B
+
+// 16-bit ID of this build, from QMK_BUILDDATE (the same date VIA uses for
+// its EEPROM magic): both halves flashed with the same file share it.
+#include "version.h"
+static uint16_t mp_build_id(void) {
+    static uint16_t id = 0;
+    if (id == 0) {
+        uint32_t h = 2166136261UL; // FNV-1a
+        for (const char *p = QMK_BUILDDATE; *p; p++) {
+            h = (h ^ (uint8_t)*p) * 16777619UL;
+        }
+        id = (uint16_t)(h ^ (h >> 16));
+        if (id == 0) id = 1;
+    }
+    return id;
+}
 #define MP_VERSION 4
 // Bytes of mp_config_t that earlier versions stored (index = version).
 static const uint8_t mp_version_size[] = {0, 28, 39, 47};
@@ -306,6 +331,12 @@ static uint32_t mp_capabilities(void) {
 #ifdef POINTING_DEVICE_DRIVER_digitizer
     caps |= 1UL << 20; // precision touchpad switch (0x10)
 #endif
+#if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
+    caps |= 1UL << 21; // other half's firmware (0x7D)
+#endif
+#ifdef RGB_MATRIX_ENABLE
+    caps |= 1UL << 22; // RGB Matrix effect count (0x7B)
+#endif
     return caps;
 }
 
@@ -518,6 +549,7 @@ uint8_t matrix_pointing_swipe(uint8_t direction) {
 
 #if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
 #    include "transactions.h"
+#    include "split_util.h"
 _Static_assert(sizeof(mp_config_t) <= RPC_M2S_BUFFER_SIZE, "Set RPC_M2S_BUFFER_SIZE to at least 64 in config.h");
 
 static uint8_t  mp_generation        = 1;
@@ -540,11 +572,29 @@ static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len
 #    endif
 }
 
+// Reply: [pending swipe + 1, marker, revision (2), build ID (2)]. Builds
+// before revision 11 only fill byte 0, so the master sees no marker (the
+// rest of the slave's RPC buffer is never written and stays 0).
+#    define MP_PEER_MARKER 0xA5
+#    define MP_PEER_REPLY_SIZE 6
 static void mp_sync_swipe_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
     if (out_len < 1) return;
-    ((uint8_t *)out)[0] = mp_pending_swipe;
-    mp_pending_swipe    = 0;
+    uint8_t *o       = (uint8_t *)out;
+    o[0]             = mp_pending_swipe;
+    mp_pending_swipe = 0;
+    if (out_len >= MP_PEER_REPLY_SIZE) {
+        const uint16_t build = mp_build_id();
+        o[1]                 = MP_PEER_MARKER;
+        o[2]                 = MP_REVISION >> 8;
+        o[3]                 = MP_REVISION & 0xFF;
+        o[4]                 = build >> 8;
+        o[5]                 = build & 0xFF;
+    }
 }
+
+static uint8_t  mp_peer_state    = 0; // see MP_SPLIT_INFO_VALUE_ID
+static uint16_t mp_peer_revision = 0;
+static uint16_t mp_peer_build    = 0;
 
 static void mp_split_register(void) {
     transaction_register_rpc(MP_SYNC_CONFIG, mp_sync_config_slave);
@@ -564,16 +614,39 @@ static void mp_split_housekeeping(void) {
     static uint16_t last_poll = 0;
     if (timer_elapsed(last_poll) >= 20) {
         last_poll         = timer_read();
-        uint8_t direction = 0;
-        if (transaction_rpc_recv(MP_SYNC_SWIPE, sizeof(direction), &direction) && direction) {
-            mp_send_swipe(direction - 1);
+        uint8_t reply[MP_PEER_REPLY_SIZE] = {0};
+        if (!is_transport_connected()) {
+            mp_peer_state = 3;
+        } else if (transaction_rpc_recv(MP_SYNC_SWIPE, sizeof(reply), reply)) {
+            if (reply[0]) mp_send_swipe(reply[0] - 1);
+            if (reply[1] == MP_PEER_MARKER) {
+                mp_peer_state    = 1;
+                mp_peer_revision = (reply[2] << 8) | reply[3];
+                mp_peer_build    = (reply[4] << 8) | reply[5];
+            } else {
+                mp_peer_state = 2;
+            }
         }
     }
+}
+
+static void mp_split_info(uint8_t *data) {
+    const uint16_t build = mp_build_id();
+    data[0]              = mp_peer_state;
+    data[1]              = mp_peer_revision >> 8;
+    data[2]              = mp_peer_revision & 0xFF;
+    data[3]              = build >> 8;
+    data[4]              = build & 0xFF;
+    data[5]              = mp_peer_build >> 8;
+    data[6]              = mp_peer_build & 0xFF;
 }
 #else
 static void mp_config_changed(void) {}
 static void mp_split_register(void) {}
 static void mp_split_housekeeping(void) {}
+static void mp_split_info(uint8_t *data) {
+    memset(data, 0, 7);
+}
 #endif
 
 // ---------------------------------------------------------------------------
@@ -852,6 +925,16 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                 value_data[1] = MP_REVISION & 0xFF;
                 return;
             }
+            if (*value_id == MP_SPLIT_INFO_VALUE_ID) {
+                mp_split_info(value_data);
+                return;
+            }
+#ifdef RGB_MATRIX_ENABLE
+            if (*value_id == MP_RGB_EFFECTS_VALUE_ID) {
+                value_data[0] = RGB_MATRIX_EFFECT_MAX;
+                return;
+            }
+#endif
             if (*value_id == MP_CAPABILITIES_VALUE_ID) {
                 const uint32_t caps = mp_capabilities();
                 value_data[0]       = caps >> 24;

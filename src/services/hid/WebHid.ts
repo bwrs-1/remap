@@ -442,11 +442,12 @@ export class Keyboard implements IKeyboard {
   fetchCustomValue(
     valueId: number,
     size: 1 | 2 | 4,
-    args?: number[]
+    args?: number[],
+    channel?: number
   ): Promise<IFetchCustomValueResult> {
     return new Promise<IFetchCustomValueResult>((resolve) => {
       const command = new CustomGetValueCommand(
-        { valueId, size, args },
+        { valueId, size, args, channel },
         async (result) => {
           if (result.success) {
             resolve({
@@ -492,10 +493,14 @@ export class Keyboard implements IKeyboard {
     });
   }
 
-  updateCustomBytes(valueId: number, bytes: number[]): Promise<IResult> {
+  updateCustomBytes(
+    valueId: number,
+    bytes: number[],
+    channel?: number
+  ): Promise<IResult> {
     return new Promise<IResult>((resolve) => {
       const command = new CustomSetValueCommand(
-        { valueId, value: 0, size: 1, bytes },
+        { valueId, value: 0, size: 1, bytes, channel },
         async (result) => {
           if (result.success) {
             resolve({ success: true });
@@ -512,9 +517,9 @@ export class Keyboard implements IKeyboard {
     });
   }
 
-  saveCustomValues(): Promise<IResult> {
+  saveCustomValues(channel?: number): Promise<IResult> {
     return new Promise<IResult>((resolve) => {
-      const command = new CustomSaveCommand({}, async (result) => {
+      const command = new CustomSaveCommand({ channel }, async (result) => {
         if (result.success) {
           resolve({ success: true });
         } else {
