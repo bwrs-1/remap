@@ -74,7 +74,7 @@ const def = <K extends string>(
 });
 
 export const TOUCHPAD_SETTINGS = [
-  def('cpi', 0x01, 'range', 400, 3200, 1600, 2, 100),
+  def('cpi', 0x01, 'range', 100, 3200, 800, 2, 50),
   def('acceleration', 0x02, 'switch', 0, 1, 1),
   def('glide', 0x03, 'switch', 0, 1, 0),
   // 0: 0deg, 1: 90deg, 2: 180deg, 3: 270deg

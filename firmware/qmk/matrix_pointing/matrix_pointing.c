@@ -334,7 +334,13 @@ static void mp_write_field(const mp_field_t *field, uint16_t value) {
 // runtime API are stored and echoed back so the editor stays in sync.
 static void mp_apply(void) {
 #ifdef POINTING_DEVICE_ENABLE
+#    ifdef MATRIX_POINTING_NATIVE_CPI
+    // Software speed: the driver keeps its own resolution (gestures such as
+    // swipes and taps are measured in it) and the reports are scaled.
+    pointing_device_set_cpi(MATRIX_POINTING_DRIVER_CPI);
+#    else
     pointing_device_set_cpi(mp_config.cpi);
+#    endif
 #endif
 #ifdef POINTING_DEVICE_DRIVER_digitizer
     // Multitouch QMK fork (digitizer mouse fallback): taps as clicks.
@@ -414,6 +420,14 @@ uint16_t matrix_pointing_tap_term(void) {
 uint16_t matrix_pointing_get_cpi(void) {
     mp_ensure_loaded();
     return mp_config.cpi;
+}
+
+uint16_t matrix_pointing_driver_cpi(void) {
+#ifdef MATRIX_POINTING_NATIVE_CPI
+    return MATRIX_POINTING_DRIVER_CPI;
+#else
+    return matrix_pointing_get_cpi();
+#endif
 }
 
 void matrix_pointing_init(void) {
@@ -896,6 +910,19 @@ report_mouse_t matrix_pointing_task(report_mouse_t r) {
         x = x * (16 + speed) / 16;
         y = y * (16 + speed) / 16;
     }
+#ifdef MATRIX_POINTING_NATIVE_CPI
+    // Scale to the chosen speed, carrying the remainder so slow movement is
+    // not lost.
+    static int32_t rem_x = 0, rem_y = 0;
+    const int32_t  native = MATRIX_POINTING_NATIVE_CPI;
+    int32_t        sx     = x * (int32_t)mp_config.cpi + rem_x;
+    int32_t        sy     = y * (int32_t)mp_config.cpi + rem_y;
+    x                     = sx / native;
+    y                     = sy / native;
+    rem_x                 = sx % native;
+    rem_y                 = sy % native;
+    if (r.x == 0 && r.y == 0) rem_x = rem_y = 0; // finger lifted / stopped
+#endif
     r.x = mp_clamp_xy(x);
     r.y = mp_clamp_xy(y);
 

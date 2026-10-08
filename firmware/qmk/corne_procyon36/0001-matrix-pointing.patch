@@ -1,4 +1,4 @@
-From 58677fa5d3130292e35dfa948ffe8b3cce173779 Mon Sep 17 00:00:00 2001
+From 08ea17d019df2e685546a6e69a4f02565e81130d Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
 Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
@@ -19,22 +19,22 @@ Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- keyboards/corne_procyon36/config.h            |  46 +
+ keyboards/corne_procyon36/config.h            |  50 +
  keyboards/corne_procyon36/digitizer_user.c    |   7 +-
  keyboards/corne_procyon36/keyboard.json       |   2 +-
  .../corne_procyon36/keymaps/default/keymap.c  |  26 +-
- keyboards/corne_procyon36/matrix_pointing.c   | 970 ++++++++++++++++++
- keyboards/corne_procyon36/matrix_pointing.h   |  71 ++
+ keyboards/corne_procyon36/matrix_pointing.c   | 997 ++++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.h   |  80 ++
  keyboards/corne_procyon36/rules.mk            |  11 +-
- 7 files changed, 1119 insertions(+), 14 deletions(-)
+ 7 files changed, 1159 insertions(+), 14 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
 diff --git a/keyboards/corne_procyon36/config.h b/keyboards/corne_procyon36/config.h
-index e074887..240746a 100644
+index e074887..ed5663d 100644
 --- a/keyboards/corne_procyon36/config.h
 +++ b/keyboards/corne_procyon36/config.h
-@@ -81,3 +81,49 @@
+@@ -81,3 +81,53 @@
   * Auto Mouse Layer 設定
   * ============================================================================ */
  #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -53,9 +53,13 @@ index e074887..240746a 100644
 +#define MATRIX_POINTING_DEFAULT_ACCELERATION 0   // 既存の操作感を保つため加速は初期オフ
 +
 +/* マルチタッチ版 QMK（george-norton/qmk_firmware multitouch_experiment）の digitizer ドライバ向け */
-+#define MATRIX_POINTING_CPI_MIN 50                // ドライバの CPI 範囲（DIGITIZER_MIN_CPI〜MAX_CPI）
-+#define MATRIX_POINTING_CPI_MAX 1200
-+#define MATRIX_POINTING_DEFAULT_CPI 1200          // センサー等倍（ドライバ既定の 400 は遅いため）
++/* カーソル速度はソフトウェアで調整する（ドライバの CPI を変えるとスワイプ・タップの判定距離も変わるため固定）。
++ * センサーは 100 カウント/mm = 2540 CPI（ドライバ 1200 = 等倍）、digitizer_user.c で ×2 → 5080 CPI 相当。 */
++#define MATRIX_POINTING_NATIVE_CPI 5080
++#define MATRIX_POINTING_DRIVER_CPI 1200
++#define MATRIX_POINTING_CPI_MIN 100
++#define MATRIX_POINTING_CPI_MAX 3000
++#define MATRIX_POINTING_DEFAULT_CPI 800
 +#define MATRIX_POINTING_DEFAULT_TAP_TERM 150      // ドライバ既定のタップ判定時間と同じ
 +#ifndef __ASSEMBLER__
 +#    include <stdint.h>
@@ -85,7 +89,7 @@ index e074887..240746a 100644
 +#define COMBO_TERM_PER_COMBO
 +#define COMBO_SHOULD_TRIGGER
 diff --git a/keyboards/corne_procyon36/digitizer_user.c b/keyboards/corne_procyon36/digitizer_user.c
-index d827269..bf2bf19 100644
+index d827269..0d95e53 100644
 --- a/keyboards/corne_procyon36/digitizer_user.c
 +++ b/keyboards/corne_procyon36/digitizer_user.c
 @@ -13,6 +13,7 @@
@@ -101,8 +105,8 @@ index d827269..bf2bf19 100644
   */
  uint16_t digitizer_get_cpi_user(void) {
 -    return CUSTOM_CPI;
-+    // Matrix エディタで設定した CPI（初期値 1600 = CUSTOM_CPI と同じ）
-+    return matrix_pointing_get_cpi();
++    // ドライバの CPI は固定（速度は Matrix の設定で matrix_pointing_task() が調整）
++    return matrix_pointing_driver_cpi();
  }
  
  /* ============================================================================
@@ -193,10 +197,10 @@ index 2784405..b110ef8 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..c7183c8
+index 0000000..d54ff6e
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
-@@ -0,0 +1,970 @@
+@@ -0,0 +1,997 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +// See matrix_pointing.h and README.md next to this file.
 +//
@@ -533,7 +537,13 @@ index 0000000..c7183c8
 +// runtime API are stored and echoed back so the editor stays in sync.
 +static void mp_apply(void) {
 +#ifdef POINTING_DEVICE_ENABLE
++#    ifdef MATRIX_POINTING_NATIVE_CPI
++    // Software speed: the driver keeps its own resolution (gestures such as
++    // swipes and taps are measured in it) and the reports are scaled.
++    pointing_device_set_cpi(MATRIX_POINTING_DRIVER_CPI);
++#    else
 +    pointing_device_set_cpi(mp_config.cpi);
++#    endif
 +#endif
 +#ifdef POINTING_DEVICE_DRIVER_digitizer
 +    // Multitouch QMK fork (digitizer mouse fallback): taps as clicks.
@@ -613,6 +623,14 @@ index 0000000..c7183c8
 +uint16_t matrix_pointing_get_cpi(void) {
 +    mp_ensure_loaded();
 +    return mp_config.cpi;
++}
++
++uint16_t matrix_pointing_driver_cpi(void) {
++#ifdef MATRIX_POINTING_NATIVE_CPI
++    return MATRIX_POINTING_DRIVER_CPI;
++#else
++    return matrix_pointing_get_cpi();
++#endif
 +}
 +
 +void matrix_pointing_init(void) {
@@ -1095,6 +1113,19 @@ index 0000000..c7183c8
 +        x = x * (16 + speed) / 16;
 +        y = y * (16 + speed) / 16;
 +    }
++#ifdef MATRIX_POINTING_NATIVE_CPI
++    // Scale to the chosen speed, carrying the remainder so slow movement is
++    // not lost.
++    static int32_t rem_x = 0, rem_y = 0;
++    const int32_t  native = MATRIX_POINTING_NATIVE_CPI;
++    int32_t        sx     = x * (int32_t)mp_config.cpi + rem_x;
++    int32_t        sy     = y * (int32_t)mp_config.cpi + rem_y;
++    x                     = sx / native;
++    y                     = sy / native;
++    rem_x                 = sx % native;
++    rem_y                 = sy % native;
++    if (r.x == 0 && r.y == 0) rem_x = rem_y = 0; // finger lifted / stopped
++#endif
 +    r.x = mp_clamp_xy(x);
 +    r.y = mp_clamp_xy(y);
 +
@@ -1169,10 +1200,10 @@ index 0000000..c7183c8
 +#endif // POINTING_DEVICE_AUTO_MOUSE_ENABLE
 diff --git a/keyboards/corne_procyon36/matrix_pointing.h b/keyboards/corne_procyon36/matrix_pointing.h
 new file mode 100644
-index 0000000..5523978
+index 0000000..300db91
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.h
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,80 @@
 +// Matrix pointing settings for QMK (touchpad + auto mouse layer).
 +//
 +// Implements the protocol the Matrix editor uses on the VIA custom channel
@@ -1199,6 +1230,15 @@ index 0000000..5523978
 +
 +// Current CPI setting, e.g. for digitizer_get_cpi_user().
 +uint16_t matrix_pointing_get_cpi(void);
++
++// Software speed (optional): when the driver's own CPI also changes how
++// gestures are measured (multitouch fork), define in config.h
++//   #define MATRIX_POINTING_NATIVE_CPI 5080  // counts per inch the reports have
++//   #define MATRIX_POINTING_DRIVER_CPI 1200  // fixed driver CPI
++// The driver then keeps MATRIX_POINTING_DRIVER_CPI and the reports are
++// scaled to the CPI chosen in the editor. Return matrix_pointing_driver_cpi()
++// from digitizer_get_cpi_user() / pointing_device_init_user().
++uint16_t matrix_pointing_driver_cpi(void);
 +
 +// Current tap term (ms), e.g. for
 +//   #define DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT matrix_pointing_tap_term()

@@ -25,6 +25,15 @@ void matrix_pointing_init(void);
 // Current CPI setting, e.g. for digitizer_get_cpi_user().
 uint16_t matrix_pointing_get_cpi(void);
 
+// Software speed (optional): when the driver's own CPI also changes how
+// gestures are measured (multitouch fork), define in config.h
+//   #define MATRIX_POINTING_NATIVE_CPI 5080  // counts per inch the reports have
+//   #define MATRIX_POINTING_DRIVER_CPI 1200  // fixed driver CPI
+// The driver then keeps MATRIX_POINTING_DRIVER_CPI and the reports are
+// scaled to the CPI chosen in the editor. Return matrix_pointing_driver_cpi()
+// from digitizer_get_cpi_user() / pointing_device_init_user().
+uint16_t matrix_pointing_driver_cpi(void);
+
 // Current tap term (ms), e.g. for
 //   #define DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT matrix_pointing_tap_term()
 uint16_t matrix_pointing_tap_term(void);
