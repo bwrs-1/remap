@@ -100,6 +100,12 @@ USB を反対側に挿すと、エディタからの設定は USB 側にしか�
 `housekeeping_task_user()` はこのモジュールが定義します（自分で定義している場合は
 `MATRIX_POINTING_NO_HOUSEKEEPING` を付けて、その中から `matrix_pointing_housekeeping()` を呼んでください）。
 
+### マルチタッチ版 QMK フォークでの移動量の取りこぼし対策
+
+フォークの digitizer 処理はループ 1 周ごとにマウス報告を上書きしますが、ポインティング処理は 1ms に 1 回のため、
+その間に読んだ移動量が失われます。このモジュールは `housekeeping_task_user()` で毎周の移動量を回収し、
+`matrix_pointing_task()` で次の報告に加えます（`MATRIX_POINTING_NO_DRAIN` で無効化）。
+
 ### コンボ（EEPROM に保存）
 
 `COMBO_ENABLE = yes` と次の設定で、エディタから最大 16 個のコンボを登録できます。`combo_count()` /

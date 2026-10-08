@@ -544,7 +544,7 @@ static void mp_split_register(void) {
     transaction_register_rpc(MP_SYNC_SWIPE, mp_sync_swipe_slave);
 }
 
-void matrix_pointing_housekeeping(void) {
+static void mp_split_housekeeping(void) {
     if (!is_keyboard_master()) return;
     mp_ensure_loaded();
     // Send on change, and every 2 s in case the other half restarted.
@@ -566,8 +566,64 @@ void matrix_pointing_housekeeping(void) {
 #else
 static void mp_config_changed(void) {}
 static void mp_split_register(void) {}
-void        matrix_pointing_housekeeping(void) {}
+static void mp_split_housekeeping(void) {}
 #endif
+
+// ---------------------------------------------------------------------------
+// Multitouch fork: the digitizer task runs on every main loop pass and, while
+// a finger is down, rewrites the fallback's mouse report each pass (to zero
+// when the sensor has no new data). The pointing task only runs once per
+// POINTING_DEVICE_TASK_THROTTLE_MS, so movement read in a pass where it is
+// throttled was overwritten before it was sent. Collect it at the end of
+// every pass instead and add it to the next report.
+#if defined(POINTING_DEVICE_DRIVER_digitizer) && defined(POINTING_DEVICE_ENABLE) && !defined(MATRIX_POINTING_NO_DRAIN)
+extern const pointing_device_driver_t digitizer_pointing_device_driver;
+static int32_t mp_drain_x = 0, mp_drain_y = 0, mp_drain_h = 0, mp_drain_v = 0;
+
+static bool mp_pointing_on_this_side(void) {
+#    if defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_LEFT)
+    return is_keyboard_left();
+#    elif defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_RIGHT)
+    return !is_keyboard_left();
+#    else
+    return true;
+#    endif
+}
+
+static void mp_drain(void) {
+    // Only on the USB half with the sensor; the other half's report goes
+    // through the split transport instead.
+    if (!is_keyboard_master() || !mp_pointing_on_this_side()) return;
+    report_mouse_t empty = {0};
+    report_mouse_t r     = digitizer_pointing_device_driver.get_report(empty);
+    mp_drain_x += r.x;
+    mp_drain_y += r.y;
+    mp_drain_h += r.h;
+    mp_drain_v += r.v;
+}
+
+static report_mouse_t mp_add_drained(report_mouse_t r) {
+    int32_t x = r.x + mp_drain_x, y = r.y + mp_drain_y;
+    int32_t h = r.h + mp_drain_h, v = r.v + mp_drain_v;
+    mp_drain_x = mp_drain_y = mp_drain_h = mp_drain_v = 0;
+    r.x = x < MOUSE_REPORT_XY_MIN ? MOUSE_REPORT_XY_MIN : x > MOUSE_REPORT_XY_MAX ? MOUSE_REPORT_XY_MAX : x;
+    r.y = y < MOUSE_REPORT_XY_MIN ? MOUSE_REPORT_XY_MIN : y > MOUSE_REPORT_XY_MAX ? MOUSE_REPORT_XY_MAX : y;
+    const int32_t hv_max = sizeof(mouse_hv_report_t) == 1 ? INT8_MAX : INT16_MAX;
+    r.h = h < -hv_max ? -hv_max : h > hv_max ? hv_max : h;
+    r.v = v < -hv_max ? -hv_max : v > hv_max ? hv_max : v;
+    return r;
+}
+#else
+static void                                  mp_drain(void) {}
+static __attribute__((unused)) report_mouse_t mp_add_drained(report_mouse_t r) {
+    return r;
+}
+#endif
+
+void matrix_pointing_housekeeping(void) {
+    mp_drain();
+    mp_split_housekeeping();
+}
 
 #ifndef MATRIX_POINTING_NO_HOUSEKEEPING
 void housekeeping_task_user(void) {
@@ -889,6 +945,7 @@ static uint8_t mp_filter_buttons(uint8_t buttons) {
 report_mouse_t matrix_pointing_task(report_mouse_t r) {
     mp_ensure_loaded();
     mp_bootloader_check();
+    r         = mp_add_drained(r);
     r.buttons = mp_filter_buttons(r.buttons);
     int32_t x = r.x;
     int32_t y = r.y;
