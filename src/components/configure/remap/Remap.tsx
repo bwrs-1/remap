@@ -32,13 +32,31 @@ type OwnState = {
   view: ConfigureView;
   // Scale of the keyboard so it fits narrow screens (1 = full size).
   zoom: number;
+  // Size picked by the user (upper bound of zoom).
+  scale: number;
 };
 
 // Horizontal room kept around the keyboard for the side toolbar.
 const MIN_SIDE_MENU_WIDTH = 32;
-// Keycaps are drawn at 85% of Remap's size, like Conductor Studio's compact
-// keyboard; narrow screens shrink them further.
-const KEYBOARD_SCALE = 0.85;
+// Keycaps are drawn smaller than Remap's, like Conductor Studio's compact
+// keyboard; the user picks the size, narrow screens shrink it further.
+const KEYBOARD_SCALES = [
+  { value: 0.6, label: 'S' },
+  { value: 0.7, label: 'M' },
+  { value: 0.85, label: 'L' },
+] as const;
+const DEFAULT_KEYBOARD_SCALE = 0.7;
+const KEYBOARD_SCALE_STORAGE_KEY = 'matrix.keyboardScale';
+
+function loadKeyboardScale(): number {
+  try {
+    const v = Number(window.localStorage.getItem(KEYBOARD_SCALE_STORAGE_KEY));
+    if (KEYBOARD_SCALES.some((s) => s.value === v)) return v;
+  } catch {
+    // Storage blocked: use the default.
+  }
+  return DEFAULT_KEYBOARD_SCALE;
+}
 
 export default class Remap extends React.Component<RemapPropType, OwnState> {
   private readonly keyboardWrapperRef: React.RefObject<HTMLDivElement>;
@@ -52,7 +70,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     const available = main.clientWidth - 8;
     const zoom = Math.max(
       0.3,
-      Math.min(KEYBOARD_SCALE, available / this.state.minWidth)
+      Math.min(this.state.scale, available / this.state.minWidth)
     );
     if (Math.abs(zoom - this.state.zoom) > 0.01) this.setState({ zoom });
   }
@@ -64,7 +82,8 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     this.state = {
       minWidth: 0,
       view: 'keymap',
-      zoom: KEYBOARD_SCALE,
+      zoom: DEFAULT_KEYBOARD_SCALE,
+      scale: DEFAULT_KEYBOARD_SCALE,
     };
     this.editorMainRef = React.createRef();
   }
@@ -75,7 +94,20 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     if (this.availableViews().includes(view)) this.setState({ view });
   };
 
+  private setScale(scale: number) {
+    try {
+      window.localStorage.setItem(KEYBOARD_SCALE_STORAGE_KEY, String(scale));
+    } catch {
+      // Not remembered; still applied for this session.
+    }
+    this.setState({ scale, zoom: scale }, () => this.updateZoom());
+  }
+
   componentDidMount() {
+    const scale = loadKeyboardScale();
+    if (scale !== this.state.scale) {
+      this.setState({ scale, zoom: scale }, () => this.updateZoom());
+    }
     window.addEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
     window.addEventListener(OPEN_EDITOR_VIEW_EVENT, this.openView);
     if (typeof ResizeObserver !== 'undefined') {
@@ -131,6 +163,28 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
           <EditorSidebar />
           <div className="editor-main" ref={this.editorMainRef}>
             {!this.props.macroKey && <LayerBar />}
+            {!this.props.macroKey && (
+              <div
+                className="keyboard-scale"
+                role="group"
+                aria-label={t('Keyboard size')}
+              >
+                {KEYBOARD_SCALES.map((s) => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    className={this.state.scale === s.value ? 'selected' : ''}
+                    aria-pressed={this.state.scale === s.value}
+                    title={`${t('Keyboard size')}: ${Math.round(
+                      s.value * 100
+                    )}%`}
+                    onClick={() => this.setScale(s.value)}
+                  >
+                    {t(`keyboardScale.${s.label}`)}
+                  </button>
+                ))}
+              </div>
+            )}
             <div
               className="keyboard-wrapper"
               style={{

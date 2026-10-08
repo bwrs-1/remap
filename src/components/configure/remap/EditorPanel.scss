@@ -10,8 +10,50 @@ $footer-height: 30px;
   }
 
   .editor-main {
+    position: relative;
     background-color: variables.$cfg-canvas-bg;
     padding-bottom: 16px;
+  }
+
+  // Keyboard size switch (S / M / L), top right of the canvas.
+  .keyboard-scale {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    z-index: 2;
+    display: flex;
+    padding: 2px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 999px;
+    background-color: variables.$cfg-panel-bg;
+    button {
+      min-width: 28px;
+      height: 22px;
+      padding: 0 8px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      font-family: variables.$cfg-font;
+      font-size: 11px;
+      color: variables.$cfg-text-dim;
+      cursor: pointer;
+      &:hover {
+        color: variables.$cfg-text;
+      }
+      &.selected {
+        background-color: variables.$cfg-text;
+        color: #fff;
+      }
+      &:focus-visible {
+        outline: 2px solid variables.$cfg-accent;
+        outline-offset: 1px;
+      }
+    }
+  }
+  @media (max-width: 768px) {
+    .keyboard-scale {
+      display: none;
+    }
   }
 
   // Layer pill centred above the keyboard.

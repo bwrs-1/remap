@@ -553,6 +553,8 @@
   "Choose...": "Choose...",
   "Combo term": "Combo term",
   "Combos": "Combos",
+  "Keyboard size": "Keyboard size",
+  "keyboardScale": { "S": "S", "M": "M", "L": "L" },
   "Combo": "Combo",
   "Combos are saved in the keyboard as soon as you save them (no \"Write\" needed). The trigger keys are the keys of layer 0 (Base): the combo fires when those keys are pressed together within the combo term, on any layer unless you limit it.": "Combos are saved in the keyboard as soon as you save them (no \"Write\" needed). The trigger keys are the keys of layer 0 (Base): the combo fires when those keys are pressed together within the combo term, on any layer unless you limit it.",
   "Combos need the Matrix-ready firmware. Write it from \"Write firmware\".": "Combos need the Matrix-ready firmware. Write it from \"Write firmware\".",
