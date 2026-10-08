@@ -56,7 +56,7 @@ __attribute__((weak)) bool usb_hires_scroll_enabled(void);
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 18
+#define MP_REVISION 19
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -249,7 +249,8 @@ static bool        mp_loaded = false;
 #define MP_CORNER_COUNT 4 // top-left, top-right, bottom-left, bottom-right
 #define MP_KNOB_COUNT 2
 #define MP_EXT_MAGIC 0x4D5A // 'MZ'
-#define MP_EXT_VERSION 4
+#define MP_EXT_VERSION 5
+#define MP_EXT_V4_SIZE 48 // version 4 (up to `touch_glow_color`)
 #define MP_EXT_V3_SIZE 46 // version 3 (up to `precision_scale`)
 #define MP_EXT_V1_SIZE 39 // bytes covered by version 1 (up to `smooth`)
 #define MP_EXT_V2_SIZE 45 // version 2 (up to `hyst_next`)
@@ -291,11 +292,15 @@ typedef struct __attribute__((packed)) {
     // version 4 (revision 18)
     uint8_t touch_glow;       // 1 = light the keys under the finger's position
     uint8_t touch_glow_color; // 0 = the lighting color, 2.. = like the layer colors
+    // version 5 (revision 19)
+    uint8_t touch_glow_radius; // LED units (keys are about 13 apart)
+    uint8_t touch_glow_fade;   // fade-out after lifting, x10 ms
 } mp_ext_t;
 _Static_assert(sizeof(mp_ext_t) <= 64, "mp_ext_t must fit 64 bytes");
 _Static_assert(offsetof(mp_ext_t, accel_slow) == MP_EXT_V1_SIZE, "extension version 1 layout changed");
 _Static_assert(offsetof(mp_ext_t, precision_scale) == MP_EXT_V2_SIZE, "extension version 2 layout changed");
 _Static_assert(offsetof(mp_ext_t, touch_glow) == MP_EXT_V3_SIZE, "extension version 3 layout changed");
+_Static_assert(offsetof(mp_ext_t, touch_glow_radius) == MP_EXT_V4_SIZE, "extension version 4 layout changed");
 
 // Touch sensor tuning: written to the sensor from the housekeeping task on
 // the half it is wired to (the slave half gets the values over the split
@@ -332,6 +337,8 @@ static const mp_ext_t mp_ext_defaults = {
     .hyst_next       = MP_DEFAULT_HYST_NEXT,
     .precision_scale = 33,
     .touch_glow      = 1,
+    .touch_glow_radius = 28,
+    .touch_glow_fade   = 30,
 };
 static mp_ext_t mp_ext = {0};
 
@@ -354,7 +361,7 @@ static void mp_ext_load(void) {
     eeconfig_read_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
     // Older versions (1: revisions 12-13, 2: 14-16): keep their settings,
     // new fields get defaults.
-    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE};
+    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE, MP_EXT_V4_SIZE};
     if (mp_ext.magic == MP_EXT_MAGIC && mp_ext.version >= 1 && mp_ext.version < MP_EXT_VERSION) {
         const uint8_t size = old_sizes[mp_ext.version];
         if (mp_ext.checksum == mp_ext_checksum_n(&mp_ext, size)) {
@@ -528,6 +535,7 @@ static uint32_t mp_capabilities(void) {
     caps |= 1UL << 28; // precision mode keys (QK_KB_0..5) and scale (0x99)
 #    if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK)
     caps |= 1UL << 29; // touch glow on the keys (0x9A, 0x9B)
+    caps |= 1UL << 30; // touch glow size and fade-out (0x9C, 0x9D)
 #    endif
 #endif
     return caps;
@@ -565,6 +573,8 @@ static const mp_field_t mp_ext_fields[] = {
     MP_EXT_FIELD(0x99, precision_scale, 10, 90),
     MP_EXT_FIELD(0x9A, touch_glow, 0, 1),
     MP_EXT_FIELD(0x9B, touch_glow_color, 0, 8),
+    MP_EXT_FIELD(0x9C, touch_glow_radius, 10, 60),
+    MP_EXT_FIELD(0x9D, touch_glow_fade, 0, 200),
 };
 
 static const mp_field_t *mp_find_ext_field(uint8_t id) {
@@ -1289,6 +1299,11 @@ static const mp_glow_t *mp_glow_now(void) {
 }
 
 // [active, u (2), v (2)] for the split poll.
+// Touch glow settings of the USB half (on, color, radius, fade), sent over
+// the split sync: the other half lights its keys with them.
+static uint8_t mp_glow_synced[4]    = {0};
+static bool    mp_glow_have_synced __attribute__((unused)) = false;
+
 static void mp_glow_pack(const mp_glow_t *g, uint8_t *o) {
     o[0] = g->active ? 1 : (timer_elapsed(g->since) < 1000 ? 2 : 0); // 2 = just lifted
     o[1] = g->u >> 8;
@@ -1456,9 +1471,10 @@ static void mp_config_changed(void) {
 // Payload: mp_config_t, then (revision 12) the edge summary: width, step,
 // edge keycode mask, corner mask; (revision 14) the touch sensor tuning:
 // threshold, initial / next movement hysteresis, 1 = valid; (revision 17)
-// the precision mode scale (100 = off). Older slaves read only what they
-// know.
-#    define MP_SYNC_SIZE (sizeof(mp_config_t) + 9)
+// the precision mode scale (100 = off); (revision 19) the touch glow:
+// on, color, radius, fade. Older slaves read only what they know.
+#    define MP_SYNC_SIZE_R17 (sizeof(mp_config_t) + 9)
+#    define MP_SYNC_SIZE (sizeof(mp_config_t) + 13)
 _Static_assert(MP_SYNC_SIZE <= RPC_M2S_BUFFER_SIZE, "Set RPC_M2S_BUFFER_SIZE to at least 64 in config.h");
 
 static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
@@ -1466,7 +1482,7 @@ static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len
     memcpy(&mp_config, in, sizeof(mp_config_t));
     mp_loaded = true;
 #    ifdef MP_EDGES
-    if (in_len >= MP_SYNC_SIZE) {
+    if (in_len >= MP_SYNC_SIZE_R17) {
         const uint8_t *extra  = (const uint8_t *)in + sizeof(mp_config_t);
         mp_edge_width_synced  = extra[0];
         mp_edge_step_synced   = extra[1];
@@ -1474,13 +1490,20 @@ static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len
         mp_corner_mask_synced = extra[3];
     }
 #    endif
-    if (in_len >= MP_SYNC_SIZE) {
+    if (in_len >= MP_SYNC_SIZE_R17) {
         const uint8_t *extra = (const uint8_t *)in + sizeof(mp_config_t);
         if (extra[7] == 1) mp_sensor_request(extra[4], extra[5], extra[6]);
 #    ifdef MP_EDGES
         if (extra[8] >= 10 && extra[8] <= 100) mp_precision_remote = extra[8];
 #    endif
     }
+#    ifdef MP_EDGES
+    if (in_len >= MP_SYNC_SIZE) {
+        const uint8_t *extra = (const uint8_t *)in + sizeof(mp_config_t);
+        memcpy(mp_glow_synced, extra + 9, sizeof(mp_glow_synced));
+        mp_glow_have_synced = true;
+    }
+#    endif
 #    ifdef POINTING_DEVICE_DRIVER_digitizer
     extern bool digitizer_taps_as_clicks;
     digitizer_taps_as_clicks = mp_config.tap_to_click;
@@ -1573,9 +1596,14 @@ static void mp_split_housekeeping(void) {
         payload[sizeof(mp_config_t) + 6] = mp_ext.hyst_next;
         payload[sizeof(mp_config_t) + 7] = 1;
 #    ifdef MP_EDGES
-        payload[sizeof(mp_config_t) + 8] = mp_precision_wanted();
+        payload[sizeof(mp_config_t) + 8]  = mp_precision_wanted();
+        payload[sizeof(mp_config_t) + 9]  = mp_ext.touch_glow;
+        payload[sizeof(mp_config_t) + 10] = mp_ext.touch_glow_color;
+        payload[sizeof(mp_config_t) + 11] = mp_ext.touch_glow_radius;
+        payload[sizeof(mp_config_t) + 12] = mp_ext.touch_glow_fade;
 #    else
         payload[sizeof(mp_config_t) + 8] = 100;
+        memset(payload + sizeof(mp_config_t) + 9, 0, 4);
 #    endif
         if (transaction_rpc_send(MP_SYNC_CONFIG, sizeof(payload), payload)) {
             mp_synced_generation = mp_generation;
@@ -1721,18 +1749,28 @@ static const uint8_t mp_led_hs[][2] = {
 // Touch glow (revision 18): the pad is mapped onto the keyboard's whole LED
 // area and the keys around the finger's place light up, brighter closer to
 // it, fading out after the finger lifts.
-#    define MP_GLOW_RADIUS 28  // LED units (keys are about 13 apart)
-#    define MP_GLOW_FADE_MS 300
-
 static void mp_glow_render(uint8_t led_min, uint8_t led_max) {
-    if (!mp_ext.touch_glow) return;
+    // The half without USB uses the settings of the USB half.
+#    ifdef SPLIT_KEYBOARD
+    const bool synced = !is_keyboard_master() && mp_glow_have_synced;
+#    else
+    const bool synced = false;
+#    endif
+    const uint8_t on      = synced ? mp_glow_synced[0] : mp_ext.touch_glow;
+    const uint8_t color   = synced ? mp_glow_synced[1] : mp_ext.touch_glow_color;
+    uint8_t       radius  = synced ? mp_glow_synced[2] : mp_ext.touch_glow_radius;
+    const uint8_t fade_cs = synced ? mp_glow_synced[3] : mp_ext.touch_glow_fade;
+    if (!on) return;
+    if (radius < 10) radius = 10;
+    if (radius > 60) radius = 60;
+    const uint16_t fade_ms = (uint16_t)(fade_cs > 200 ? 200 : fade_cs) * 10;
     const mp_glow_t *g    = mp_glow_now();
     int32_t          fade = 256;
     if (!g->active) {
         if (g->since == 0) return; // never touched
         const uint16_t since = timer_elapsed(g->since);
-        if (since >= MP_GLOW_FADE_MS) return;
-        fade = 256 - (int32_t)since * 256 / MP_GLOW_FADE_MS;
+        if (since >= fade_ms) return;
+        fade = 256 - (int32_t)since * 256 / fade_ms;
     }
     static int16_t x0 = 0, x1 = 0, y0 = 0, y1 = 0;
     static bool    bounds = false;
@@ -1750,13 +1788,12 @@ static void mp_glow_render(uint8_t led_min, uint8_t led_max) {
     }
     const int32_t fx    = x0 + (int32_t)g->u * (x1 - x0) / MP_EDGE_SCALE;
     const int32_t fy    = y0 + (int32_t)g->v * (y1 - y0) / MP_EDGE_SCALE;
-    const uint8_t color = mp_ext.touch_glow_color;
     uint8_t       hue = rgb_matrix_get_hue(), sat = rgb_matrix_get_sat();
     if (color >= 2 && color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
         hue = mp_led_hs[color - 2][0];
         sat = mp_led_hs[color - 2][1];
     }
-    const int32_t r2 = MP_GLOW_RADIUS * MP_GLOW_RADIUS;
+    const int32_t r2 = (int32_t)radius * radius;
     for (uint8_t i = led_min; i < led_max; i++) {
         const int32_t dx = g_led_config.point[i].x - fx;
         const int32_t dy = g_led_config.point[i].y - fy;

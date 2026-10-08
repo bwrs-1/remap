@@ -918,5 +918,11 @@
   "Light the touched position": "触れている位置を光らせる",
   "Needs the RGB lighting to be on. Brightness follows the lighting brightness.": "RGB ライティングがオンのときに動作します。明るさはライティングの明るさに従います。",
   "Glow color": "発光色",
-  "Same as the lighting": "ライティングと同じ"
+  "Same as the lighting": "ライティングと同じ",
+  "Firmware r19 or later can also change the size of the glow and how long it takes to fade out.": "ファームウェア r19 以降では、光る範囲とフェードアウトの時間も変更できます。",
+  "Glow size": "光る範囲",
+  "How far around the finger the keys light up, in keys (radius).": "指の位置からどこまでのキーを光らせるか（半径、キーの個数）。",
+  "About {{n}} keys": "約 {{n}} キー",
+  "Fade-out time": "フェードアウト時間",
+  "How long the glow stays after the finger lifts. 0 turns it off at once.": "指を離してから光が消えるまでの時間。0 にするとすぐに消えます。"
 }

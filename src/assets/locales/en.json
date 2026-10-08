@@ -825,5 +825,11 @@
   "Light the touched position": "Light the touched position",
   "Needs the RGB lighting to be on. Brightness follows the lighting brightness.": "Needs the RGB lighting to be on. Brightness follows the lighting brightness.",
   "Glow color": "Glow color",
-  "Same as the lighting": "Same as the lighting"
+  "Same as the lighting": "Same as the lighting",
+  "Firmware r19 or later can also change the size of the glow and how long it takes to fade out.": "Firmware r19 or later can also change the size of the glow and how long it takes to fade out.",
+  "Glow size": "Glow size",
+  "How far around the finger the keys light up, in keys (radius).": "How far around the finger the keys light up, in keys (radius).",
+  "About {{n}} keys": "About {{n}} keys",
+  "Fade-out time": "Fade-out time",
+  "How long the glow stays after the finger lifts. 0 turns it off at once.": "How long the glow stays after the finger lifts. 0 turns it off at once."
 }

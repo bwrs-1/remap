@@ -28,6 +28,7 @@ import {
   CAP_SENSOR_TUNING,
   CAP_SMOOTHING,
   CAP_TOUCH_GLOW,
+  CAP_TOUCH_GLOW_SHAPE,
   fetchCapabilities,
   LED_COLORS,
   probeProtocol,
@@ -612,23 +613,41 @@ export function SmoothnessCard(props: { keyboard: IKeyboard }) {
 // Values 0x9A / 0x9B: light the keys under the finger on the touchpad.
 const GLOW_ID = 0x9a;
 const GLOW_COLOR_ID = 0x9b;
+// Values 0x9C / 0x9D (firmware r19+): size in LED units, fade-out x10 ms.
+const GLOW_RADIUS_ID = 0x9c;
+const GLOW_FADE_ID = 0x9d;
+// Keys are about 13 LED units apart.
+const LED_UNITS_PER_KEY = 13;
 
 // Layer LED tab: touch glow (firmware r18+).
 export function TouchGlowCard(props: { keyboard: IKeyboard }) {
   const [glow, setGlow] = useState<number | null>(null);
   const [color, setColor] = useState<number>(0);
+  // null: the firmware has no size / fade-out settings (r18).
+  const [shape, setShape] = useState<{ radius: number; fade: number } | null>(
+    null
+  );
   const [supported, setSupported] = useState<boolean | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('saved');
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const ok =
-        (await probeProtocol(props.keyboard)) === 'supported' &&
-        ((await fetchCapabilities(props.keyboard)) ?? 0) & CAP_TOUCH_GLOW;
+      const caps =
+        (await probeProtocol(props.keyboard)) === 'supported'
+          ? (await fetchCapabilities(props.keyboard)) ?? 0
+          : 0;
       if (cancelled) return;
-      if (!ok) {
+      if (!(caps & CAP_TOUCH_GLOW)) {
         setSupported(false);
         return;
+      }
+      if (caps & CAP_TOUCH_GLOW_SHAPE) {
+        const r = await props.keyboard.fetchCustomValue(GLOW_RADIUS_ID, 1);
+        const f = await props.keyboard.fetchCustomValue(GLOW_FADE_ID, 1);
+        if (cancelled) return;
+        if (r.success && !r.unhandled && f.success && !f.unhandled) {
+          setShape({ radius: r.value!, fade: f.value! });
+        }
       }
       const on = await props.keyboard.fetchCustomValue(GLOW_ID, 1);
       const col = await props.keyboard.fetchCustomValue(GLOW_COLOR_ID, 1);
@@ -647,7 +666,7 @@ export function TouchGlowCard(props: { keyboard: IKeyboard }) {
 
   const change = async (id: number, value: number) => {
     if (id === GLOW_ID) setGlow(value);
-    else setColor(value);
+    else if (id === GLOW_COLOR_ID) setColor(value);
     setSaveState('busy');
     const r = await props.keyboard.updateCustomValue(id, value, 1);
     const saved =
@@ -734,6 +753,90 @@ export function TouchGlowCard(props: { keyboard: IKeyboard }) {
               </div>
             </div>
           </div>
+          {shape === null && (
+            <p className="knob-note">
+              {t(
+                'Firmware r19 or later can also change the size of the glow and how long it takes to fade out.'
+              )}
+            </p>
+          )}
+          {shape !== null && (
+            <div
+              className={['pointing-row', glow === 1 ? '' : 'not-applied']
+                .join(' ')
+                .trim()}
+            >
+              <div className="pointing-row-label">
+                <span className="label">{t('Glow size')}</span>
+                <span className="help">
+                  {t(
+                    'How far around the finger the keys light up, in keys (radius).'
+                  )}
+                </span>
+              </div>
+              <div className="pointing-row-control">
+                <div className="pointing-range edge-knob-range">
+                  <Slider
+                    value={shape.radius}
+                    min={10}
+                    max={60}
+                    size="small"
+                    disabled={glow !== 1}
+                    aria-label={t('Glow size')}
+                    onChange={(_, v) =>
+                      setShape({ ...shape, radius: v as number })
+                    }
+                    onChangeCommitted={(_, v) =>
+                      change(GLOW_RADIUS_ID, v as number)
+                    }
+                  />
+                  <span className="pointing-value">
+                    {t('About {{n}} keys', {
+                      n: Number((shape.radius / LED_UNITS_PER_KEY).toFixed(1)),
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          {shape !== null && (
+            <div
+              className={['pointing-row', glow === 1 ? '' : 'not-applied']
+                .join(' ')
+                .trim()}
+            >
+              <div className="pointing-row-label">
+                <span className="label">{t('Fade-out time')}</span>
+                <span className="help">
+                  {t(
+                    'How long the glow stays after the finger lifts. 0 turns it off at once.'
+                  )}
+                </span>
+              </div>
+              <div className="pointing-row-control">
+                <div className="pointing-range edge-knob-range">
+                  <Slider
+                    value={shape.fade}
+                    min={0}
+                    max={200}
+                    step={5}
+                    size="small"
+                    disabled={glow !== 1}
+                    aria-label={t('Fade-out time')}
+                    onChange={(_, v) =>
+                      setShape({ ...shape, fade: v as number })
+                    }
+                    onChangeCommitted={(_, v) =>
+                      change(GLOW_FADE_ID, v as number)
+                    }
+                  />
+                  <span className="pointing-value">
+                    {(shape.fade / 100).toFixed(2)} s
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </section>

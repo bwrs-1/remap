@@ -156,6 +156,7 @@ export const CAP_SENSOR_TUNING = 1 << 26;
 export const CAP_ACCEL_TUNING = 1 << 27;
 export const CAP_PRECISION_MODE = 1 << 28;
 export const CAP_TOUCH_GLOW = 1 << 29;
+export const CAP_TOUCH_GLOW_SHAPE = 1 << 30;
 
 export async function fetchCapabilities(
   keyboard: IKeyboard
@@ -269,7 +270,7 @@ export async function applySettings<K extends string>(
 // Revision of the matrix_pointing firmware module (value 0x7C). Firmware
 // before revision 9 does not report it (0 here).
 export const FIRMWARE_REVISION_VALUE_ID = 0x7c;
-export const LATEST_FIRMWARE_REVISION = 18;
+export const LATEST_FIRMWARE_REVISION = 19;
 
 export async function fetchFirmwareRevision(
   keyboard: IKeyboard
