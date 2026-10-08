@@ -640,5 +640,10 @@
   "License": "License",
   "(commercial use requires consulting the Remap authors)": "(commercial use requires consulting the Remap authors)",
   "This program comes with ABSOLUTELY NO WARRANTY.": "This program comes with ABSOLUTELY NO WARRANTY.",
-  "Source code of this site": "Source code of this site"
+  "Source code of this site": "Source code of this site",
+  "This layer has keys. Make all of them transparent and remove the layer? (Press \"Flash\" afterwards to write it to the keyboard.)": "This layer has keys. Make all of them transparent and remove the layer? (Press \"Flash\" afterwards to write it to the keyboard.)",
+  "Layers shown / layers the firmware has": "Layers shown / layers the firmware has",
+  "The firmware has no more layers. The latest Matrix-ready firmware has 8.": "The firmware has no more layers. The latest Matrix-ready firmware has 8.",
+  "Add layer": "Add layer",
+  "Remove layer": "Remove layer"
 }

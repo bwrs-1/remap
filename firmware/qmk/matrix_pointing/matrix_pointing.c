@@ -51,7 +51,7 @@
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 9
+#define MP_REVISION 10
 #define MP_VERSION 4
 // Bytes of mp_config_t that earlier versions stored (index = version).
 static const uint8_t mp_version_size[] = {0, 28, 39, 47};

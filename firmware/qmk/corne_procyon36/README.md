@@ -16,7 +16,7 @@
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `matrix_pointing.c` / `.h`（追加） | Matrix からの設定の読み書き・EEPROM 保存・反映                                                                                                                                                                                                                        |
 | `rules.mk`                         | `SRC += matrix_pointing.c`                                                                                                                                                                                                                                            |
-| `config.h`                         | `DYNAMIC_KEYMAP_LAYER_COUNT 5`、`EECONFIG_USER_DATA_SIZE 320`、左右の設定同期（`MATRIX_POINTING_SPLIT_SYNC`）、コンボ設定、`AUTO_MOUSE_DELAY 0`、初期値（対象レイヤー 4 = `_MOUSE`、加速オフ）、タップ/ホールドの `*_PER_KEY`、3 本指スワイプのキーを Matrix から変更 |
+| `config.h`                         | `DYNAMIC_KEYMAP_LAYER_COUNT 8`、`EECONFIG_USER_DATA_SIZE 320`、左右の設定同期（`MATRIX_POINTING_SPLIT_SYNC`）、コンボ設定、`AUTO_MOUSE_DELAY 0`、初期値（対象レイヤー 4 = `_MOUSE`、加速オフ）、タップ/ホールドの `*_PER_KEY`、3 本指スワイプのキーを Matrix から変更 |
 | `digitizer_user.c`                 | CPI を保存値から返す（初期値 1600 は従来どおり）。既存の平滑化の後に Matrix の変換を適用                                                                                                                                                                              |
 | `keymaps/default/keymap.c`         | 起動時に設定を読み込み（従来の `set_auto_mouse_layer(_MOUSE)` を置き換え）、`process_record_user` を追加                                                                                                                                                              |
 
@@ -25,7 +25,7 @@
 キーマップには `_MOUSE`（レイヤー 4）まで 5 レイヤーありますが、VIA の動的キーマップは既定で 4 レイヤーです。
 QMK はこの場合レイヤー 4 のキーをすべて `KC_NO` として扱うため、オートマウスでレイヤー 4 が有効になると
 **全キーが効かなくなり、`_MOUSE` のクリックキーも使えません**（QMK `quantum/dynamic_keymap.c` の
-`keycode_at_keymap_location()` で確認）。`DYNAMIC_KEYMAP_LAYER_COUNT 5` でこれを解消します。
+`keycode_at_keymap_location()` で確認）。`DYNAMIC_KEYMAP_LAYER_COUNT 8` でこれを解消します。
 
 ## 適用・ビルド・書き込み
 

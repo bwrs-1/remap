@@ -260,3 +260,26 @@
     flex-shrink: 0;
   }
 }
+
+.editor-sidebar .editor-sidebar-add-layer {
+  height: 34px;
+  margin-top: 4px;
+  padding: 0 10px;
+  border: 1px dashed variables.$cfg-panel-border;
+  border-radius: variables.$cfg-radius-m;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: variables.$cfg-text-dim;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  &:hover:not(:disabled) {
+    border-color: variables.$cfg-accent;
+    color: variables.$cfg-accent;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}

@@ -9,15 +9,14 @@ import {
   layerName,
   useLayerMeta,
 } from '../../../services/layers/LayerMeta';
+import { useVisibleLayerCount } from '../../../services/layers/VisibleLayers';
 
 // Bar above the keyboard: previous / next layer, the layer name and the
 // number of changes on this layer that are not yet flashed.
 export default function LayerBar() {
   const dispatch = useDispatch();
   const keyboard = useSelector((s: RootState) => s.entities.keyboard);
-  const layerCount = useSelector(
-    (s: RootState) => s.entities.device.layerCount
-  );
+  const { visible: layerCount } = useVisibleLayerCount();
   const selected = useSelector(
     (s: RootState) => s.configure.keymap.selectedLayer
   );
@@ -76,9 +75,7 @@ export default function LayerBar() {
 // Footer: keyboard, layers, keys, and whether everything is flashed.
 export function EditorFooter() {
   const keyboard = useSelector((s: RootState) => s.entities.keyboard);
-  const layerCount = useSelector(
-    (s: RootState) => s.entities.device.layerCount
-  );
+  const { visible: layerCount } = useVisibleLayerCount();
   const keymaps = useSelector((s: RootState) => s.entities.device.keymaps);
   const remaps = useSelector((s: RootState) => s.app.remaps);
   if (!keyboard) return null;

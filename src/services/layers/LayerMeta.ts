@@ -20,6 +20,9 @@ export const LAYER_ACCENT_COLORS = [
 export type LayerMeta = {
   names: { [layer: number]: string };
   colors: { [layer: number]: number }; // index into LAYER_ACCENT_COLORS
+  // Number of layers shown in the editor (layers the user added). Unset:
+  // up to the last layer that has keys.
+  count?: number;
 };
 
 const STORAGE_PREFIX = 'matrix.layerMeta.';
@@ -38,7 +41,11 @@ function read(storageKey: string): LayerMeta {
     const raw = window.localStorage.getItem(storageKey);
     if (raw) {
       const parsed = JSON.parse(raw);
-      meta = { names: parsed.names || {}, colors: parsed.colors || {} };
+      meta = {
+        names: parsed.names || {},
+        colors: parsed.colors || {},
+        count: typeof parsed.count === 'number' ? parsed.count : undefined,
+      };
     }
   } catch {
     // Unavailable or broken storage: use defaults.
@@ -83,6 +90,12 @@ export function setLayerColor(device: DeviceId, layer: number, color: number) {
   const k = key(device.vendorId, device.productId);
   const meta = read(k);
   write(k, { ...meta, colors: { ...meta.colors, [layer]: color } });
+}
+
+export function setLayerCount(device: DeviceId, count: number) {
+  if (!device) return;
+  const k = key(device.vendorId, device.productId);
+  write(k, { ...read(k), count });
 }
 
 export function replaceLayerMeta(device: DeviceId, meta: LayerMeta) {

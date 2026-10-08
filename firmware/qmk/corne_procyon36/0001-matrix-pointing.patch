@@ -1,4 +1,4 @@
-From de6ca5b5035cae892f236d085d5cbe4e84de51dc Mon Sep 17 00:00:00 2001
+From 2364e9b4d02acaacf69ee10b75aa982cdf4e9176 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Wed, 7 Oct 2026 14:40:51 +0000
 Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
@@ -19,22 +19,22 @@ Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- keyboards/corne_procyon36/config.h            |   53 +
+ keyboards/corne_procyon36/config.h            |   54 +
  keyboards/corne_procyon36/digitizer_user.c    |   99 +-
  keyboards/corne_procyon36/keyboard.json       |    2 +-
  .../corne_procyon36/keymaps/default/keymap.c  |   26 +-
  keyboards/corne_procyon36/matrix_pointing.c   | 1075 +++++++++++++++++
  keyboards/corne_procyon36/matrix_pointing.h   |   80 ++
  keyboards/corne_procyon36/rules.mk            |   11 +-
- 7 files changed, 1247 insertions(+), 99 deletions(-)
+ 7 files changed, 1248 insertions(+), 99 deletions(-)
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
  create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
 
 diff --git a/keyboards/corne_procyon36/config.h b/keyboards/corne_procyon36/config.h
-index e074887..49edfee 100644
+index e074887..de19ae4 100644
 --- a/keyboards/corne_procyon36/config.h
 +++ b/keyboards/corne_procyon36/config.h
-@@ -81,3 +81,56 @@
+@@ -81,3 +81,57 @@
   * Auto Mouse Layer 設定
   * ============================================================================ */
  #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -43,9 +43,10 @@ index e074887..49edfee 100644
 +/* ============================================================================
 + * VIA / Matrix 設定
 + * ============================================================================ */
-+/* キーマップに _MOUSE（レイヤー4）まで5レイヤーあるため、VIA の動的キーマップも5レイヤーにする。
-+ * 既定の4だとレイヤー4のキーがすべて KC_NO になり、オートマウス中に全キーが効かなくなる。 */
-+#define DYNAMIC_KEYMAP_LAYER_COUNT 5
++/* VIA の動的キーマップのレイヤー数。既定の 4 だと _MOUSE（レイヤー4）のキーがすべて KC_NO になり、
++ * オートマウス中に全キーが効かなくなるため 5 以上が必要。Matrix からレイヤーを追加できるよう 8 にする
++ * （6〜8 番目は透過キーで初期化）。レイヤーの LED 色とコンボのレイヤー指定も 8 レイヤーまで。 */
++#define DYNAMIC_KEYMAP_LAYER_COUNT 8
 +
 +/* Matrix エディタからのタッチパッド/マウスレイヤー設定（matrix_pointing.c） */
 +#define EECONFIG_USER_DATA_SIZE 320              // 設定の保存領域（設定 64 + コンボ 16 個 × 16）
@@ -298,7 +299,7 @@ index 2784405..b110ef8 100644
  }
 diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
 new file mode 100644
-index 0000000..d7fa246
+index 0000000..fb8d28d
 --- /dev/null
 +++ b/keyboards/corne_procyon36/matrix_pointing.c
 @@ -0,0 +1,1075 @@
@@ -355,7 +356,7 @@ index 0000000..d7fa246
 +// Read-only value 0x7C: revision of this module, so the editor can tell that
 +// the keyboard runs an older build. Bump it with every behaviour change.
 +#define MP_REVISION_VALUE_ID 0x7C
-+#define MP_REVISION 9
++#define MP_REVISION 10
 +#define MP_VERSION 4
 +// Bytes of mp_config_t that earlier versions stored (index = version).
 +static const uint8_t mp_version_size[] = {0, 28, 39, 47};

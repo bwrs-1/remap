@@ -13,8 +13,13 @@ import {
   layerName,
   setLayerColor,
   setLayerName,
+  setLayerCount,
   useLayerMeta,
 } from '../../../services/layers/LayerMeta';
+import {
+  isLayerUsed,
+  visibleLayerCount,
+} from '../../../services/layers/VisibleLayers';
 import {
   EditorSidebarActionsType,
   EditorSidebarStateType,
@@ -41,7 +46,6 @@ type EditorSidebarProps = OwnProps &
 
 export default function EditorSidebar(props: EditorSidebarProps) {
   const layerCount = Number.isNaN(props.layerCount) ? 0 : props.layerCount!;
-  const layers = [...Array(layerCount)].map((_, i) => i);
   const viewLabels: Record<EditorView, string> = {
     keymap: t('Keymap'),
     touchpad: t('Touchpad'),
@@ -52,6 +56,37 @@ export default function EditorSidebar(props: EditorSidebarProps) {
   };
   const device = props.keyboard?.getInformation();
   const meta = useLayerMeta(device);
+  // Layers in use / added by the user; the keyboard has layerCount in all.
+  const visible = visibleLayerCount(
+    meta,
+    layerCount,
+    props.keymaps,
+    props.remaps
+  );
+  const layers = [...Array(visible)].map((_, i) => i);
+
+  const addLayer = () => {
+    if (visible >= layerCount) return;
+    setLayerCount(device, visible + 1);
+    props.onClickLayer!(visible);
+    props.onChangeView('keymap');
+  };
+
+  const removeLastLayer = () => {
+    const last = visible - 1;
+    if (last < 1) return;
+    if (isLayerUsed(last, props.keymaps, props.remaps)) {
+      const ok = window.confirm(
+        t(
+          'This layer has keys. Make all of them transparent and remove the layer? (Press "Flash" afterwards to write it to the keyboard.)'
+        )
+      );
+      if (!ok) return;
+      props.clearLayer!(last, props.keymaps?.[last] || {}, props.labelLang!);
+    }
+    setLayerCount(device, last);
+    if (props.selectedLayer! >= last) props.onClickLayer!(last - 1);
+  };
   const changedCount = (layer: number) => {
     const remap = props.remaps?.[layer];
     return remap ? Object.keys(remap).length : 0;
@@ -62,7 +97,12 @@ export default function EditorSidebar(props: EditorSidebarProps) {
       <section className="editor-sidebar-section">
         <div className="editor-sidebar-heading">
           <h2>{t('Layers')}</h2>
-          <span className="editor-sidebar-count">{layerCount} / 32</span>
+          <span
+            className="editor-sidebar-count"
+            title={t('Layers shown / layers the firmware has')}
+          >
+            {visible} / {layerCount}
+          </span>
         </div>
         {layers.map((layer) => (
           <LayerRow
@@ -81,8 +121,33 @@ export default function EditorSidebar(props: EditorSidebarProps) {
             }}
             onRename={(name) => setLayerName(device, layer, name)}
             onColor={(color) => setLayerColor(device, layer, color)}
+            onRemove={
+              layer === visible - 1 && layer > 0 ? removeLastLayer : undefined
+            }
           />
         ))}
+        <button
+          type="button"
+          className="editor-sidebar-add-layer"
+          disabled={visible >= layerCount}
+          title={
+            visible >= layerCount
+              ? t(
+                  'The firmware has no more layers. The latest Matrix-ready firmware has 8.'
+                )
+              : undefined
+          }
+          onClick={addLayer}
+        >
+          + {t('Add layer')}
+        </button>
+        {visible >= layerCount && layerCount < 8 && (
+          <span className="editor-sidebar-note">
+            {t(
+              'The firmware has no more layers. The latest Matrix-ready firmware has 8.'
+            )}
+          </span>
+        )}
       </section>
 
       {props.views.length > 1 && (
@@ -135,6 +200,8 @@ type LayerRowProps = {
   onRename: (name: string) => void;
   // eslint-disable-next-line no-unused-vars
   onColor: (color: number) => void;
+  // Only on the last layer.
+  onRemove?: () => void;
 };
 
 // One layer: color dot (click to pick a color), name (double-click or the
@@ -198,6 +265,19 @@ function LayerRow(props: LayerRowProps) {
           <span className="layer-changed" title={t('Changes not yet flashed')}>
             {props.changed}
           </span>
+        )}
+        {!editing && props.onRemove && (
+          <button
+            type="button"
+            className="layer-rename layer-remove"
+            aria-label={`${t('Remove layer')}: ${props.name}`}
+            title={t('Remove layer')}
+            onClick={props.onRemove}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5" />
+            </svg>
+          </button>
         )}
         {!editing && (
           <button
