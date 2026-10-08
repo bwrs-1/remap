@@ -15,7 +15,8 @@ import {
 } from './Configure.container';
 import { NotificationItem } from '../../actions/actions';
 import { IKeyboard } from '../../services/hid/Hid';
-import Footer from '../common/footer/Footer.container';
+import LicenseLink from '../common/license/LicenseLink';
+import './Responsive.scss';
 import { Button, CssBaseline } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { APPLICATION_NAME } from '../../utils/Brand';
@@ -147,7 +148,7 @@ function Configure(props: ConfigureProps) {
         <main>
           <UnsupportedBrowser />
         </main>
-        <Footer />
+        <LicenseLink className="license-link-corner" />
         <FirmwareFlasherDialog />
       </React.Fragment>
     );
@@ -163,7 +164,7 @@ function Configure(props: ConfigureProps) {
         {(props.draggingKey || props.testMatrix) && (
           <div className="dragMask fill-blank"></div>
         )}
-        <Footer />
+        {!props.keyboard && <LicenseLink className="license-link-corner" />}
         <FirmwareFlasherDialog />
       </div>
     </React.Fragment>

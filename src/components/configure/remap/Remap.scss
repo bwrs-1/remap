@@ -35,8 +35,8 @@
 .editor-layout {
   display: flex;
   margin-top: calc(var(--key-height));
-  // header (key-height) and footer (27px) are outside this area
-  height: calc(100vh - var(--key-height) - 27px);
+  // the header (key-height) is outside this area
+  height: calc(100vh - var(--key-height));
   min-height: 0;
 }
 .editor-main {

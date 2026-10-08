@@ -1,0 +1,187 @@
+// Layout for narrower screens (tablet / phone). Desktop styles live in the
+// components; this file only adapts them.
+@use '../../variables';
+
+.license-link-corner {
+  position: fixed;
+  right: 12px;
+  bottom: 8px;
+  z-index: 1;
+}
+
+// Nested under the page root so these win over the components' own rules
+// whatever order the stylesheets load in.
+.configure-root {
+  // Header buttons never wrap their labels.
+  .header {
+    .header-actions button,
+    .header-flash-button {
+      white-space: nowrap;
+    }
+  }
+
+  // Tablet: the selected-key panel moves below the editor.
+  @media (max-width: 1100px) {
+    .editor-layout {
+      flex-wrap: wrap;
+      height: auto;
+      min-height: calc(100vh - var(--key-height));
+    }
+    .editor-main {
+      flex: 1 1 0;
+      overflow: visible;
+    }
+    .key-inspector {
+      flex: 1 1 100%;
+      order: 3;
+      max-width: none;
+      border-left: 0;
+      border-top: 1px solid variables.$cfg-panel-border;
+    }
+  }
+
+  // Phone: the side menu becomes a horizontal bar, the header is compacted.
+  @media (max-width: 768px) {
+    .header {
+      gap: 8px;
+      padding: 0 10px;
+      .header-logo {
+        gap: 6px;
+        .brand-name {
+          display: none;
+        }
+      }
+      .kbd-device {
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        .kbd-select .kbd-name h2 {
+          max-width: 28vw;
+        }
+        .kbd-select .kbd-name .ids,
+        .connection-pill {
+          display: none;
+        }
+      }
+      .header-right {
+        flex: 1 1 0;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+        & > * {
+          flex-shrink: 0;
+        }
+      }
+      .header-actions {
+        flex-shrink: 0;
+        gap: 4px;
+        // Label language is also on the keymap ("English (US)" menu).
+        .header-segment {
+          display: none;
+        }
+      }
+      // Export / Import are for the computer; keep Undo, Redo and Write.
+      @media (max-width: 480px) {
+        .header-info-button {
+          display: none;
+        }
+        .header-actions .header-text-button,
+        .header-actions .header-pill-button {
+          display: none;
+        }
+      }
+    }
+
+    .editor-layout {
+      flex-direction: column;
+      flex-wrap: nowrap;
+    }
+
+    .editor-sidebar {
+      flex: none;
+      width: 100%;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      overflow-x: auto;
+      border-right: 0;
+      border-bottom: 1px solid variables.$cfg-panel-border;
+      .editor-sidebar-section {
+        flex-direction: row;
+        flex-shrink: 0;
+        gap: 4px;
+      }
+      .editor-sidebar-heading {
+        display: none;
+      }
+      .editor-sidebar-layer,
+      .editor-sidebar-item {
+        flex-shrink: 0;
+      }
+      .editor-sidebar-item {
+        height: 36px;
+        white-space: nowrap;
+      }
+      .editor-sidebar-layer-row {
+        height: 36px;
+      }
+      .layer-palette {
+        position: absolute;
+        z-index: 3;
+        padding: 8px;
+        border: 1px solid variables.$cfg-panel-border;
+        border-radius: 8px;
+        background: #fff;
+      }
+      .editor-sidebar-footer {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        .editor-sidebar-note {
+          display: none;
+        }
+      }
+    }
+
+    .layer-bar {
+      margin: 8px 8px 0;
+    }
+    .keycode {
+      margin: 0 8px 8px;
+    }
+    .editor-footer {
+      flex-wrap: wrap;
+      gap: 4px 12px;
+    }
+
+    // Settings screens: label above the control.
+    .pointing-settings {
+      padding: 12px !important;
+      .pointing-title {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .pointing-row-control {
+        flex: 1 1 100%;
+        justify-content: flex-start;
+      }
+      .pointing-range {
+        width: 100%;
+      }
+      .pointing-preview {
+        max-width: none;
+      }
+      .pointing-outdated {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    .combos .combo-row {
+      flex-wrap: wrap;
+      .combo-meta {
+        align-items: flex-start;
+      }
+    }
+  }
+}

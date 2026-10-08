@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './EditorSidebar.scss';
 import { t } from 'i18next';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
+import LicenseLink from '../../common/license/LicenseLink';
 import {
   hasSavedLocalDefinition,
   removeLocalDefinition,
@@ -115,6 +116,9 @@ export default function EditorSidebar(props: EditorSidebarProps) {
         </section>
       )}
       <SavedDefinition keyboard={props.keyboard} />
+      <div className="editor-sidebar-license">
+        <LicenseLink />
+      </div>
     </nav>
   );
 }

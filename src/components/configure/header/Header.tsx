@@ -272,7 +272,7 @@ function InfoDialogButton(props: IInfoDialogButton) {
       : 'secondary'
     : 'primary';
   return (
-    <IconButton onClick={props.onClick}>
+    <IconButton className="header-info-button" onClick={props.onClick}>
       <InfoIcon color={color} />
     </IconButton>
   );

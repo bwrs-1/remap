@@ -27,6 +27,8 @@ type ConfigureView = 'keymap' | 'combos' | PointingSettingsMode;
 type OwnState = {
   minWidth: number;
   view: ConfigureView;
+  // Scale of the keyboard so it fits narrow screens (1 = full size).
+  zoom: number;
 };
 
 // Horizontal room kept around the keyboard for the side toolbar.
@@ -35,6 +37,16 @@ const MIN_SIDE_MENU_WIDTH = 32;
 export default class Remap extends React.Component<RemapPropType, OwnState> {
   private readonly keyboardWrapperRef: React.RefObject<HTMLDivElement>;
   private readonly keycodeRef: React.RefObject<HTMLDivElement>;
+  private readonly editorMainRef: React.RefObject<HTMLDivElement>;
+  private resizeObserver: ResizeObserver | null = null;
+
+  private updateZoom() {
+    const main = this.editorMainRef.current;
+    if (!main || !this.state.minWidth) return;
+    const available = main.clientWidth - 8;
+    const zoom = Math.max(0.3, Math.min(1, available / this.state.minWidth));
+    if (Math.abs(zoom - this.state.zoom) > 0.01) this.setState({ zoom });
+  }
 
   constructor(props: RemapPropType | Readonly<RemapPropType>) {
     super(props);
@@ -43,24 +55,36 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     this.state = {
       minWidth: 0,
       view: 'keymap',
+      zoom: 1,
     };
+    this.editorMainRef = React.createRef();
   }
 
   private readonly openTouchpad = () => this.setState({ view: 'touchpad' });
 
   componentDidMount() {
     window.addEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => this.updateZoom());
+      if (this.editorMainRef.current) {
+        this.resizeObserver.observe(this.editorMainRef.current);
+      }
+    }
   }
 
   componentWillUnmount() {
     window.removeEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
+    this.resizeObserver?.disconnect();
   }
 
   componentDidUpdate(prevProps: RemapPropType) {
     if (this.props.keyboardWidth != prevProps.keyboardWidth) {
-      this.setState({
-        minWidth: this.props.keyboardWidth! + MIN_SIDE_MENU_WIDTH * 2,
-      });
+      this.setState(
+        {
+          minWidth: this.props.keyboardWidth! + MIN_SIDE_MENU_WIDTH * 2,
+        },
+        () => this.updateZoom()
+      );
     }
   }
 
@@ -86,20 +110,27 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
             view={view}
             onChangeView={(v) => this.setState({ view: v })}
           />
-          <div className="editor-main">
+          <div className="editor-main" ref={this.editorMainRef}>
             {view === 'keymap' ? (
               <React.Fragment>
                 {!this.props.macroKey && <LayerBar />}
                 <div
                   className="keyboard-wrapper"
-                  style={{ minWidth: this.state.minWidth }}
+                  style={{
+                    minWidth: this.state.minWidth,
+                    // CSS zoom keeps the layout (and the popovers' positions)
+                    // consistent, unlike a transform.
+                    zoom: this.state.zoom < 1 ? this.state.zoom : undefined,
+                  }}
                   ref={this.keyboardWrapperRef}
                 >
                   <EditMode mode={this.props.macroKey ? 'macro' : 'keymap'} />
                 </div>
                 <div
                   className="keycode"
-                  style={{ minWidth: this.state.minWidth }}
+                  style={{
+                    minWidth: this.state.zoom < 1 ? 0 : this.state.minWidth,
+                  }}
                   ref={this.keycodeRef}
                 >
                   <Keycodes />

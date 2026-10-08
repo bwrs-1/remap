@@ -634,5 +634,11 @@
   "Saved in the keyboard": "Saved in the keyboard",
   "The firmware on the keyboard is older than the latest Matrix-ready firmware, so some values here may not take effect. Write the latest firmware.": "The firmware on the keyboard is older than the latest Matrix-ready firmware, so some values here may not take effect. Write the latest firmware.",
   "Latest": "Latest",
-  "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.": "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into."
+  "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.": "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.",
+  "License & source code": "License & source code",
+  "Matrix is based on Remap and is distributed under the same license.": "Matrix is based on Remap and is distributed under the same license.",
+  "License": "License",
+  "(commercial use requires consulting the Remap authors)": "(commercial use requires consulting the Remap authors)",
+  "This program comes with ABSOLUTELY NO WARRANTY.": "This program comes with ABSOLUTELY NO WARRANTY.",
+  "Source code of this site": "Source code of this site"
 }

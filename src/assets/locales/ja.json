@@ -727,5 +727,11 @@
   "Saved in the keyboard": "キーボードに保存済み（自動保存）",
   "The firmware on the keyboard is older than the latest Matrix-ready firmware, so some values here may not take effect. Write the latest firmware.": "キーボードのファームウェアが最新の Matrix 対応版より古いため、ここで変えた数値の一部が反映されない可能性があります。最新のファームウェアを書き込んでください。",
   "Latest": "最新",
-  "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.": "数値を変えるとすぐにキーボードへ書き込まれ（自動保存）、その場で反映されます。USB を抜いても設定は残ります。タッチパッドは右手側にありますが、USB を左右どちらに挿していても設定はタッチパッド側に届きます。"
+  "Changes are written into the keyboard automatically as you edit them, so they take effect at once and stay after unplugging. The touchpad is on the right half; the settings are sent to it whichever half the USB cable is plugged into.": "数値を変えるとすぐにキーボードへ書き込まれ（自動保存）、その場で反映されます。USB を抜いても設定は残ります。タッチパッドは右手側にありますが、USB を左右どちらに挿していても設定はタッチパッド側に届きます。",
+  "License & source code": "ライセンス・ソースコード",
+  "Matrix is based on Remap and is distributed under the same license.": "Matrix は Remap をもとに改変したソフトウェアで、同じライセンスで公開しています。",
+  "License": "ライセンス",
+  "(commercial use requires consulting the Remap authors)": "（商用利用には Remap の作者への相談が必要です）",
+  "This program comes with ABSOLUTELY NO WARRANTY.": "このソフトウェアは無保証です。",
+  "Source code of this site": "このサイトのソースコード"
 }

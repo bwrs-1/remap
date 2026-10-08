@@ -1,0 +1,27 @@
+@use '../../../variables';
+
+.license-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  color: variables.$cfg-text-dim;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  &:hover {
+    color: variables.$cfg-text;
+  }
+}
+
+.license-dialog {
+  p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  a {
+    word-break: break-all;
+  }
+}

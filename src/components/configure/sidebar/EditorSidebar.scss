@@ -245,3 +245,18 @@
     }
   }
 }
+
+.editor-sidebar .editor-sidebar-license {
+  margin-top: auto;
+  padding: 8px 8px 0;
+}
+.editor-sidebar .editor-sidebar-footer + .editor-sidebar-license {
+  margin-top: 0;
+}
+@media (max-width: 768px) {
+  .editor-sidebar .editor-sidebar-license {
+    margin: 0;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+}
