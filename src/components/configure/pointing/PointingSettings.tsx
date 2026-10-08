@@ -42,6 +42,7 @@ import {
   EdgeZonesCard,
   SensitivityCard,
   SmoothnessCard,
+  TouchGlowCard,
 } from './EdgeKnobSettings';
 
 export type PointingSettingsMode = 'touchpad' | 'autoMouse' | 'timing' | 'leds';
@@ -641,6 +642,9 @@ export default function PointingSettings(props: PointingSettingsProps) {
               keyboard={props.keyboard}
               capabilities={capabilities}
             />
+          )}
+          {props.mode === 'leds' && live && props.keyboard && (
+            <TouchGlowCard keyboard={props.keyboard} />
           )}
           {sections.map((section) => (
             <section className="pointing-card" key={section.title}>

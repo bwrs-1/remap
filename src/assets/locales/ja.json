@@ -912,5 +912,11 @@
   "On (recommended on Windows): Windows handles the cursor, scrolling and gestures itself, which feels smoothest; the speed, acceleration, tap, scroll and smoothness settings here are replaced by Windows touchpad settings. The auto mouse layer and edge sliders keep working (firmware r16+, USB cable on the touchpad half). Off: the touchpad works as a mouse and all settings here apply (macOS always uses this mode).": "オン（Windows で推奨）：カーソル・スクロール・ジェスチャーを Windows 自身が処理し、最もなめらかに動きます。ここの速度・加速・タップ・スクロール・なめらかさの設定は、Windows のタッチパッド設定に置き換わります。マウスレイヤーの自動切り替えと縁スライダーは引き続き使えます（ファームウェア r16 以降、USB をタッチパッド側に挿した場合）。オフ：タッチパッドをマウスとして扱い、ここの設定がすべて有効になります（macOS では常にこちら）。",
   "Precision touchpad mode is on: on Windows, cursor speed, acceleration, taps, scrolling and smoothness follow Windows settings (Settings > Bluetooth & devices > Touchpad), not the settings below. Edge sliders, the auto mouse layer (r16+) and touch sensitivity still apply.": "高精度タッチパッドモードがオンです。Windows では、カーソル速度・加速・タップ・スクロール・なめらかさは下の設定ではなく Windows の設定（設定 > Bluetooth とデバイス > タッチパッド）に従います。縁スライダー、マウスレイヤーの自動切り替え（r16 以降）、タッチの感度は引き続き有効です。",
   "Precision mode speed": "精密モードの速さ",
-  "Cursor movement while precision mode is on: hold the \"Sniping Mode\" key, or press \"Sniping Toggle\" (Key Config > custom keys). Works in the precision touchpad mode too.": "精密モード中のカーソルの動きの割合です。「Sniping Mode」キー（押している間）か「Sniping Toggle」キー（切り替え）で精密モードになります（キー設定の独自キーで割り当て）。高精度タッチパッドモードでも使えます。"
+  "Cursor movement while precision mode is on: hold the \"Sniping Mode\" key, or press \"Sniping Toggle\" (Key Config > custom keys). Works in the precision touchpad mode too.": "精密モード中のカーソルの動きの割合です。「Sniping Mode」キー（押している間）か「Sniping Toggle」キー（切り替え）で精密モードになります（キー設定の独自キーで割り当て）。高精度タッチパッドモードでも使えます。",
+  "Touch glow": "タッチ位置の発光",
+  "While a finger is on the touchpad, the keys at the matching place on the keyboard light up and fade out after you lift it. The whole keyboard works as a map of the touchpad.": "タッチパッドに指を置いている間、キーボード上の対応する位置のキーが光り、指を離すとフェードアウトします。キーボード全体がタッチパッドの地図として働きます。",
+  "Light the touched position": "触れている位置を光らせる",
+  "Needs the RGB lighting to be on. Brightness follows the lighting brightness.": "RGB ライティングがオンのときに動作します。明るさはライティングの明るさに従います。",
+  "Glow color": "発光色",
+  "Same as the lighting": "ライティングと同じ"
 }

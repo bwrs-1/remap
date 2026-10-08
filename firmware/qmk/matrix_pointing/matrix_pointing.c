@@ -56,7 +56,7 @@ __attribute__((weak)) bool usb_hires_scroll_enabled(void);
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 17
+#define MP_REVISION 18
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -249,7 +249,8 @@ static bool        mp_loaded = false;
 #define MP_CORNER_COUNT 4 // top-left, top-right, bottom-left, bottom-right
 #define MP_KNOB_COUNT 2
 #define MP_EXT_MAGIC 0x4D5A // 'MZ'
-#define MP_EXT_VERSION 3
+#define MP_EXT_VERSION 4
+#define MP_EXT_V3_SIZE 46 // version 3 (up to `precision_scale`)
 #define MP_EXT_V1_SIZE 39 // bytes covered by version 1 (up to `smooth`)
 #define MP_EXT_V2_SIZE 45 // version 2 (up to `hyst_next`)
 #ifdef MXT_TOUCH_THRESHOLD
@@ -287,10 +288,14 @@ typedef struct __attribute__((packed)) {
     uint8_t hyst_next;       // touch sensor: movement between position updates
     // version 3 (revision 17)
     uint8_t precision_scale; // precision ("sniping") mode: % of the normal movement
+    // version 4 (revision 18)
+    uint8_t touch_glow;       // 1 = light the keys under the finger's position
+    uint8_t touch_glow_color; // 0 = the lighting color, 2.. = like the layer colors
 } mp_ext_t;
 _Static_assert(sizeof(mp_ext_t) <= 64, "mp_ext_t must fit 64 bytes");
 _Static_assert(offsetof(mp_ext_t, accel_slow) == MP_EXT_V1_SIZE, "extension version 1 layout changed");
 _Static_assert(offsetof(mp_ext_t, precision_scale) == MP_EXT_V2_SIZE, "extension version 2 layout changed");
+_Static_assert(offsetof(mp_ext_t, touch_glow) == MP_EXT_V3_SIZE, "extension version 3 layout changed");
 
 // Touch sensor tuning: written to the sensor from the housekeeping task on
 // the half it is wired to (the slave half gets the values over the split
@@ -326,6 +331,7 @@ static const mp_ext_t mp_ext_defaults = {
     .hyst_initial    = MP_DEFAULT_HYST_INITIAL,
     .hyst_next       = MP_DEFAULT_HYST_NEXT,
     .precision_scale = 33,
+    .touch_glow      = 1,
 };
 static mp_ext_t mp_ext = {0};
 
@@ -348,7 +354,7 @@ static void mp_ext_load(void) {
     eeconfig_read_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
     // Older versions (1: revisions 12-13, 2: 14-16): keep their settings,
     // new fields get defaults.
-    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE};
+    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE};
     if (mp_ext.magic == MP_EXT_MAGIC && mp_ext.version >= 1 && mp_ext.version < MP_EXT_VERSION) {
         const uint8_t size = old_sizes[mp_ext.version];
         if (mp_ext.checksum == mp_ext_checksum_n(&mp_ext, size)) {
@@ -520,6 +526,9 @@ static uint32_t mp_capabilities(void) {
     if (maxtouch_tune) caps |= 1UL << 26; // touch sensor tuning (0x96..0x98)
 #ifdef MP_EDGES
     caps |= 1UL << 28; // precision mode keys (QK_KB_0..5) and scale (0x99)
+#    if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK)
+    caps |= 1UL << 29; // touch glow on the keys (0x9A, 0x9B)
+#    endif
 #endif
     return caps;
 }
@@ -554,6 +563,8 @@ static const mp_field_t mp_ext_fields[] = {
     MP_EXT_FIELD(0x97, hyst_initial, 0, 40),
     MP_EXT_FIELD(0x98, hyst_next, 0, 40),
     MP_EXT_FIELD(0x99, precision_scale, 10, 90),
+    MP_EXT_FIELD(0x9A, touch_glow, 0, 1),
+    MP_EXT_FIELD(0x9B, touch_glow_color, 0, 8),
 };
 
 static const mp_field_t *mp_find_ext_field(uint8_t id) {
@@ -1135,6 +1146,8 @@ static void mp_touch_start(uint8_t i, int16_t u, int16_t v, uint8_t fingers) {
     }
 }
 
+static void mp_glow_update(const digitizer_t *state);
+
 bool matrix_pointing_digitizer(digitizer_t *const state) {
     if (!mp_edge_on_this_side()) return false;
     mp_ensure_loaded();
@@ -1143,6 +1156,7 @@ bool matrix_pointing_digitizer(digitizer_t *const state) {
         if (state->contacts[i].type == FINGER && state->contacts[i].tip) fingers++;
     }
     mp_fingers_local = fingers;
+    mp_glow_update(state);
     for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
         digitizer_contact_t *c    = &state->contacts[i];
         mp_touch_t          *t    = &mp_touch[i];
@@ -1240,6 +1254,56 @@ static void mp_precision_task(void) {
         digitizer_set_scale(want);
         mp_precision_applied = want;
     }
+}
+
+// Touch glow (revision 18): where a finger is on the pad (0..MP_EDGE_SCALE,
+// as the user sees it), for lighting the keys at the same place on the
+// keyboard. Known on the touchpad half; the other half gets it with the
+// split poll (see mp_split_housekeeping()).
+typedef struct {
+    bool     active;
+    uint16_t u, v;
+    uint16_t since; // when it was last touched (fade out after lifting)
+} mp_glow_t;
+static mp_glow_t mp_glow_local  = {0};
+static mp_glow_t mp_glow_remote = {0};
+
+static void mp_glow_update(const digitizer_t *state) {
+    for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
+        const digitizer_contact_t *c = &state->contacts[i];
+        if (c->type == FINGER && c->tip) {
+            int16_t u, v;
+            mp_edge_position(c, &u, &v);
+            mp_glow_local.active = true;
+            mp_glow_local.u      = u < 0 ? 0 : u > MP_EDGE_SCALE ? MP_EDGE_SCALE : u;
+            mp_glow_local.v      = v < 0 ? 0 : v > MP_EDGE_SCALE ? MP_EDGE_SCALE : v;
+            mp_glow_local.since  = timer_read();
+            return;
+        }
+    }
+    mp_glow_local.active = false;
+}
+
+static const mp_glow_t *mp_glow_now(void) {
+    return mp_edge_on_this_side() ? &mp_glow_local : &mp_glow_remote;
+}
+
+// [active, u (2), v (2)] for the split poll.
+static void mp_glow_pack(const mp_glow_t *g, uint8_t *o) {
+    o[0] = g->active ? 1 : (timer_elapsed(g->since) < 1000 ? 2 : 0); // 2 = just lifted
+    o[1] = g->u >> 8;
+    o[2] = g->u & 0xFF;
+    o[3] = g->v >> 8;
+    o[4] = g->v & 0xFF;
+}
+
+static void mp_glow_unpack(const uint8_t *in) {
+    const bool was = mp_glow_remote.active;
+    if (in[0] == 0 && !was) return;
+    mp_glow_remote.u      = (in[1] << 8) | in[2];
+    mp_glow_remote.v      = (in[3] << 8) | in[4];
+    mp_glow_remote.active = in[0] == 1;
+    if (in[0] == 1 || was) mp_glow_remote.since = timer_read();
 }
 
 // Custom keycodes of the keyboard definition (QK_KB_0..5): DPI+/-,
@@ -1430,13 +1494,19 @@ static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len
 // revision 11 only fill byte 0, so the master sees no marker (the rest of
 // the slave's RPC buffer is never written and stays 0); revision 11 fills 6.
 #    define MP_PEER_MARKER 0xA5
-#    define MP_PEER_REPLY_SIZE 12
+#    define MP_PEER_REPLY_BASE 12 // up to the finger count (revisions 12-17)
+#    define MP_PEER_REPLY_SIZE 17 // + touch glow [active, u, v] (revision 18)
+// Request (revision 18): the master's touch glow [active, u, v] when the
+// touchpad is on the master half.
 static void mp_sync_swipe_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
+#    ifdef MP_EDGES
+    if (in_len >= 5 && !mp_edge_on_this_side()) mp_glow_unpack((const uint8_t *)in);
+#    endif
     if (out_len < 1) return;
     uint8_t *o       = (uint8_t *)out;
     o[0]             = mp_pending_swipe;
     mp_pending_swipe = 0;
-    if (out_len >= MP_PEER_REPLY_SIZE) {
+    if (out_len >= MP_PEER_REPLY_BASE) {
         const uint16_t build = mp_build_id();
         o[1]                 = MP_PEER_MARKER;
         o[2]                 = MP_REVISION >> 8;
@@ -1458,6 +1528,17 @@ static void mp_sync_swipe_slave(uint8_t in_len, const void *in, uint8_t out_len,
 #    else
         o[10] = 0;
         o[11] = 0;
+#    endif
+    }
+    if (out_len >= MP_PEER_REPLY_SIZE) {
+#    ifdef MP_EDGES
+        if (mp_edge_on_this_side()) {
+            mp_glow_pack(&mp_glow_local, o + 12);
+        } else {
+            memset(o + 12, 0, 5);
+        }
+#    else
+        memset(o + 12, 0, 5);
 #    endif
     }
 }
@@ -1504,9 +1585,13 @@ static void mp_split_housekeeping(void) {
     if (timer_elapsed(last_poll) >= 20) {
         last_poll         = timer_read();
         uint8_t reply[MP_PEER_REPLY_SIZE] = {0};
+        uint8_t glow[5]                   = {0}; // this half's touch glow, for the other half
+#    ifdef MP_EDGES
+        if (mp_edge_on_this_side()) mp_glow_pack(&mp_glow_local, glow);
+#    endif
         if (!is_transport_connected()) {
             mp_peer_state = 3;
-        } else if (transaction_rpc_recv(MP_SYNC_SWIPE, sizeof(reply), reply)) {
+        } else if (transaction_rpc_exec(MP_SYNC_SWIPE, sizeof(glow), glow, sizeof(reply), reply)) {
             if (reply[0]) mp_send_swipe(reply[0] - 1);
             if (reply[1] == MP_PEER_MARKER) {
                 mp_peer_state    = 1;
@@ -1523,6 +1608,7 @@ static void mp_split_housekeeping(void) {
                     if (reply[10] & (1 << c)) mp_corner_emit(c);
                 }
                 if (reply[11]) mp_fingers_remote = reply[11] - 1;
+                if (!mp_edge_on_this_side()) mp_glow_unpack(reply + 12);
 #    endif
             } else {
                 mp_peer_state = 2;
@@ -1631,21 +1717,79 @@ static const uint8_t mp_led_hs[][2] = {
     {0, 0},     // white
 };
 
-bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max) {
-    mp_ensure_loaded();
-    const uint8_t layer = get_highest_layer(layer_state | default_layer_state);
-    if (layer >= ARRAY_SIZE(mp_config.led_layer_color)) return true;
-    const uint8_t color = mp_config.led_layer_color[layer];
-    if (color == 0) return true; // keep the running effect
-    rgb_t rgb = {0, 0, 0};
-    if (color >= 2 && color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
-        hsv_t hsv = {mp_led_hs[color - 2][0], mp_led_hs[color - 2][1], rgb_matrix_get_val()};
-        rgb       = hsv_to_rgb(hsv);
+#ifdef MP_EDGES
+// Touch glow (revision 18): the pad is mapped onto the keyboard's whole LED
+// area and the keys around the finger's place light up, brighter closer to
+// it, fading out after the finger lifts.
+#    define MP_GLOW_RADIUS 28  // LED units (keys are about 13 apart)
+#    define MP_GLOW_FADE_MS 300
+
+static void mp_glow_render(uint8_t led_min, uint8_t led_max) {
+    if (!mp_ext.touch_glow) return;
+    const mp_glow_t *g    = mp_glow_now();
+    int32_t          fade = 256;
+    if (!g->active) {
+        if (g->since == 0) return; // never touched
+        const uint16_t since = timer_elapsed(g->since);
+        if (since >= MP_GLOW_FADE_MS) return;
+        fade = 256 - (int32_t)since * 256 / MP_GLOW_FADE_MS;
     }
+    static int16_t x0 = 0, x1 = 0, y0 = 0, y1 = 0;
+    static bool    bounds = false;
+    if (!bounds) {
+        x0 = y0 = INT16_MAX;
+        x1 = y1 = INT16_MIN;
+        for (uint8_t i = 0; i < RGB_MATRIX_LED_COUNT; i++) {
+            const led_point_t pt = g_led_config.point[i];
+            if (pt.x < x0) x0 = pt.x;
+            if (pt.x > x1) x1 = pt.x;
+            if (pt.y < y0) y0 = pt.y;
+            if (pt.y > y1) y1 = pt.y;
+        }
+        bounds = true;
+    }
+    const int32_t fx    = x0 + (int32_t)g->u * (x1 - x0) / MP_EDGE_SCALE;
+    const int32_t fy    = y0 + (int32_t)g->v * (y1 - y0) / MP_EDGE_SCALE;
+    const uint8_t color = mp_ext.touch_glow_color;
+    uint8_t       hue = rgb_matrix_get_hue(), sat = rgb_matrix_get_sat();
+    if (color >= 2 && color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
+        hue = mp_led_hs[color - 2][0];
+        sat = mp_led_hs[color - 2][1];
+    }
+    const int32_t r2 = MP_GLOW_RADIUS * MP_GLOW_RADIUS;
     for (uint8_t i = led_min; i < led_max; i++) {
+        const int32_t dx = g_led_config.point[i].x - fx;
+        const int32_t dy = g_led_config.point[i].y - fy;
+        const int32_t d2 = dx * dx + dy * dy;
+        if (d2 >= r2) continue;
+        const int32_t level = (r2 - d2) * 256 / r2 * fade / 256; // 0..256
+        hsv_t         hsv   = {hue, sat, (uint8_t)((int32_t)rgb_matrix_get_val() * level / 256)};
+        rgb_t         rgb   = hsv_to_rgb(hsv);
         rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
     }
-    return false;
+}
+#endif
+
+bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max) {
+    mp_ensure_loaded();
+    bool          keep_going = true;
+    const uint8_t layer      = get_highest_layer(layer_state | default_layer_state);
+    const uint8_t color      = layer < ARRAY_SIZE(mp_config.led_layer_color) ? mp_config.led_layer_color[layer] : 0;
+    if (color != 0) { // 0: keep the running effect
+        rgb_t rgb = {0, 0, 0};
+        if (color >= 2 && color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
+            hsv_t hsv = {mp_led_hs[color - 2][0], mp_led_hs[color - 2][1], rgb_matrix_get_val()};
+            rgb       = hsv_to_rgb(hsv);
+        }
+        for (uint8_t i = led_min; i < led_max; i++) {
+            rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
+        }
+        keep_going = false;
+    }
+#ifdef MP_EDGES
+    mp_glow_render(led_min, led_max);
+#endif
+    return keep_going;
 }
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {

@@ -27,7 +27,9 @@ import {
   CAP_KNOB_PRESS_TURN,
   CAP_SENSOR_TUNING,
   CAP_SMOOTHING,
+  CAP_TOUCH_GLOW,
   fetchCapabilities,
+  LED_COLORS,
   probeProtocol,
 } from '../../../services/pointing/PointingSettings';
 import { hexadecimal } from '../../../utils/StringUtils';
@@ -603,6 +605,137 @@ export function SmoothnessCard(props: { keyboard: IKeyboard }) {
           'Tip: on Windows, turn off "Enhance pointer precision" (Settings > Bluetooth & devices > Mouse > Additional mouse settings > Pointer Options) so the acceleration here is not applied twice.'
         )}
       </p>
+    </section>
+  );
+}
+
+// Values 0x9A / 0x9B: light the keys under the finger on the touchpad.
+const GLOW_ID = 0x9a;
+const GLOW_COLOR_ID = 0x9b;
+
+// Layer LED tab: touch glow (firmware r18+).
+export function TouchGlowCard(props: { keyboard: IKeyboard }) {
+  const [glow, setGlow] = useState<number | null>(null);
+  const [color, setColor] = useState<number>(0);
+  const [supported, setSupported] = useState<boolean | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>('saved');
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ok =
+        (await probeProtocol(props.keyboard)) === 'supported' &&
+        ((await fetchCapabilities(props.keyboard)) ?? 0) & CAP_TOUCH_GLOW;
+      if (cancelled) return;
+      if (!ok) {
+        setSupported(false);
+        return;
+      }
+      const on = await props.keyboard.fetchCustomValue(GLOW_ID, 1);
+      const col = await props.keyboard.fetchCustomValue(GLOW_COLOR_ID, 1);
+      if (cancelled) return;
+      const good = on.success && !on.unhandled && col.success && !col.unhandled;
+      setSupported(good);
+      if (good) {
+        setGlow(on.value!);
+        setColor(col.value!);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [props.keyboard]);
+
+  const change = async (id: number, value: number) => {
+    if (id === GLOW_ID) setGlow(value);
+    else setColor(value);
+    setSaveState('busy');
+    const r = await props.keyboard.updateCustomValue(id, value, 1);
+    const saved =
+      r.success && (await props.keyboard.saveCustomValues()).success;
+    setSaveState(saved ? 'saved' : 'error');
+  };
+
+  // "Off" makes no sense for the glow; 0 follows the lighting color.
+  const swatches = LED_COLORS.filter((c) => c.value !== 1).map((c) => ({
+    ...c,
+    label: c.value === 0 ? t('Same as the lighting') : t(c.label),
+  }));
+
+  return (
+    <section className="pointing-card edge-knob-card">
+      <div className="pointing-card-header">
+        <h2>
+          {t('Touch glow')}
+          {glow !== null && <SaveChip state={saveState} />}
+        </h2>
+        <span>
+          {t(
+            'While a finger is on the touchpad, the keys at the matching place on the keyboard light up and fade out after you lift it. The whole keyboard works as a map of the touchpad.'
+          )}
+        </span>
+      </div>
+      {supported === false && (
+        <UpdateNotice keyboard={props.keyboard} revision={18} />
+      )}
+      {glow !== null && (
+        <>
+          <div className="pointing-row">
+            <div className="pointing-row-label">
+              <span className="label">{t('Light the touched position')}</span>
+              <span className="help">
+                {t(
+                  'Needs the RGB lighting to be on. Brightness follows the lighting brightness.'
+                )}
+              </span>
+            </div>
+            <div className="pointing-row-control">
+              <Switch
+                checked={glow === 1}
+                onChange={(_, checked) => change(GLOW_ID, checked ? 1 : 0)}
+                inputProps={{ 'aria-label': t('Light the touched position') }}
+              />
+            </div>
+          </div>
+          <div
+            className={['pointing-row', glow === 1 ? '' : 'not-applied']
+              .join(' ')
+              .trim()}
+          >
+            <div className="pointing-row-label">
+              <span className="label">{t('Glow color')}</span>
+            </div>
+            <div className="pointing-row-control">
+              <div
+                className="pointing-swatches"
+                role="group"
+                aria-label={t('Glow color')}
+              >
+                {swatches.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    className={[
+                      'pointing-swatch',
+                      c.value === 0 ? 'effect' : '',
+                    ]
+                      .join(' ')
+                      .trim()}
+                    style={{ backgroundColor: c.css }}
+                    title={c.label}
+                    aria-label={c.label}
+                    aria-pressed={color === c.value}
+                    disabled={glow !== 1}
+                    onClick={() => change(GLOW_COLOR_ID, c.value)}
+                  />
+                ))}
+                <span className="pointing-swatch-name">
+                  {swatches.find((c) => c.value === color)?.label}
+                </span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </section>
   );
 }
