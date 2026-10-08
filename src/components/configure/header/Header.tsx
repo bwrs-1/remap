@@ -17,10 +17,17 @@ import {
 } from '../../../services/storage/Storage';
 import ProfileIcon from '../../common/auth/ProfileIcon.container';
 import { t } from 'i18next';
+import KeymapSafetyDialog, {
+  checkKeymapBeforeFlash,
+  hasBlockingIssues,
+} from '../safety/KeymapSafetyDialog';
+import { SafetyIssue } from '../../../services/keymap/KeymapSafety';
 
 type HeaderState = {
   connectionStateEl: any;
   openInfoDialog: boolean;
+  // Keymap check shown before writing (problems or warnings found).
+  safetyIssues: SafetyIssue[] | null;
 };
 
 type OwnProps = {};
@@ -38,6 +45,7 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
     this.state = {
       connectionStateEl: null,
       openInfoDialog: false,
+      safetyIssues: null,
     };
     this.flashButtonRef = React.createRef<HTMLButtonElement>();
     this.deviceMenuRef = React.createRef<HTMLDivElement>();
@@ -75,10 +83,23 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
     this.props.onClickAnotherKeyboard!();
   }
 
-  private onClickFlash() {
-    if (this.hasKeysToFlash) {
-      this.props.onClickFlashButton!();
+  private async onClickFlash() {
+    if (!this.hasKeysToFlash) return;
+    let issues: SafetyIssue[] = [];
+    try {
+      issues = await checkKeymapBeforeFlash(
+        this.props.keymaps!,
+        this.props.remaps!,
+        this.props.keyboard || null
+      );
+    } catch (e) {
+      console.warn('Keymap check failed; writing anyway.', e);
     }
+    if (hasBlockingIssues(issues)) {
+      this.setState({ safetyIssues: issues });
+      return;
+    }
+    this.props.onClickFlashButton!();
   }
 
   private onClickKeyboardMenuItem(kbd: IKeyboard) {
@@ -249,6 +270,15 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
             <div className="dragMask header-height"></div>
           )}
           <ConnectionModal open={false} onClose={() => {}} />
+          <KeymapSafetyDialog
+            open={this.state.safetyIssues !== null}
+            issues={this.state.safetyIssues || []}
+            onCancel={() => this.setState({ safetyIssues: null })}
+            onProceed={() => {
+              this.setState({ safetyIssues: null });
+              this.props.onClickFlashButton!();
+            }}
+          />
         </header>
         <InfoDialog
           open={this.state.openInfoDialog}

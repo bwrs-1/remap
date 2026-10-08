@@ -10,7 +10,25 @@ EEPROM のユーザー用データブロックに保存します。プロトコ�
 > 設定のバージョン 1→2 移行、タップ/ホールド判定、スワイプ）を実施済み。
 > マルチタッチ版 QMK フォークでの Corne Procyon36 向けビルドも確認済み。**実機での動作は未確認**です。
 
-## リビジョン 12・13 の追加機能（任意）
+## フォーク本体への追加パッチ（リビジョン 14）
+
+[`../fork/0001-matrix-hires-scroll-and-sensor-tuning.patch`](../fork/0001-matrix-hires-scroll-and-sensor-tuning.patch)
+をマルチタッチ版 QMK フォーク（george-norton/qmk_firmware `multitouch_experiment`）に当てると、
+次が有効になります（当てなくてもビルドでき、その場合は機能が自動で無効になります）。
+
+- **高解像度スクロールの有効化要求の受け付け**: パソコンが Resolution Multiplier の Feature
+  レポートを書いたときだけ 1/120 目盛り単位で送ります（`usb_hires_scroll_enabled()`）。
+  フォーク本体のままだとマウス用インターフェース宛ての要求を STALL するため、パソコンは
+  有効化に失敗し、細かい単位が 1 目盛りとして扱われていました（r12 で約 120 倍速くなった原因）。
+- **タッチセンサーの実行中の調整**: `maxtouch_tune()` で T100 のしきい値と移動ヒステリシスを
+  書き換えます（エディタの「感度の詳細設定」）。
+
+```sh
+cd qmk_firmware   # multitouch_experiment
+git apply /path/to/remap/firmware/qmk/fork/0001-matrix-hires-scroll-and-sensor-tuning.patch
+```
+
+## リビジョン 12〜14 の追加機能（任意）
 
 `config.h` で有効にします（Corne Procyon36 の設定が実例です）。
 
@@ -21,10 +39,8 @@ EEPROM のユーザー用データブロックに保存します。プロトコ�
 #define MATRIX_POINTING_EXT_EEPROM_OFFSET 320
 #define MATRIX_POINTING_EDGE_ZONES               // タッチパッドの縁スライダー・四隅タップ（digitizer）
 #define MATRIX_POINTING_KNOB_KEYS { {3, 2}, {7, 3} } // ノブの押し込みスイッチ {行, 列}（ENCODER_MAP_ENABLE 必須）
-// 高解像度スクロール（1/120 目盛り）は任意。QMK はパソコン側が倍率を有効にしたか確認しないため、
-// 有効にしないパソコンでは約 120 倍速くスクロールする（Corne Procyon36 では使わない）
-// #define POINTING_DEVICE_HIRES_SCROLL_ENABLE
-// #define MOUSEKEY_WHEEL_DELTA 120
+// 高解像度スクロール（1/120 目盛り）。上記のフォーク用パッチが必要（パッチなしでは目盛り単位で動作）
+#define POINTING_DEVICE_HIRES_SCROLL_ENABLE
 ```
 
 - **なめらか補間**（`MATRIX_POINTING_NATIVE_CPI` 使用時）: センサーの報告を次の報告までの

@@ -38,7 +38,11 @@ import { SWIPE_KEYCODE_OPTIONS } from '../../../services/pointing/SwipeKeycodes'
 import { hexadecimal } from '../../../utils/StringUtils';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 import RgbMatrixCard from '../lighting/RgbMatrixCard';
-import { EdgeZonesCard, SmoothnessCard } from './EdgeKnobSettings';
+import {
+  EdgeZonesCard,
+  SensitivityCard,
+  SmoothnessCard,
+} from './EdgeKnobSettings';
 
 export type PointingSettingsMode = 'touchpad' | 'autoMouse' | 'timing' | 'leds';
 
@@ -617,6 +621,9 @@ export default function PointingSettings(props: PointingSettingsProps) {
         <div className="pointing-sections">
           {props.mode === 'touchpad' && live && props.keyboard && (
             <SmoothnessCard keyboard={props.keyboard} />
+          )}
+          {props.mode === 'touchpad' && live && props.keyboard && (
+            <SensitivityCard keyboard={props.keyboard} />
           )}
           {props.mode === 'touchpad' && live && props.keyboard && (
             <EdgeZonesCard keyboard={props.keyboard} />

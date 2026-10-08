@@ -11,6 +11,11 @@
 #include "eeconfig.h"
 #include "via.h"
 
+// Provided by the Matrix patches to the multitouch QMK fork
+// (firmware/qmk/fork/); without them these stay NULL and the features are off.
+__attribute__((weak)) void maxtouch_tune(uint8_t touch_threshold, uint16_t move_hysteresis_initial, uint16_t move_hysteresis_next);
+__attribute__((weak)) bool usb_hires_scroll_enabled(void);
+
 #if defined(POINTING_DEVICE_DRIVER_cirque_pinnacle_i2c) || defined(POINTING_DEVICE_DRIVER_cirque_pinnacle_spi)
 #    include "drivers/sensors/cirque_pinnacle_gestures.h"
 #    define MP_CIRQUE
@@ -51,7 +56,7 @@
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 13
+#define MP_REVISION 14
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -244,7 +249,23 @@ static bool        mp_loaded = false;
 #define MP_CORNER_COUNT 4 // top-left, top-right, bottom-left, bottom-right
 #define MP_KNOB_COUNT 2
 #define MP_EXT_MAGIC 0x4D5A // 'MZ'
-#define MP_EXT_VERSION 1
+#define MP_EXT_VERSION 2
+#define MP_EXT_V1_SIZE 39 // bytes covered by version 1 (up to `smooth`)
+#ifdef MXT_TOUCH_THRESHOLD
+#    define MP_DEFAULT_TOUCH_THRESHOLD MXT_TOUCH_THRESHOLD
+#else
+#    define MP_DEFAULT_TOUCH_THRESHOLD 20
+#endif
+#ifdef MXT_MOVE_HYSTERESIS_INITIAL
+#    define MP_DEFAULT_HYST_INITIAL MXT_MOVE_HYSTERESIS_INITIAL
+#else
+#    define MP_DEFAULT_HYST_INITIAL 10
+#endif
+#ifdef MXT_MOVE_HYSTERESIS_NEXT
+#    define MP_DEFAULT_HYST_NEXT MXT_MOVE_HYSTERESIS_NEXT
+#else
+#    define MP_DEFAULT_HYST_NEXT 4
+#endif
 
 typedef struct __attribute__((packed)) {
     uint16_t magic;
@@ -256,15 +277,50 @@ typedef struct __attribute__((packed)) {
     uint16_t corner_kc[MP_CORNER_COUNT];
     uint16_t knob_kc[MP_KNOB_COUNT][2]; // while pushed: [0] counter-clockwise, [1] clockwise
     uint8_t  smooth;                    // spread each sensor report over the next frame
+    // version 2 (revision 14)
+    uint8_t accel_slow;      // gain for slow movement, x0.1
+    uint8_t accel_fast;      // gain for fast movement, x0.1
+    uint8_t momentum_tau;    // momentum scrolling time constant, x10 ms
+    uint8_t touch_threshold; // touch sensor: how hard a touch must be (lower = lighter)
+    uint8_t hyst_initial;    // touch sensor: movement before a touch starts moving
+    uint8_t hyst_next;       // touch sensor: movement between position updates
 } mp_ext_t;
 _Static_assert(sizeof(mp_ext_t) <= 64, "mp_ext_t must fit 64 bytes");
+_Static_assert(offsetof(mp_ext_t, accel_slow) == MP_EXT_V1_SIZE, "extension version 1 layout changed");
+
+// Touch sensor tuning: written to the sensor from the housekeeping task on
+// the half it is wired to (the slave half gets the values over the split
+// sync), only when they change.
+static uint8_t mp_sensor_wanted[3]  = {0};
+static uint8_t mp_sensor_applied[3] = {0xFF, 0xFF, 0xFF};
+static bool    mp_sensor_have       = false;
+
+static void mp_sensor_request(uint8_t threshold, uint8_t hyst_initial, uint8_t hyst_next) {
+    mp_sensor_wanted[0] = threshold;
+    mp_sensor_wanted[1] = hyst_initial;
+    mp_sensor_wanted[2] = hyst_next;
+    mp_sensor_have      = true;
+}
+
+static void mp_sensor_task(void) {
+    if (!mp_sensor_have || !maxtouch_tune) return;
+    if (memcmp(mp_sensor_wanted, mp_sensor_applied, sizeof(mp_sensor_applied)) == 0) return;
+    maxtouch_tune(mp_sensor_wanted[0], mp_sensor_wanted[1], mp_sensor_wanted[2]);
+    memcpy(mp_sensor_applied, mp_sensor_wanted, sizeof(mp_sensor_applied));
+}
 
 static const mp_ext_t mp_ext_defaults = {
     .magic      = MP_EXT_MAGIC,
     .version    = MP_EXT_VERSION,
-    .edge_width = 12,
-    .edge_step  = 6,
-    .smooth     = 1,
+    .edge_width      = 12,
+    .edge_step       = 6,
+    .smooth          = 1,
+    .accel_slow      = 6,
+    .accel_fast      = 28,
+    .momentum_tau    = 20,
+    .touch_threshold = MP_DEFAULT_TOUCH_THRESHOLD,
+    .hyst_initial    = MP_DEFAULT_HYST_INITIAL,
+    .hyst_next       = MP_DEFAULT_HYST_NEXT,
 };
 static mp_ext_t mp_ext = {0};
 
@@ -272,16 +328,27 @@ static mp_ext_t mp_ext = {0};
 #    if (EECONFIG_USER_DATA_SIZE) < (MATRIX_POINTING_EXT_EEPROM_OFFSET + 64)
 #        error "Set EECONFIG_USER_DATA_SIZE to MATRIX_POINTING_EXT_EEPROM_OFFSET + 64"
 #    endif
-static uint8_t mp_ext_checksum(const mp_ext_t *e) {
+static uint8_t mp_ext_checksum_n(const mp_ext_t *e, uint8_t size) {
     const uint8_t *b   = (const uint8_t *)e;
     uint8_t        sum = 0xA5;
-    for (uint8_t i = 4; i < sizeof(mp_ext_t); i++) sum = (uint8_t)((sum << 1 | sum >> 7) ^ b[i]);
+    for (uint8_t i = 4; i < size; i++) sum = (uint8_t)((sum << 1 | sum >> 7) ^ b[i]);
     return sum;
+}
+static uint8_t mp_ext_checksum(const mp_ext_t *e) {
+    return mp_ext_checksum_n(e, sizeof(mp_ext_t));
 }
 
 static void mp_ext_save(void);
 static void mp_ext_load(void) {
     eeconfig_read_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
+    // Version 1 (revisions 12-13): keep its settings, new fields get defaults.
+    if (mp_ext.magic == MP_EXT_MAGIC && mp_ext.version == 1 && mp_ext.checksum == mp_ext_checksum_n(&mp_ext, MP_EXT_V1_SIZE)) {
+        mp_ext_t migrated = mp_ext_defaults;
+        memcpy((uint8_t *)&migrated + 4, (const uint8_t *)&mp_ext + 4, MP_EXT_V1_SIZE - 4);
+        mp_ext = migrated;
+        mp_ext_save();
+        return;
+    }
     // Fresh, or bytes left over from the dynamic keymap that used to be here.
     if (mp_ext.magic != MP_EXT_MAGIC || mp_ext.version != MP_EXT_VERSION || mp_ext.checksum != mp_ext_checksum(&mp_ext)) {
         mp_ext = mp_ext_defaults;
@@ -437,6 +504,10 @@ static uint32_t mp_capabilities(void) {
 #ifdef MP_EDGES
     caps |= MP_CAP(0x03); // momentum scrolling (needs the finger count)
 #endif
+#if defined(MATRIX_POINTING_NATIVE_CPI) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
+    caps |= 1UL << 27; // acceleration curve / momentum tuning (0x93..0x95)
+#endif
+    if (maxtouch_tune) caps |= 1UL << 26; // touch sensor tuning (0x96..0x98)
     return caps;
 }
 
@@ -463,6 +534,12 @@ static const mp_field_t mp_ext_fields[] = {
     MP_EXT_FIELD(0x90, knob_kc[1][0], 0, 0xFFFF),
     MP_EXT_FIELD(0x91, knob_kc[1][1], 0, 0xFFFF),
     MP_EXT_FIELD(0x92, smooth, 0, 1),
+    MP_EXT_FIELD(0x93, accel_slow, 3, 10),
+    MP_EXT_FIELD(0x94, accel_fast, 10, 50),
+    MP_EXT_FIELD(0x95, momentum_tau, 5, 60),
+    MP_EXT_FIELD(0x96, touch_threshold, 10, 80),
+    MP_EXT_FIELD(0x97, hyst_initial, 0, 40),
+    MP_EXT_FIELD(0x98, hyst_next, 0, 40),
 };
 
 static const mp_field_t *mp_find_ext_field(uint8_t id) {
@@ -526,6 +603,7 @@ static void mp_write_field(const mp_field_t *field, uint16_t value) {
 // Applies the settings that QMK can change at runtime. Settings without a
 // runtime API are stored and echoed back so the editor stays in sync.
 static void mp_apply(void) {
+    mp_sensor_request(mp_ext.touch_threshold, mp_ext.hyst_initial, mp_ext.hyst_next);
 #ifdef POINTING_DEVICE_ENABLE
 #    ifdef MATRIX_POINTING_NATIVE_CPI
     // Software speed: the driver keeps its own resolution (gestures such as
@@ -722,12 +800,13 @@ static int32_t  mp_scroll_pend_h = 0, mp_scroll_pend_v = 0;
 static uint16_t mp_scroll_until  = 0;
 static int32_t  mp_momentum_h = 0, mp_momentum_v = 0; // units per ms x65536
 
+// Wheel units per notch: fine units only once the host has turned the
+// multiplier on (otherwise every unit would be a whole notch).
 static int32_t mp_notch(void) {
 #    ifdef MP_HIRES
-    return pointing_device_get_hires_scroll_resolution();
-#    else
-    return 1;
+    if (usb_hires_scroll_enabled && usb_hires_scroll_enabled()) return pointing_device_get_hires_scroll_resolution();
 #    endif
+    return 1;
 }
 #endif
 
@@ -1145,8 +1224,10 @@ static void mp_config_changed(void) {
 }
 
 // Payload: mp_config_t, then (revision 12) the edge summary: width, step,
-// edge keycode mask, corner mask. Older slaves read only mp_config_t.
-#    define MP_SYNC_SIZE (sizeof(mp_config_t) + 4)
+// edge keycode mask, corner mask; (revision 14) the touch sensor tuning:
+// threshold, initial / next movement hysteresis, 1 = valid. Older slaves
+// read only what they know.
+#    define MP_SYNC_SIZE (sizeof(mp_config_t) + 8)
 _Static_assert(MP_SYNC_SIZE <= RPC_M2S_BUFFER_SIZE, "Set RPC_M2S_BUFFER_SIZE to at least 64 in config.h");
 
 static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
@@ -1162,6 +1243,10 @@ static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len
         mp_corner_mask_synced = extra[3];
     }
 #    endif
+    if (in_len >= MP_SYNC_SIZE) {
+        const uint8_t *extra = (const uint8_t *)in + sizeof(mp_config_t);
+        if (extra[7] == 1) mp_sensor_request(extra[4], extra[5], extra[6]);
+    }
 #    ifdef POINTING_DEVICE_DRIVER_digitizer
     extern bool digitizer_taps_as_clicks;
     digitizer_taps_as_clicks = mp_config.tap_to_click;
@@ -1232,6 +1317,10 @@ static void mp_split_housekeeping(void) {
 #    else
         memset(payload + sizeof(mp_config_t), 0, 4);
 #    endif
+        payload[sizeof(mp_config_t) + 4] = mp_ext.touch_threshold;
+        payload[sizeof(mp_config_t) + 5] = mp_ext.hyst_initial;
+        payload[sizeof(mp_config_t) + 6] = mp_ext.hyst_next;
+        payload[sizeof(mp_config_t) + 7] = 1;
         if (transaction_rpc_send(MP_SYNC_CONFIG, sizeof(payload), payload)) {
             mp_synced_generation = mp_generation;
         }
@@ -1340,6 +1429,7 @@ static __attribute__((unused)) report_mouse_t mp_add_drained(report_mouse_t r) {
 void matrix_pointing_housekeeping(void) {
     mp_drain();
     mp_split_housekeeping();
+    mp_sensor_task();
 }
 
 #ifndef MATRIX_POINTING_NO_HOUSEKEEPING
@@ -1689,7 +1779,9 @@ static uint8_t mp_filter_buttons(uint8_t buttons) {
 // Acceleration: gain (x256) for the finger speed (mm/s), interpolated:
 // slow movement is precise, fast movement goes far.
 static int32_t mp_accel_gain(int32_t mm_per_s) {
-    static const int16_t curve[][2] = {{0, 154}, {10, 154}, {50, 256}, {150, 460}, {400, 717}};
+    const int16_t slow    = (int16_t)mp_ext.accel_slow * 256 / 10;
+    const int16_t fast    = (int16_t)mp_ext.accel_fast * 256 / 10;
+    const int16_t curve[][2] = {{0, slow}, {10, slow}, {50, 256}, {150, (256 + fast) / 2}, {400, fast}};
     if (mm_per_s >= curve[ARRAY_SIZE(curve) - 1][0]) return curve[ARRAY_SIZE(curve) - 1][1];
     for (uint8_t i = 1; i < ARRAY_SIZE(curve); i++) {
         if (mm_per_s <= curve[i][0]) {
@@ -1820,8 +1912,10 @@ static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
         for (uint16_t i = 0; i < elapsed; i++) {
             mrem_h += mp_momentum_h;
             mrem_v += mp_momentum_v;
-            mp_momentum_h = (int32_t)((int64_t)mp_momentum_h * 199 / 200); // ~200 ms time constant
-            mp_momentum_v = (int32_t)((int64_t)mp_momentum_v * 199 / 200);
+            // time constant momentum_tau x 10 ms
+            const int32_t tau = (int32_t)mp_ext.momentum_tau * 10;
+            mp_momentum_h     = (int32_t)((int64_t)mp_momentum_h * (tau - 1) / tau);
+            mp_momentum_v     = (int32_t)((int64_t)mp_momentum_v * (tau - 1) / tau);
         }
         mp_scroll_pend_h += mrem_h / 65536;
         mp_scroll_pend_v += mrem_v / 65536;
