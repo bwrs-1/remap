@@ -1,0 +1,28 @@
+{
+  "name": "omniroute-env",
+  "version": "1.0.0",
+  "description": "Local AI Gateway workspace for OmniRoute and Claude Code routing",
+  "main": "index.js",
+  "scripts": {
+    "start:gateway": "npx omniroute serve --port 20128 --no-open --daemon",
+    "stop:gateway": "npx omniroute stop",
+    "restart:gateway": "npx omniroute restart --port 20128 --no-open --daemon",
+    "status:gateway": "npx omniroute status",
+    "health:gateway": "npx omniroute health",
+    "setup:claude": "npx omniroute setup-claude --port 20128",
+    "launch:claude": "npx omniroute launch --port 20128",
+    "test:connection": "bash ./test-connection.sh"
+  },
+  "dependencies": {
+    "omniroute": "^3.8.51"
+  },
+  "keywords": [
+    "omniroute",
+    "ai-gateway",
+    "claude-code",
+    "antigravity",
+    "llm-router"
+  ],
+  "author": "",
+  "license": "MIT"
+}
