@@ -4,17 +4,20 @@ import { useSyncExternalStore } from 'react';
 // Stored in this browser per keyboard (VID/PID); they are not sent to the
 // keyboard. LED colors on the keyboard itself are a separate firmware setting.
 
-// Accent palette (from the reference editor's layer dots).
+// Accent palette. Stored by index, so a layer keeps its hue when these
+// change. Darkened (v2, design canvas board 10) to be seen on the new
+// layout's grey panels (3.1:1 or more) and apart from its mint accent:
+// copper, blue, green, amber, pink, purple, red, teal, charcoal.
 export const LAYER_ACCENT_COLORS = [
-  'rgb(184,115,51)',
-  'rgb(88,166,255)',
-  'rgb(63,185,80)',
-  'rgb(210,153,34)',
-  'rgb(247,120,186)',
-  'rgb(163,113,247)',
-  'rgb(255,123,114)',
-  'rgb(14,165,164)',
-  'rgb(139,148,158)',
+  '#8d5129',
+  '#275db9',
+  '#366c1b',
+  '#795c03',
+  '#a83171',
+  '#7345c1',
+  '#b03229',
+  '#09646f',
+  '#383a3f',
 ] as const;
 
 export type LayerMeta = {
