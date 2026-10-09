@@ -1,0 +1,146 @@
+// Settings screens in the new layout (UI rebuild P5): Touchpad, Mouse Layer,
+// Timing & gestures, Layer LED colors, Combos and Knobs. Restyles the shared
+// screens inside .mx-shell only, so the classic layout keeps its look.
+
+$card-shadow:
+  inset 0 1px 0 rgba(255, 255, 255, 0.4),
+  0 6px 18px rgba(0, 0, 0, 0.1);
+
+.mx-shell .mx-shell-settings {
+  // The screen's cards sit on the main area directly (no card in a card).
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+
+  .pointing-settings {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    gap: 16px;
+  }
+
+  // The top bar already shows the screen's name; keep its description and
+  // actions (reset, saved state, add).
+  .pointing-title .pointing-title-text h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .pointing-title .pointing-title-text span {
+    font-size: 14px;
+    color: var(--mx-text-2);
+  }
+
+  .pointing-card {
+    border: 0;
+    border-radius: var(--mx-radius-l);
+    background-color: var(--mx-card);
+    box-shadow: $card-shadow;
+    overflow: hidden;
+  }
+  .pointing-card-header {
+    padding: 16px 20px;
+    border-bottom-color: var(--mx-border);
+    h2 {
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+
+  // Saved: mint chip with dark text. Busy and error keep their colors.
+  .pointing-save-state:not(.busy):not(.error) {
+    background-color: var(--mx-accent);
+    color: var(--mx-text);
+  }
+
+  // Preview: dark pad like the real one, big numbers.
+  .pointing-pad {
+    border: 0;
+    background-color: var(--mx-rail);
+    color: #ffffff;
+  }
+  .pointing-pad-ring {
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+  .pointing-summary {
+    div {
+      border-radius: 16px;
+      background-color: var(--mx-selected);
+    }
+    dt {
+      font-size: 12px;
+      color: var(--mx-text-2);
+    }
+    dd {
+      font-family: var(--mx-font);
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+    }
+  }
+
+  // Controls: pill selects, toggles and buttons; dark sliders and switches.
+  .pointing-select,
+  select {
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--mx-border);
+    border-radius: 999px;
+    background-color: var(--mx-field);
+    color: var(--mx-text);
+  }
+  .pointing-presets button {
+    border-color: var(--mx-border);
+    background: transparent;
+    color: var(--mx-text);
+    &[aria-pressed='true'] {
+      border-color: var(--mx-ink);
+      background: var(--mx-ink);
+      color: var(--mx-on-ink);
+    }
+  }
+  .MuiToggleButtonGroup-root {
+    padding: 3px;
+    border-radius: 999px;
+    background-color: var(--mx-field);
+  }
+  .MuiToggleButton-root {
+    margin: 0;
+    padding: 4px 14px;
+    border: 0;
+    border-radius: 999px !important;
+    color: var(--mx-text);
+    text-transform: none;
+    &.Mui-selected,
+    &.Mui-selected:hover {
+      background-color: var(--mx-ink);
+      color: var(--mx-on-ink);
+    }
+  }
+  .MuiButton-root {
+    border-radius: 999px;
+  }
+  .MuiButton-outlined {
+    border-color: var(--mx-border);
+    color: var(--mx-text);
+  }
+  .MuiButton-contained {
+    background-color: var(--mx-ink);
+    color: var(--mx-on-ink);
+    box-shadow: none;
+  }
+  .MuiSlider-root {
+    color: var(--mx-ink);
+  }
+  .MuiSwitch-switchBase.Mui-checked {
+    color: var(--mx-accent);
+    & + .MuiSwitch-track {
+      background-color: var(--mx-ink);
+      opacity: 1;
+    }
+  }
+}
