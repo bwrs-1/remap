@@ -29,6 +29,7 @@ import {
   RP2040_BOOT_VENDOR_ID,
 } from '../../../services/firmware/rp2040/Picoboot';
 import { requestBootloader } from '../../../services/pointing/PointingSettings';
+import { useFlashBackupOnOpen } from './FlashBackupBanner';
 
 // Firmware builds shipped with Matrix (public/firmware). See
 // firmware/qmk/corne_procyon36 for how they are built.
@@ -37,7 +38,7 @@ const BUNDLED_FIRMWARES: BundledFirmware[] = [
   {
     keyboard: 'Dilemma_3X6 (Corne Procyon36)',
     // Bump ?v= when the bundled file changes so browsers do not use a cached copy.
-    url: '/firmware/corne_procyon36_matrix.uf2?v=20',
+    url: '/firmware/corne_procyon36_matrix.uf2?v=21',
     fileName: 'corne_procyon36_matrix.uf2',
   },
 ];
@@ -64,6 +65,7 @@ const phaseLabel = (p: FlashProgress | null): string => {
 
 export default function FirmwareFlasherDialog() {
   const { open, keyboard } = useFirmwareFlasher();
+  useFlashBackupOnOpen(open, keyboard);
   const [fileName, setFileName] = useState<string>('');
   const [image, setImage] = useState<Uf2Image | null>(null);
   // The .uf2 file as loaded, for writing it onto the RPI-RP2 drive.
@@ -247,7 +249,7 @@ export default function FirmwareFlasherDialog() {
 
         <p className="firmware-flasher-note">
           {t(
-            'Writing new firmware resets the keymap stored in the keyboard to the firmware defaults. Export your keymap from the header first and import it again afterwards. For a split keyboard, write both halves.'
+            'The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves.'
           )}
         </p>
 

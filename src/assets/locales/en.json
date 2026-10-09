@@ -850,5 +850,10 @@
   "Unassigned keys": "Unassigned keys",
   "Brightness of the keys without an assignment. 0% turns them off.": "Brightness of the keys without an assignment. 0% turns them off.",
   "The key you hold to reach the layer stays lit. Needs the RGB lighting to be on.": "The key you hold to reach the layer stays lit. Needs the RGB lighting to be on.",
-  "Guide off": "Off"
+  "Guide off": "Off",
+  "Loaded the keymap from before the firmware update": "Loaded the keymap from before the firmware update",
+  "The keymap differs from the one saved before writing firmware ({{date}}) in {{count}} keys. Writing the firmware may have reset it.": "The keymap differs from the one saved before writing firmware ({{date}}) in {{count}} keys. Writing the firmware may have reset it.",
+  "Load the keymap from before": "Load the keymap from before",
+  "Keep the current keymap": "Keep the current keymap",
+  "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves.": "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves."
 }

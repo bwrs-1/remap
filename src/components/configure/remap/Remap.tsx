@@ -22,6 +22,7 @@ import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/state';
 import { SplitFirmwareBanner } from '../split/SplitFirmwareStatus';
+import { FlashBackupBanner } from '../firmware/FlashBackupBanner';
 import { KnobPanel } from '../pointing/EdgeKnobSettings';
 
 type OwnProp = {};
@@ -177,6 +178,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
           <div className="editor-main" ref={this.editorMainRef}>
             {!this.props.macroKey && <LayerBar />}
             <SplitBanner />
+            <FlashBackupBanner />
             {!this.props.macroKey && (
               <div
                 className="keyboard-scale"

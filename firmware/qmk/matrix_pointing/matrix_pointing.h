@@ -87,3 +87,8 @@ void matrix_pointing_housekeeping(void);
 // unless MATRIX_POINTING_NO_LED_HOOK).
 bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max);
 #endif
+
+// Called from via_init_kb() (unless MATRIX_POINTING_NO_VIA_INIT_KB): keeps the
+// keymap over a firmware update when a Matrix build with the same storage
+// layout wrote the EEPROM. Returns true when it did.
+bool matrix_pointing_keep_keymap(void);

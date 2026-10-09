@@ -56,7 +56,7 @@ __attribute__((weak)) bool usb_hires_scroll_enabled(void);
 // Read-only value 0x7C: revision of this module, so the editor can tell that
 // the keyboard runs an older build. Bump it with every behaviour change.
 #define MP_REVISION_VALUE_ID 0x7C
-#define MP_REVISION 20
+#define MP_REVISION 21
 // Read-only value 0x7D: the other half of a split keyboard —
 // [state, its revision (2), this build's ID (2), its build ID (2)];
 // state 0 = not known yet, 1 = known, 2 = it runs firmware without this
@@ -249,10 +249,34 @@ static bool        mp_loaded = false;
 #define MP_CORNER_COUNT 4 // top-left, top-right, bottom-left, bottom-right
 #define MP_KNOB_COUNT 2
 #define MP_EXT_MAGIC 0x4D5A // 'MZ'
+// What the keymap storage looks like: if any of these change, a saved keymap
+// cannot be kept over a firmware update (see via_init_kb()).
+#ifndef DYNAMIC_KEYMAP_LAYER_COUNT
+#    define MP_SIG_LAYERS 4
+#else
+#    define MP_SIG_LAYERS DYNAMIC_KEYMAP_LAYER_COUNT
+#endif
+#ifndef DYNAMIC_KEYMAP_MACRO_COUNT
+#    define MP_SIG_MACROS 16
+#else
+#    define MP_SIG_MACROS DYNAMIC_KEYMAP_MACRO_COUNT
+#endif
+#ifdef NUM_ENCODERS
+#    define MP_SIG_ENCODERS NUM_ENCODERS
+#else
+#    define MP_SIG_ENCODERS 0
+#endif
+#ifdef MATRIX_ROWS
+#    define MP_SIG_MATRIX ((MATRIX_ROWS << 6) ^ MATRIX_COLS)
+#else
+#    define MP_SIG_MATRIX 0
+#endif
+#define MP_LAYOUT_SIG ((uint16_t)(0x4C00 ^ (MP_SIG_LAYERS << 10) ^ MP_SIG_MATRIX ^ (MP_SIG_MACROS << 3) ^ (MP_SIG_ENCODERS << 13) ^ (EECONFIG_USER_DATA_SIZE >> 4)))
 #if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
 #    define MP_GUIDE // light only the assigned keys (revision 20)
 #endif
-#define MP_EXT_VERSION 6
+#define MP_EXT_VERSION 7
+#define MP_EXT_V6_SIZE 53 // version 6 (up to `key_guide_dim`)
 #define MP_EXT_V5_SIZE 50 // version 5 (up to `touch_glow_fade`)
 #define MP_EXT_V4_SIZE 48 // version 4 (up to `touch_glow_color`)
 #define MP_EXT_V3_SIZE 46 // version 3 (up to `precision_scale`)
@@ -303,6 +327,8 @@ typedef struct __attribute__((packed)) {
     uint8_t key_guide;       // light only assigned keys: 0 off, 1 on layers above the base, 2 always
     uint8_t key_guide_color; // 0 = keep the colors, 1 = color by the kind of key
     uint8_t key_guide_dim;   // brightness of unassigned keys, % (0 = off)
+    // version 7 (revision 21)
+    uint16_t layout_sig; // MP_LAYOUT_SIG of the build that wrote the block
 } mp_ext_t;
 _Static_assert(sizeof(mp_ext_t) <= 64, "mp_ext_t must fit 64 bytes");
 _Static_assert(offsetof(mp_ext_t, accel_slow) == MP_EXT_V1_SIZE, "extension version 1 layout changed");
@@ -310,6 +336,7 @@ _Static_assert(offsetof(mp_ext_t, precision_scale) == MP_EXT_V2_SIZE, "extension
 _Static_assert(offsetof(mp_ext_t, touch_glow) == MP_EXT_V3_SIZE, "extension version 3 layout changed");
 _Static_assert(offsetof(mp_ext_t, touch_glow_radius) == MP_EXT_V4_SIZE, "extension version 4 layout changed");
 _Static_assert(offsetof(mp_ext_t, key_guide) == MP_EXT_V5_SIZE, "extension version 5 layout changed");
+_Static_assert(offsetof(mp_ext_t, layout_sig) == MP_EXT_V6_SIZE, "extension version 6 layout changed");
 
 // Touch sensor tuning: written to the sensor from the housekeeping task on
 // the half it is wired to (the slave half gets the values over the split
@@ -349,6 +376,7 @@ static const mp_ext_t mp_ext_defaults = {
     .touch_glow_radius = 28,
     .touch_glow_fade   = 30,
     .key_guide         = 1,
+    .layout_sig        = MP_LAYOUT_SIG,
 };
 static mp_ext_t mp_ext = {0};
 
@@ -371,7 +399,7 @@ static void mp_ext_load(void) {
     eeconfig_read_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
     // Older versions (1: revisions 12-13, 2: 14-16): keep their settings,
     // new fields get defaults.
-    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE, MP_EXT_V4_SIZE, MP_EXT_V5_SIZE};
+    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE, MP_EXT_V4_SIZE, MP_EXT_V5_SIZE, MP_EXT_V6_SIZE};
     if (mp_ext.magic == MP_EXT_MAGIC && mp_ext.version >= 1 && mp_ext.version < MP_EXT_VERSION) {
         const uint8_t size = old_sizes[mp_ext.version];
         if (mp_ext.checksum == mp_ext_checksum_n(&mp_ext, size)) {
@@ -407,6 +435,34 @@ static void mp_ext_load(void) {
     mp_ext = mp_ext_defaults;
 }
 static void mp_ext_save(void) {}
+#endif
+
+#if defined(VIA_ENABLE) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
+// Keep the keymap over firmware updates (revision 21). VIA accepts its saved
+// data only when the build date matches, so every new build reset the
+// keymaps and macros to the defaults. When the extension block shows that a
+// Matrix build with the same storage layout wrote this EEPROM, mark VIA's
+// data valid for this build before VIA checks it. Blocks of versions 1-6
+// (revisions 12-20) have no layout signature; those builds all used the
+// layout of this one (8 layers, the same matrix, 384 bytes of user data).
+bool matrix_pointing_keep_keymap(void) {
+    if (via_eeprom_is_valid()) return false;
+    mp_ext_t block;
+    eeconfig_read_user_datablock(&block, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(block));
+    static const uint8_t sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE, MP_EXT_V4_SIZE, MP_EXT_V5_SIZE, MP_EXT_V6_SIZE, sizeof(mp_ext_t)};
+    _Static_assert(ARRAY_SIZE(sizes) == MP_EXT_VERSION + 1, "add the size of the new extension version");
+    if (block.magic != MP_EXT_MAGIC || block.version < 1 || block.version > MP_EXT_VERSION) return false;
+    if (block.checksum != mp_ext_checksum_n(&block, sizes[block.version])) return false;
+    if (block.version >= 7 && block.layout_sig != MP_LAYOUT_SIG) return false;
+    via_eeprom_set_valid(true);
+    return true;
+}
+
+#    ifndef MATRIX_POINTING_NO_VIA_INIT_KB
+void via_init_kb(void) {
+    matrix_pointing_keep_keymap();
+}
+#    endif
 #endif
 
 // Writing any value to 0x7F reboots into the bootloader (RP2040: BOOTSEL),

@@ -943,5 +943,10 @@
   "Unassigned keys": "割り当てのないキー",
   "Brightness of the keys without an assignment. 0% turns them off.": "割り当てのないキーの明るさ。0% で消灯します。",
   "The key you hold to reach the layer stays lit. Needs the RGB lighting to be on.": "レイヤーを切り替えるために押しているキーは光ったままです。RGB ライティングがオンのときに動作します。",
-  "Guide off": "オフ"
+  "Guide off": "オフ",
+  "Loaded the keymap from before the firmware update": "ファームウェア更新前のキーマップを読み込みました",
+  "The keymap differs from the one saved before writing firmware ({{date}}) in {{count}} keys. Writing the firmware may have reset it.": "ファームウェアを書き込む前（{{date}}）に保存したキーマップと {{count}} 箇所違います。書き込みでキーマップが初期化された可能性があります。",
+  "Load the keymap from before": "書き込み前のキーマップを読み込む",
+  "Keep the current keymap": "今のキーマップのままにする",
+  "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves.": "今のキーマップをこのブラウザに保存しました。Matrix ファームウェア r21 以降は、更新してもキーマップが保持されます。それより古いファームウェアでは初期化されますが、再接続後に保存したキーマップを読み込めるよう案内します。分割キーボードは左右両方に書き込んでください。"
 }
