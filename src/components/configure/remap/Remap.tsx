@@ -22,7 +22,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/state';
 import { SplitFirmwareBanner } from '../split/SplitFirmwareStatus';
 import { FlashBackupBanner } from '../firmware/FlashBackupBanner';
-import { KnobPanel } from '../pointing/EdgeKnobSettings';
+import { KnobPanel } from '../pointing/KnobPanel';
 import {
   ConfigureView,
   DEFAULT_KEYBOARD_SCALE,
