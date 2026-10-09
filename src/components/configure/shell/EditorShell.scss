@@ -359,10 +359,11 @@ $card-shadow:
     }
   }
 }
+// Top left: the keyboard's own label language menu is at the top right.
 .mx-shell-scale {
   position: absolute;
   top: 12px;
-  right: 16px;
+  left: 16px;
   z-index: 2;
 }
 .mx-shell-keycodes {

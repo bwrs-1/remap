@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { t } from 'i18next';
 import { Menu, MenuItem } from '@mui/material';
 import './EditorShell.scss';
+import './KeyConfigTheme.scss';
 import { RootState } from '../../../store/state';
 import {
   AppActionsThunk,
