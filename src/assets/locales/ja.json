@@ -948,5 +948,11 @@
   "The keymap differs from the one saved before writing firmware ({{date}}) in {{count}} keys. Writing the firmware may have reset it.": "ファームウェアを書き込む前（{{date}}）に保存したキーマップと {{count}} 箇所違います。書き込みでキーマップが初期化された可能性があります。",
   "Load the keymap from before": "書き込み前のキーマップを読み込む",
   "Keep the current keymap": "今のキーマップのままにする",
-  "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves.": "今のキーマップをこのブラウザに保存しました。Matrix ファームウェア r21 以降は、更新してもキーマップが保持されます。それより古いファームウェアでは初期化されますが、再接続後に保存したキーマップを読み込めるよう案内します。分割キーボードは左右両方に書き込んでください。"
+  "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves.": "今のキーマップをこのブラウザに保存しました。Matrix ファームウェア r21 以降は、更新してもキーマップが保持されます。それより古いファームウェアでは初期化されますが、再接続後に保存したキーマップを読み込めるよう案内します。分割キーボードは左右両方に書き込んでください。",
+  "Screens": "画面",
+  "Back to the classic layout": "従来のレイアウトに戻す",
+  "Keyboard information": "キーボードの情報",
+  "Writing...": "反映中…",
+  "Write to keyboard": "キーボードに反映",
+  "Try the new layout": "新しいレイアウトを試す"
 }

@@ -21,6 +21,8 @@ import { Button, CssBaseline } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { APPLICATION_NAME } from '../../utils/Brand';
 import FirmwareFlasherDialog from './firmware/FirmwareFlasherDialog';
+import { useUiLayout } from '../../services/ui/UiLayout';
+import { SetupPhase } from '../../store/state';
 
 type OwnProps = {};
 type ConfigureProps = OwnProps &
@@ -33,6 +35,9 @@ function Configure(props: ConfigureProps) {
     string[]
   >([]);
   const [supportedBrowser, setSupportedBrowser] = useState<boolean>(true);
+  // The new layout draws its own header (see Content).
+  const shell =
+    useUiLayout() === 'shell' && props.setupPhase === SetupPhase.openedKeyboard;
 
   const storeDisplayedNotification = (key: string) => {
     setDisplayedNotificationIds([...displayedNotificationIds, key]);
@@ -157,7 +162,7 @@ function Configure(props: ConfigureProps) {
     <React.Fragment>
       <div className="configure-root">
         <CssBaseline />
-        <Header />
+        {!shell && <Header />}
         <main>
           <Content />
         </main>

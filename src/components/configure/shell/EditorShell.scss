@@ -1,0 +1,400 @@
+// The redesigned editor. Colors come from the --mx-* tokens, which
+// MxTokenStyles sets to the new layout's values on .mx-shell.
+
+.mx-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  box-sizing: border-box;
+  background-color: var(--mx-ground);
+  color: var(--mx-text);
+  font-family: var(--mx-font);
+
+  button {
+    font-family: inherit;
+  }
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--mx-ink);
+    outline-offset: 2px;
+  }
+}
+
+$panel-shadow:
+  inset 0 1px 0 rgba(255, 255, 255, 0.3),
+  0 10px 30px rgba(0, 0, 0, 0.14);
+$card-shadow:
+  inset 0 1px 0 rgba(255, 255, 255, 0.4),
+  0 6px 18px rgba(0, 0, 0, 0.1);
+
+// Icon rail
+.mx-shell-rail-case {
+  flex: none;
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: var(--mx-radius-xl);
+  background-color: var(--mx-rail-case);
+  box-shadow: $panel-shadow;
+}
+.mx-shell-rail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0;
+  border-radius: 22px;
+  background-color: var(--mx-rail);
+  overflow-y: auto;
+}
+.mx-shell-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: var(--mx-accent);
+  color: var(--mx-text);
+  font-family: var(--mx-font-mono);
+  font-weight: 600;
+}
+.mx-shell-rail-divider {
+  width: 30px;
+  height: 1px;
+  margin: 6px 0 8px;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+.mx-shell-rail-button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--mx-rail-icon);
+  cursor: pointer;
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  &[aria-current='page'] {
+    background-color: var(--mx-rail-active);
+    color: #ffffff;
+  }
+  &:focus-visible {
+    outline-color: var(--mx-accent);
+  }
+}
+.mx-shell-firmware {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 64px;
+  border: 0;
+  border-radius: 22px;
+  background-color: var(--mx-rail);
+  color: var(--mx-rail-icon);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  &:hover {
+    color: #ffffff;
+  }
+  &:focus-visible {
+    outline-color: var(--mx-accent);
+  }
+}
+
+// Side panel: keyboard and layers
+.mx-shell-side {
+  flex: none;
+  width: 248px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 14px;
+  box-sizing: border-box;
+  border-radius: var(--mx-radius-xl);
+  background-color: var(--mx-panel);
+  box-shadow: $panel-shadow;
+  overflow-y: auto;
+
+  // The classic side bar, reused for the layers.
+  .editor-sidebar.embedded {
+    flex: none;
+    width: auto;
+    padding: 0;
+    gap: 16px;
+    background: transparent;
+    border: 0;
+    overflow: visible;
+  }
+}
+.mx-shell-device {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mx-shell-device-button {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--mx-radius-m);
+  background-color: var(--mx-selected);
+  color: var(--mx-text);
+  text-align: left;
+  cursor: pointer;
+}
+.mx-shell-device-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mx-shell-device-ids {
+  font-family: var(--mx-font-mono);
+  font-size: 11px;
+  color: var(--mx-text-2);
+}
+.mx-shell-icon-button {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--mx-border);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--mx-text);
+  font-family: var(--mx-font-mono);
+  cursor: pointer;
+}
+.mx-shell-side-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--mx-border);
+  font-size: 12px;
+  color: var(--mx-text-2);
+  .license-link {
+    color: var(--mx-text-2);
+  }
+}
+.mx-shell-connection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mx-text);
+}
+.mx-shell-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--mx-ok);
+}
+.mx-shell-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mx-text-2);
+  font-size: 12px;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+// Main area
+.mx-shell-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 24px;
+  box-sizing: border-box;
+  border-radius: var(--mx-radius-xl);
+  background-color: var(--mx-surface);
+  box-shadow: $panel-shadow;
+  overflow: auto;
+}
+.mx-shell-topbar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.mx-shell-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+}
+.mx-shell-layer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background-color: var(--mx-ink);
+  color: var(--mx-on-ink);
+  font-size: 13px;
+}
+.mx-shell-layer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+.mx-shell-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.mx-shell-apply {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 24px;
+  background-color: var(--mx-ink);
+  color: var(--mx-on-ink);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  &:has(.mx-shell-apply-count) {
+    padding-right: 8px;
+  }
+  &:disabled {
+    box-shadow: none;
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+.mx-shell-apply-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  background-color: var(--mx-accent);
+  color: var(--mx-text);
+  font-family: var(--mx-font-mono);
+}
+
+.mx-shell-card {
+  border-radius: var(--mx-radius-l);
+  background-color: var(--mx-card);
+  box-shadow: $card-shadow;
+}
+.mx-shell-keyboard {
+  position: relative;
+  flex: none;
+  padding: 12px 8px 16px;
+  overflow-x: auto;
+}
+.mx-shell-segment {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background-color: var(--mx-field);
+  button {
+    min-width: 28px;
+    height: 24px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--mx-text);
+    font-size: 12px;
+    cursor: pointer;
+    &[aria-pressed='true'] {
+      background-color: var(--mx-ink);
+      color: var(--mx-on-ink);
+    }
+  }
+}
+.mx-shell-scale {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 2;
+}
+.mx-shell-keycodes {
+  flex: 1 0 260px;
+  min-height: 0;
+  display: flex;
+  gap: 14px;
+}
+.mx-shell-inspector {
+  flex: none;
+  width: 320px;
+  overflow: auto;
+  .key-inspector {
+    background: transparent;
+    border: 0;
+  }
+}
+.mx-shell-palette {
+  flex: 1;
+  min-width: 0;
+  padding: 8px;
+  overflow: auto;
+  // Keycodes keeps the palette at least as wide as the keyboard (inline
+  // style), and a wrapping column makes each row as wide as all its keys.
+  // Beside the selected key here, the rows fit the card and the keys wrap.
+  .keycodes {
+    flex-wrap: nowrap;
+    min-width: 0 !important;
+  }
+}
+.mx-shell-settings {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}

@@ -8,6 +8,7 @@ import { initReactI18next } from 'react-i18next';
 import enJson from './assets/locales/en.json';
 import jaJson from './assets/locales/ja.json';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { useUiLayout } from './services/ui/UiLayout';
 
 i18n
   .use(LanguageDetector)
@@ -28,22 +29,7 @@ i18n
 class App extends React.Component<{}, {}> {
   render() {
     return (
-      <SnackbarProvider
-        dense
-        preventDuplicate
-        hideIconVariant
-        maxSnack={4}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        classes={{
-          variantSuccess: 'mx-snackbar-success',
-          variantError: 'mx-snackbar-error',
-          variantWarning: 'mx-snackbar-warning',
-          variantInfo: 'mx-snackbar-info',
-        }}
-      >
+      <Snackbars>
         {/* Matrix ships only the keyboard editor: it is the top page, and
             every other path (including the old /configure) goes there. */}
         <BrowserRouter>
@@ -52,8 +38,34 @@ class App extends React.Component<{}, {}> {
             <Route path="/*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </SnackbarProvider>
+      </Snackbars>
     );
   }
 }
 export default App;
+
+// Notifications. The new layout keeps its main button at the top right, so
+// they appear at the bottom right there.
+function Snackbars(props: { children: React.ReactNode }) {
+  const layout = useUiLayout();
+  return (
+    <SnackbarProvider
+      dense
+      preventDuplicate
+      hideIconVariant
+      maxSnack={4}
+      anchorOrigin={{
+        vertical: layout === 'shell' ? 'bottom' : 'top',
+        horizontal: 'right',
+      }}
+      classes={{
+        variantSuccess: 'mx-snackbar-success',
+        variantError: 'mx-snackbar-error',
+        variantWarning: 'mx-snackbar-warning',
+        variantInfo: 'mx-snackbar-info',
+      }}
+    >
+      {props.children}
+    </SnackbarProvider>
+  );
+}

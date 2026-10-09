@@ -32,7 +32,11 @@ import {
 } from './EditorSidebar.container';
 
 type EditorSidebarProps = Partial<EditorSidebarStateType> &
-  Partial<EditorSidebarActionsType>;
+  Partial<EditorSidebarActionsType> & {
+    // In the new layout's side panel: layers only; the connection state and
+    // the firmware button live elsewhere there.
+    embedded?: boolean;
+  };
 
 export default function EditorSidebar(props: EditorSidebarProps) {
   const layerCount = Number.isNaN(props.layerCount) ? 0 : props.layerCount!;
@@ -75,7 +79,12 @@ export default function EditorSidebar(props: EditorSidebarProps) {
   };
 
   return (
-    <nav className="editor-sidebar" aria-label={t('Settings')}>
+    <nav
+      className={['editor-sidebar', props.embedded ? 'embedded' : '']
+        .join(' ')
+        .trim()}
+      aria-label={props.embedded ? t('Layers') : t('Settings')}
+    >
       <section className="editor-sidebar-section">
         <div className="editor-sidebar-heading">
           <h2>{t('Layers')}</h2>
@@ -135,22 +144,26 @@ export default function EditorSidebar(props: EditorSidebarProps) {
         )}
       </section>
 
-      <div className="editor-sidebar-connection">
-        <div className="editor-sidebar-connection-state">
-          <span className="connection-dot" aria-hidden="true" />
-          <span>USB · {t('Connected')}</span>
-        </div>
-        <SplitFirmwareLine keyboard={props.keyboard || null} />
-        <button
-          type="button"
-          className="editor-sidebar-primary"
-          onClick={() => firmwareFlasherStore.open(props.keyboard || null)}
-        >
-          {t('Write firmware')}
-        </button>
+      {props.embedded ? (
         <SavedDefinition keyboard={props.keyboard} />
-        <LicenseLink />
-      </div>
+      ) : (
+        <div className="editor-sidebar-connection">
+          <div className="editor-sidebar-connection-state">
+            <span className="connection-dot" aria-hidden="true" />
+            <span>USB · {t('Connected')}</span>
+          </div>
+          <SplitFirmwareLine keyboard={props.keyboard || null} />
+          <button
+            type="button"
+            className="editor-sidebar-primary"
+            onClick={() => firmwareFlasherStore.open(props.keyboard || null)}
+          >
+            {t('Write firmware')}
+          </button>
+          <SavedDefinition keyboard={props.keyboard} />
+          <LicenseLink />
+        </div>
+      )}
     </nav>
   );
 }
