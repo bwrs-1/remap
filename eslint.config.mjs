@@ -57,6 +57,12 @@ export default [...fixupConfigRules(compat.extends(
         },
     },
 
+    settings: {
+        react: {
+            version: "detect",
+        },
+    },
+
     rules: {
         "prettier/prettier": ["warn", {}, {
             usePrettierrc: true,
@@ -64,6 +70,23 @@ export default [...fixupConfigRules(compat.extends(
 
         "no-unused-vars": "off",
         "react/prop-types": "warn",
+        "react/no-unknown-property": [
+            "error",
+            {
+                ignore: [
+                    "object",
+                    "dispose",
+                    "position",
+                    "rotation",
+                    "intensity",
+                    "castShadow",
+                    "receiveShadow",
+                    "shadow-mapSize",
+                    "args",
+                    "attach",
+                ],
+            },
+        ],
         "@typescript-eslint/no-unused-vars": [
           "warn",
           {

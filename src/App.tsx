@@ -3,6 +3,7 @@ import { SnackbarProvider } from 'notistack';
 // import './App.css';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import Configure from './components/configure/Configure.container';
+import Keyboard3DViewer from './components/keyboard3d/Keyboard3DViewer';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import enJson from './assets/locales/en.json';
@@ -35,6 +36,7 @@ class App extends React.Component<{}, {}> {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Configure />} />
+            <Route path="/3d" element={<Keyboard3DViewer />} />
             <Route path="/*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
