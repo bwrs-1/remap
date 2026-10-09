@@ -1,0 +1,1491 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Keys · Combos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=IBM+Plex+Sans+JP:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#e9ecf1}
+a{color:#0e0e10}a:hover{color:#3b3d42}
+button,input,select{font-family:inherit}
+button:disabled{cursor:default}
+.mx-root{--px:clamp(14px,2vw,28px);--py:clamp(10px,2vh,24px);--ind:clamp(0px,calc((100vw - 1100px) * .5),116px);height:100vh;height:100dvh;box-sizing:border-box;padding:clamp(6px,2.4vh,32px) clamp(6px,2.2vw,32px);display:flex;background:#e9ecf1;font-family:'Manrope','IBM Plex Sans JP',system-ui,sans-serif;color:#0e0e10}
+.mx-panel{flex:1;min-width:0;min-height:0;max-width:1376px;margin:0 auto;position:relative;overflow:clip;background:#f5f6f8;border-radius:clamp(18px,3vh,32px);padding:var(--py) var(--px) 0;box-sizing:border-box;display:flex;flex-direction:column}
+.mx-hdr{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.mx-top{position:relative;flex:none;z-index:30;margin:calc(-1 * var(--py)) calc(-1 * var(--px)) 0;padding:var(--py) var(--px) 0;background:rgba(245,246,248,.55);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
+.mx-top.scrolled{box-shadow:0 10px 30px rgba(20,24,40,.06)}
+.mx-mini{display:flex;align-items:center;gap:18px;font-size:15px;font-weight:700;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.mx-mini.show{opacity:1;transform:none;pointer-events:auto}
+.mx-mini a{color:#8f9197;text-decoration:none;transition:color .25s ease}.mx-mini a:hover,.mx-mini a[aria-current]{color:#0e0e10}
+.mx-mini i{font-style:normal;color:#c5c8ce;font-weight:500}.mx-mini b{font-weight:600;font-size:14px}
+.mx-hgrp{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mx-ib{width:44px;height:44px;border:none;border-radius:22px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(20,24,40,.06);cursor:pointer;color:#0e0e10;flex:none}
+.mx-ib.off{opacity:.4}
+.mx-hbtn{height:44px;border:none;border-radius:22px;background:#fff;display:flex;align-items:center;gap:10px;padding:0 14px 0 6px;box-shadow:0 2px 8px rgba(20,24,40,.06);font-size:14px;font-weight:600;color:#0e0e10;cursor:pointer}
+.mx-hbtn .mx-dot32{width:32px;height:32px;border-radius:16px;background:#0e0e10;display:flex;align-items:center;justify-content:center}
+.mx-chip{height:32px;border-radius:16px;background:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px;padding:0 12px;font-size:12px;color:#4a4d54}
+.mx-big{position:relative;display:flex;align-items:baseline;gap:clamp(14px,2.2vw,32px);margin:clamp(8px,2.6vh,30px) 0 0 var(--ind);flex-wrap:wrap}
+.mx-big button,.mx-subnav button{border:none;background:none;padding:0;margin:0;font:inherit;cursor:pointer}
+.mx-big a,.mx-big button{font-size:clamp(24px,min(5.2vh,4.2vw),52px);font-weight:700;letter-spacing:-.02em;line-height:1.05;color:#8f9197;text-decoration:none;transition:color .25s ease}
+.mx-big a:hover,.mx-big a[aria-current],.mx-big button:hover,.mx-big button.cur{color:#0e0e10}
+.mx-big button{transition:color .45s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+.mx-big button.cur{transform:translateY(-1px)}
+.mx-subnav{position:relative;display:flex;gap:clamp(14px,1.8vw,26px);margin:clamp(6px,1.4vh,16px) 0 0 var(--ind);font-size:14px;font-weight:600;flex-wrap:wrap}
+.mx-subnav a,.mx-subnav button{color:#4a4d54;text-decoration:none;padding-bottom:9px;transition:color .25s ease;display:flex;flex-direction:column;gap:9px}
+.mx-subnav a:hover,.mx-subnav a[aria-current],.mx-subnav button:hover,.mx-subnav button.cur{color:#0e0e10}
+.mx-subnav a[aria-current]::after,.mx-subnav button.cur::after{content:'';height:2px;background:#0e0e10;margin-bottom:-9px;transform-origin:left center;animation:mx-line .5s cubic-bezier(.2,.8,.2,1) .3s backwards}
+.mx-rule{position:relative;height:1px;background:#e1e3e8;margin:0 calc(-1 * var(--px))}
+.mx-main{position:relative;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;margin:clamp(10px,2.4vh,32px) calc(-1 * var(--px)) 0 var(--ind);padding:0 var(--px) 14px 0;max-width:none;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
+.mx-main::-webkit-scrollbar{display:none}
+.mx-main>*{flex-shrink:0}
+.mx-main *{scrollbar-width:none}
+.mx-main *::-webkit-scrollbar{display:none}
+.mx-card{background:#fff;border-radius:28px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;min-width:0}
+.mx-h1{margin:0;font-size:19px;font-weight:600;display:flex;align-items:center;gap:10px}
+.mx-sub{font-size:13px;color:#6b6e75;line-height:1.6}
+.mx-pill{height:36px;border-radius:18px;padding:0 16px;cursor:pointer;border:1px solid #e1e3e8;background:#fff;color:#0e0e10;font-size:13px;font-weight:600;white-space:nowrap}
+.mx-pill.on{border-color:#0e0e10;background:#0e0e10;color:#fff}
+.mx-pill.sm{height:32px;padding:0 12px;font-size:12px}
+.mx-dots{width:36px;height:36px;border:1px solid #e1e3e8;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;flex:none}
+.mx-dots::before,.mx-dots::after{content:'';width:4px;height:4px;border-radius:2px;background:#0e0e10}
+.mx-tool{height:36px;border:1px solid #e1e3e8;border-radius:18px;background:#fff;display:flex;align-items:center;gap:6px;padding:0 12px;font-size:12px;font-weight:600;color:#0e0e10;cursor:pointer;white-space:nowrap}
+.mx-tool:disabled{color:#b5b8be}
+.mx-menu{position:absolute;top:52px;min-width:260px;background:#fff;border-radius:18px;padding:6px;box-shadow:0 18px 48px rgba(20,24,40,.16),0 2px 6px rgba(20,24,40,.06);animation:mx-menu .22s cubic-bezier(.2,.8,.2,1);z-index:31}
+.mx-menu.r{right:0;transform-origin:top right}.mx-menu.l{left:0;transform-origin:top left}
+.mx-mi{display:flex;align-items:center;gap:10px;width:100%;height:42px;padding:0 12px;border:none;border-radius:12px;background:transparent;font-size:14px;color:#0e0e10;cursor:pointer;text-decoration:none;box-sizing:border-box;text-align:left;transition:background-color .15s ease;position:relative}
+.mx-mi:hover:not(:disabled){background:#f2f3f6}
+.mx-mi:disabled{color:#b5b8be}
+.mx-mi.danger{color:#a33a2c}
+.mx-sep{height:1px;background:#eceef2;margin:4px 8px}
+.mx-seg{display:flex;gap:6px;flex-wrap:wrap}
+.mx-sel{height:36px;border:1px solid #e1e3e8;border-radius:18px;background:#fff;padding:0 12px;font-size:13px;color:#0e0e10;max-width:100%}
+.mx-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;background:#f5f6f8;border-radius:14px;font-size:13px}
+.mx-foot{position:relative;flex:none;z-index:29;display:flex;justify-content:space-between;align-items:center;margin:0 calc(-1 * var(--px));padding:clamp(8px,1.4vh,14px) var(--px);gap:12px;flex-wrap:wrap;background:rgba(245,246,248,.8);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-radius:0 0 32px 32px;animation:mx-in .6s cubic-bezier(.2,.8,.2,1) .45s backwards}
+.mx-status{height:32px;border-radius:16px;background:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;padding:0 14px;font-size:13px;color:#4a4d54}
+.mx-primary{height:48px;border:none;border-radius:24px;background:#0e0e10;color:#fff;display:flex;align-items:center;gap:12px;padding:0 8px 0 24px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(14,14,16,.18);text-decoration:none}
+.mx-primary:hover{color:#fff}
+.mx-primary.idle{opacity:.55}
+.mx-help{position:absolute;bottom:54px;left:0;width:340px;background:#0e0e10;color:#fff;border-radius:20px;padding:18px 20px;box-sizing:border-box;box-shadow:0 18px 48px rgba(20,24,40,.28);animation:mx-menu .22s cubic-bezier(.2,.8,.2,1);transform-origin:bottom left;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.7;z-index:31}
+.mx-toast{position:fixed;right:56px;bottom:104px;z-index:45;display:flex;align-items:center;gap:10px;padding:12px 18px 12px 12px;border-radius:18px;background:#0e0e10;color:#fff;font-size:13px;box-shadow:0 18px 40px rgba(14,14,16,.25)}
+.mx-toast i{width:22px;height:22px;border-radius:11px;background:#1f8a55;display:flex;align-items:center;justify-content:center;flex:none}
+.mx-scrimwrap{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}
+.mx-scrim{position:absolute;inset:0;border:none;background:rgba(14,14,16,.26);backdrop-filter:blur(6px);cursor:default;animation:mx-fade .25s ease}
+.mx-dlg{position:relative;width:100%;max-width:520px;max-height:100%;overflow:auto;background:#fff;border-radius:28px;padding:26px;box-sizing:border-box;box-shadow:0 30px 80px rgba(14,14,16,.25);animation:mx-dialog .32s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;gap:18px}
+.mx-btn{height:44px;border:1px solid #e1e3e8;border-radius:22px;background:#fff;color:#0e0e10;padding:0 20px;font-size:14px;font-weight:600;cursor:pointer}
+.mx-btn.dark{border:none;background:#0e0e10;color:#fff}
+.mx-btn.red{border:none;background:#a33a2c;color:#fff}
+.mx-btn:disabled{opacity:.4}
+.mx-close{position:fixed;inset:0;z-index:25;border:none;background:transparent;cursor:default}
+.mx-tile{min-width:44px;height:44px;padding:0 10px;border:none;border-radius:12px;background:#eef0f3;font-size:12px;font-weight:600;color:#0e0e10;cursor:pointer;line-height:1.15;white-space:pre-line;max-width:150px;animation:mx-in .4s cubic-bezier(.2,.8,.2,1) backwards}
+.mx-grp{display:flex;flex-direction:column;gap:8px}
+.mx-grph{font-size:11px;font-weight:700;letter-spacing:.08em;color:#6b6e75}
+.mx-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:4px;border-radius:22px;background:#eef0f3;gap:4px}
+.mx-tabs button{height:36px;border:none;border-radius:18px;background:transparent;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;color:#4a4d54;transition:background-color .25s ease,color .25s ease}
+.mx-tabs button[aria-selected=true]{background:#0e0e10;color:#fff}
+.mx-input{height:44px;border:1px solid #d5d8de;border-radius:14px;padding:0 14px;font:inherit;font-size:14px;color:#0e0e10;outline-color:#0e0e10;box-sizing:border-box;width:100%}
+.mx-check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.mx-check input{width:18px;height:18px;accent-color:#0e0e10}
+.mx-stage{position:relative;height:100%;z-index:0;border-radius:22px;overflow:hidden;background:radial-gradient(120% 95% at 50% 0%,#ffffff 0%,#eceff4 55%,#dde2ea 100%);perspective:1400px;perspective-origin:50% 35%}
+.mx-stage::after{content:'';position:absolute;left:10%;right:10%;bottom:18px;height:40px;border-radius:50%;background:radial-gradient(closest-side,rgba(14,14,16,.18),rgba(14,14,16,0));pointer-events:none}
+.mx-cam{position:absolute;z-index:1;left:50%;top:52%;width:0;height:0;transform-style:preserve-3d;transition:transform 1.1s cubic-bezier(.65,0,.2,1),left 1.1s cubic-bezier(.65,0,.2,1),top 1.1s cubic-bezier(.65,0,.2,1)}
+.mx-half{position:absolute;transform-style:preserve-3d;border-radius:26px;background:linear-gradient(160deg,#3b3d44,#25262b);box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 40px 60px rgba(14,14,16,.28)}
+.mx-half::before{content:'';position:absolute;inset:0;border-radius:inherit;background:#15161a;transform:translateZ(-18px)}
+.mx-cap{position:absolute;width:54px;height:54px;border:none;border-radius:12px;transform:translateZ(10px);background-color:#f6f7f9;background-image:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,0));color:#0e0e10;font-size:12px;font-weight:700;line-height:1.1;white-space:pre-line;overflow:hidden;cursor:pointer;padding:0 3px;box-shadow:0 6px 0 #b9bdc6,0 10px 12px rgba(0,0,0,.35);transition:transform .25s cubic-bezier(.3,.7,.4,1),box-shadow .6s ease,background-color .7s ease,color .7s ease,text-shadow .6s ease,opacity .6s ease,filter .6s ease}
+.mx-cap:hover{transform:translateZ(14px)}
+.mx-cap:active{transform:translateZ(4px);box-shadow:0 1px 0 #b9bdc6,0 3px 4px rgba(0,0,0,.3);transition-duration:.06s}
+.mx-cap.trans{color:#a3a6ad}
+.mx-cap.sel{background:linear-gradient(#26272c,#0e0e10);color:#fff;transform:translateZ(16px);box-shadow:0 6px 0 #000,0 0 0 3px rgba(61,111,214,.55),0 16px 26px rgba(14,14,16,.45)}
+.mx-cap.ok{background:linear-gradient(#36a46c,#1f8a55);color:#fff;box-shadow:0 6px 0 #146b40,0 10px 12px rgba(0,0,0,.35)}
+.mx-pad{position:absolute;border:none;border-radius:18px;transform:translateZ(5px);background:linear-gradient(150deg,#2f3137,#1b1c20);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 10px 24px rgba(255,255,255,.04),0 4px 0 #0c0d0f;color:#8f9197;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:box-shadow .3s ease,color .3s ease,transform .25s ease}
+.mx-pad:hover{color:#e1e3e8;transform:translateZ(7px)}
+.mx-pad.sel{color:#fff;box-shadow:inset 0 0 0 2px #7aa2ff,0 0 30px rgba(122,162,255,.55),0 4px 0 #0c0d0f}
+.mx-zoom{position:absolute;right:12px;bottom:12px;display:flex;gap:6px;z-index:2}
+.mx-win{position:absolute;right:16px;top:16px;bottom:16px;width:min(480px,calc(100% - 32px));display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;border-radius:26px;background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 30px 80px rgba(14,14,16,.22),inset 0 0 0 1px rgba(255,255,255,.75);z-index:6;animation:mx-win .42s cubic-bezier(.2,.8,.2,1);transform-origin:0 50%}
+.mx-win.out{animation:mx-win-out .24s ease forwards}
+.mx-win::before{content:'';position:absolute;left:-9px;top:50%;width:18px;height:18px;margin-top:-9px;background:rgba(255,255,255,.66);transform:rotate(45deg);border-radius:3px;box-shadow:-1px 1px 0 rgba(255,255,255,.75)}
+.mx-win .mx-tabs{grid-template-columns:repeat(4,minmax(0,1fr));background:rgba(14,14,16,.06)}
+.mx-win .mx-tile{background:rgba(255,255,255,.85);box-shadow:0 1px 2px rgba(14,14,16,.08)}
+.mx-win .mx-tile:hover{background:#ffffff}
+.mx-stagebg{position:absolute;inset:0;border:none;background:transparent;cursor:default;z-index:0}
+.mx-float{position:absolute;z-index:3;display:flex;gap:6px;align-items:center;flex-wrap:wrap;transition:opacity .3s ease,transform .3s ease}
+.mx-float.hide{opacity:0;transform:translateY(-6px);pointer-events:none}
+.mx-glass{background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(20,24,40,.08)}
+.mx-stage::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(120% 100% at 50% 0%,#2c2f37 0%,#17181c 58%,#0c0d10 100%);opacity:0;transition:opacity 1s cubic-bezier(.2,.8,.2,1)}
+.mx-stage.dark::before{opacity:1}
+.mx-stage::after{z-index:0;transition:background .8s ease}
+.mx-stage.dark::after{background:radial-gradient(closest-side,var(--under,rgba(90,120,255,.22)),rgba(0,0,0,0))}
+.mx-stage.dark .mx-cap:not(.sel){background-color:#2a2c32;background-image:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0));color:#7d8089;box-shadow:0 6px 0 #0d0e11,0 10px 12px rgba(0,0,0,.5)}
+.mx-cap::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background-color:var(--led,#ffffff);opacity:0;mix-blend-mode:screen;transition:opacity var(--fade,.6s) ease,background-color .6s ease}
+.mx-stage.dark .mx-cap.lit{color:#ffffff;text-shadow:0 0 8px var(--led);box-shadow:0 6px 0 #0d0e11,0 0 24px -3px var(--led),0 10px 14px rgba(0,0,0,.45)}
+.mx-stage.dark .mx-cap.lit::after,.mx-stage.dark .mx-cap.dimk::after{opacity:var(--ledA,.6)}
+.mx-stage.dark .mx-cap.dimk{color:#5d6068}
+.fx-breathe .mx-cap.lit::after{animation:mx-breathe var(--spd,3s) ease-in-out infinite}
+.fx-cycle .mx-cap.lit::after{animation:mx-hue var(--spd,3s) linear infinite}
+.fx-wave .mx-cap.lit::after{animation:mx-hue var(--spd,3s) linear infinite;animation-delay:var(--dly,0s)}
+.fx-twinkle .mx-cap.lit::after{animation:mx-twinkle var(--spd,3s) ease-in-out infinite;animation-delay:var(--dly,0s)}
+.fx-react .mx-cap.lit::after{opacity:calc(var(--ledA,.6) * .14)}
+.fx-react .mx-cap.lit:hover::after,.fx-react .mx-cap.lit:active::after{opacity:var(--ledA,.6);transition-duration:.05s}
+.mx-cap.touch::after{animation:none !important;opacity:var(--ledA,.8) !important}
+@keyframes mx-breathe{0%,100%{opacity:calc(var(--ledA,.6) * .12)}50%{opacity:var(--ledA,.6)}}
+@keyframes mx-hue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
+@keyframes mx-twinkle{0%,100%{opacity:calc(var(--ledA,.6) * .1)}12%{opacity:var(--ledA,.6)}45%{opacity:calc(var(--ledA,.6) * .2)}}
+.mx-pad{overflow:hidden}
+.mx-padlbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .4s ease}
+.mx-pzone{position:absolute;border:none;padding:0;cursor:pointer;border-radius:7px;background:rgba(122,162,255,.1);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background-color .3s ease,box-shadow .3s ease;animation:mx-fade .5s ease backwards}
+.mx-pzone:hover{background:rgba(122,162,255,.3)}
+.mx-pzone.set{background:rgba(122,162,255,.5)}
+.mx-pzone.on{box-shadow:inset 0 0 0 2px #ffffff,0 0 14px rgba(122,162,255,.7)}
+.mx-knob{position:absolute;width:52px;height:52px;border:none;border-radius:26px;padding:0;cursor:pointer;background:radial-gradient(circle at 35% 30%,#5d5e64,#1a1b1f 70%);box-shadow:0 6px 0 #0c0d0f,0 10px 14px rgba(0,0,0,.4);transition:transform .6s cubic-bezier(.34,1.4,.64,1),box-shadow .3s ease}
+.mx-knob::before{content:'';position:absolute;top:5px;left:50%;width:4px;height:12px;margin-left:-2px;border-radius:2px;background:#ffffff}
+.mx-knob:hover{box-shadow:0 6px 0 #0c0d0f,0 0 0 2px rgba(122,162,255,.4),0 10px 14px rgba(0,0,0,.4)}
+.mx-knob.sel{box-shadow:0 6px 0 #0c0d0f,0 0 0 3px rgba(122,162,255,.75),0 0 26px rgba(122,162,255,.55)}
+.mx-win.wide{width:min(520px,46%,calc(100% - 32px))}
+.mx-win.ondark,.mx-win.ondark::before{background:rgba(255,255,255,.84)}
+.mx-win .mx-card{background:transparent;padding:0;border-radius:0;gap:10px;flex:none;animation:none}
+.mx-win .mx-card .mx-h1{font-size:15px}
+.mx-win .mx-help-t{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.mx-win .mx-sub2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mx-win .mx-rows{gap:12px 18px !important}
+.mx-win .mx-swatch{width:30px !important;height:30px !important}
+.mx-win .mx-tabs.n{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.mx-win .mx-tabs.n button{font-size:12px;letter-spacing:0;padding:0 4px}
+.mx-wpane{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.mx-help-t:empty{display:none}
+.mx-win .mx-pill.sm{padding:0 9px}
+@media (max-height: 720px){.mx-win .mx-whsub{display:none}.mx-win .mx-card{gap:6px}.mx-steps{max-height:110px !important;min-height:88px !important}.mx-win .mx-swatch{width:26px !important;height:26px !important}.mx-win .mx-rows{gap:8px 14px !important}}
+@media (max-height: 800px){.mx-win .mx-sub2{-webkit-line-clamp:1}.mx-win .mx-help-t.mx-sub[style*='12px']{font-size:11px !important}.mx-win.wide{gap:8px}.mx-win .mx-tabs button{height:30px}.mx-win .mx-pill.sm{height:28px}.mx-win .mx-sel{height:34px !important}.mx-win .mx-rows{gap:10px 16px !important}}
+.mx-cap.hl{box-shadow:0 6px 0 #b9bdc6,0 0 0 3px var(--hl,#3d6fd6),0 10px 12px rgba(0,0,0,.3)}
+.mx-cap.hl2{transform:translateZ(18px);box-shadow:0 6px 0 #b9bdc6,0 0 0 4px var(--hl,#3d6fd6),0 0 24px var(--hl,#3d6fd6),0 14px 18px rgba(0,0,0,.35)}
+.mx-win.xwide{width:min(640px,54%,calc(100% - 32px))}
+.flip-0 .mx-cap{animation:mx-flip0 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip0{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-1 .mx-cap{animation:mx-flip1 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip1{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-2 .mx-cap{animation:mx-flip2 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip2{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-3 .mx-cap{animation:mx-flip3 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip3{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-4 .mx-cap{animation:mx-flip4 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip4{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-5 .mx-cap{animation:mx-flip5 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip5{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-6 .mx-cap{animation:mx-flip6 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip6{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-7 .mx-cap{animation:mx-flip7 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip7{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.mx-rig{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+.mx-rig.idle{animation:mx-idle 7s ease-in-out infinite}
+@keyframes mx-idle{0%,100%{transform:translateZ(0) rotateZ(0deg)}50%{transform:translateZ(18px) rotateZ(-1.2deg)}}
+.mx-cap.ghost{background-color:#e4e7ec;background-image:none;box-shadow:0 6px 0 #c9cdd4,0 8px 10px rgba(0,0,0,.12);cursor:default}
+.mx-pad.ghost{background:linear-gradient(150deg,#45474e,#35363b);color:#6b6e75}
+.powering .mx-cap{animation:mx-power 1.5s cubic-bezier(.2,.8,.2,1) infinite;animation-delay:calc(var(--o,0) * .5s)}
+@keyframes mx-power{0%,100%{background-color:#e4e7ec;box-shadow:0 6px 0 #c9cdd4,0 8px 10px rgba(0,0,0,.12)}35%{background-color:#ffffff;box-shadow:0 6px 0 #b9bdc6,0 0 26px rgba(122,162,255,.9)}}
+.powered .mx-cap{animation:mx-poweron .9s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 14ms)}
+@keyframes mx-poweron{from{transform:translateZ(2px);box-shadow:0 6px 0 #b9bdc6,0 0 30px rgba(122,162,255,1)}to{transform:translateZ(10px)}}
+.mx-half{transition:opacity .6s ease,filter .6s ease,box-shadow .6s ease}
+.mx-knob,.mx-pad{transition:opacity .6s ease,filter .6s ease,transform .5s ease,box-shadow .3s ease,color .3s ease}
+.mx-half.fdim,.mx-cap.fdim,.mx-knob.fdim,.mx-pad.fdim{opacity:.32;filter:saturate(.4)}
+.mx-half.fsel{box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 0 0 3px rgba(122,162,255,.55),0 40px 60px rgba(14,14,16,.28)}
+.mx-cap.flashk{background-color:#dfe8ff;box-shadow:0 6px 0 #9fb3e6,0 0 22px rgba(122,162,255,.95);transform:translateZ(14px)}
+.reboot-a .mx-cap:not(.fdim){animation:mx-reboot-a 1s ease backwards;animation-delay:calc(var(--o,0) * .3s)}
+.reboot-b .mx-cap:not(.fdim){animation:mx-reboot-b 1s ease backwards;animation-delay:calc(var(--o,0) * .3s)}
+@keyframes mx-reboot-a{0%{box-shadow:0 6px 0 #9fb3e6,0 0 26px rgba(31,138,85,.9)}100%{box-shadow:0 6px 0 #b9bdc6,0 10px 12px rgba(0,0,0,.35)}}
+@keyframes mx-reboot-b{0%{box-shadow:0 6px 0 #9fb3e6,0 0 26px rgba(31,138,85,.9)}100%{box-shadow:0 6px 0 #b9bdc6,0 10px 12px rgba(0,0,0,.35)}}
+@keyframes mx-win2{from{opacity:0;transform:translateX(28px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes mx-sub-a{from{opacity:0;transform:translateX(-14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes mx-sub-b{from{opacity:0;transform:translateX(-14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes mx-pin-a{from{opacity:0;transform:translateY(10px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes mx-pin-b{from{opacity:0;transform:translateY(10px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes mx-chip-a{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes mx-chip-b{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes mx-win{from{opacity:0;transform:translateX(28px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes mx-win-out{from{opacity:1;transform:none}to{opacity:0;transform:translateX(24px) scale(.97)}}
+.mx-ptabs{display:inline-flex;gap:4px;padding:4px;border-radius:22px;background:rgba(14,14,16,.06);flex-wrap:wrap}
+.mx-ptabs button{height:34px;border:none;border-radius:17px;background:transparent;padding:0 16px;font-size:13px;font-weight:700;color:#4a4d54;cursor:pointer;transition:background-color .25s ease,color .25s ease,box-shadow .25s ease}
+.mx-ptabs button:hover{color:#0e0e10}
+.mx-ptabs button[aria-selected=true]{background:#ffffff;color:#0e0e10;box-shadow:0 2px 8px rgba(20,24,40,.1)}
+.mx-pane{animation:mx-in .45s cubic-bezier(.2,.8,.2,1)}
+.mx-grid{display:grid;gap:12px;align-items:start}
+@keyframes mx-in{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes mx-rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes mx-fade{from{opacity:0}to{opacity:1}}
+@keyframes mx-line{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes mx-pop-a{0%{transform:scale(.82)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes mx-pop-b{0%{transform:scale(.82)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes mx-swap-a{from{opacity:0;transform:translateY(10px) rotate(-6deg) scale(.88)}to{opacity:1;transform:none}}
+@keyframes mx-swap-b{from{opacity:0;transform:translateY(10px) rotate(-6deg) scale(.88)}to{opacity:1;transform:none}}
+@keyframes mx-layer-a{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes mx-layer-b{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes mx-menu{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes mx-dialog{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes mx-spin{to{transform:rotate(360deg)}}
+.mx-big a,.mx-big button{animation:mx-rise .7s cubic-bezier(.2,.8,.2,1) backwards}
+.mx-big>:nth-child(2){animation-delay:.06s}.mx-big>:nth-child(3){animation-delay:.12s}
+.mx-fade{animation:mx-fade .5s ease .18s backwards}
+.mx-stagger>*{animation:mx-in .6s cubic-bezier(.2,.8,.2,1) backwards}
+.mx-stagger>*:nth-child(1){animation-delay:.22s}.mx-stagger>*:nth-child(2){animation-delay:.29s}.mx-stagger>*:nth-child(3){animation-delay:.36s}.mx-stagger>*:nth-child(4){animation-delay:.43s}.mx-stagger>*:nth-child(5){animation-delay:.5s}.mx-stagger>*:nth-child(6){animation-delay:.57s}
+.mx-press{transition:transform .2s cubic-bezier(.3,.7,.4,1),box-shadow .2s ease,background-color .2s ease,color .2s ease,opacity .2s ease}
+.mx-press:hover:not(:disabled){transform:translateY(-1px)}
+.mx-press:active:not(:disabled){transform:scale(.94);transition-duration:.08s}
+.mx-lift{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+.mx-lift:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(20,24,40,.08)}
+.mx-key{transition:background-color .22s ease,color .22s ease,box-shadow .25s ease,transform .18s cubic-bezier(.3,.7,.4,1)}
+.mx-key:hover{transform:translateY(-2px)}
+.mx-key:active{transform:scale(.9);transition-duration:.06s}
+.mx-spin{animation:mx-spin .8s linear infinite;width:16px;height:16px;border-radius:8px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;box-sizing:border-box}
+@media (max-width: 1180px){.mx-hbtn .lbl{display:none}.mx-hbtn{padding:0 12px !important}}
+@media (max-width: 900px){.mx-chip.opt{display:none}.mx-float.opt{display:none}.mx-win{left:12px !important;right:12px !important;top:auto !important;width:auto !important;height:min(62%,520px)}.mx-win::before{display:none}}
+@media (max-height: 800px){
+.mx-big a,.mx-big button{font-size:clamp(22px,4.4vh,38px)}
+.mx-big{margin-top:6px}
+.mx-subnav{margin-top:4px}
+.mx-hbtn,.mx-ib{height:38px}.mx-ib{width:38px}.mx-hbtn .mx-dot32{width:28px;height:28px}
+.mx-main{margin-top:10px}
+.mx-card{padding:14px 16px;gap:10px;border-radius:22px}
+.mx-h1{font-size:16px}
+.mx-sub{line-height:1.45}
+.mx-help-t{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.mx-sub2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mx-steps{max-height:140px !important;min-height:100px !important}
+.mx-pick{max-height:46px !important}
+.mx-hide-short{display:none !important}
+.mx-win{gap:8px;padding:12px}
+.mx-rows{gap:10px 20px !important}
+.mx-swatch{width:28px !important;height:28px !important}
+.mx-primary{height:42px}
+.mx-row{padding:9px 12px}
+}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div class="mx-root">
+<div class="mx-panel" onMouseMove="{{onMove}}" onMouseLeave="{{onLeave}}">
+<div aria-hidden="true" style="{{glowStyle}}"></div>
+<div aria-hidden="true" style="{{glowStyle2}}"></div>
+<div aria-hidden="true" style="{{glowStyle3}}"></div>
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><button class="mx-close" aria-label="メニューを閉じる" onClick="{{closeAll}}"></button></sc-if>
+
+<div class="mx-top mx-fade {{hdrCls}}">
+<header class="mx-hdr">
+<div class="mx-hgrp">
+<div style="position: relative">
+<button class="mx-hbtn mx-press" aria-haspopup="menu" aria-expanded="{{kbdOpen}}" onClick="{{toggleKbd}}"><span class="mx-dot32"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"></path></svg></span>Matrix Split 42<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+<sc-if value="{{kbdOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-menu l" role="menu" style="min-width: 290px">
+<div class="mx-row" style="background: #f5f6f8"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 14px">Matrix Split 42</b><span class="mx-sub" style="font-size: 12px">FEED:0000 · 接続中・左右とも</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f8a55" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></div>
+<a class="mx-mi" role="menuitem" href="Connect.dc.html" style="margin-top: 4px">＋ Keyboard</a>
+<a class="mx-mi danger" role="menuitem" href="Connect.dc.html">Disconnect</a>
+</div>
+</sc-if>
+</div>
+<span class="mx-chip opt"><span style="width: 8px; height: 8px; border-radius: 4px; background: #1f8a55"></span>Connected · both halves</span>
+</div>
+<div class="mx-hgrp">
+<div style="position: relative">
+<button class="mx-hbtn mx-press" aria-haspopup="menu" aria-expanded="{{layerOpen}}" onClick="{{toggleLayer}}" style="padding: 0 6px 0 16px"><span style="{{layerDot}}"></span>{{layerTitle}}<span class="mx-dot32"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span></button>
+<sc-if value="{{layerOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-menu r" role="menu">
+<sc-for list="{{layers}}" as="l" hint-placeholder-count="4">
+<button class="mx-mi" role="menuitemradio" aria-checked="{{l.on}}" onClick="{{l.pick}}" style="{{l.style}}"><span style="{{l.dot}}"></span><span style="flex: 1">{{l.title}}</span><sc-if value="{{l.hasPending}}" hint-placeholder-val="{{false}}"><span style="min-width: 22px; height: 22px; border-radius: 11px; background: #e6edfb; color: #2a55b0; font-size: 12px; display: flex; align-items: center; justify-content: center; padding: 0 6px; box-sizing: border-box">{{l.pending}}</span></sc-if></button>
+</sc-for>
+<div class="mx-sep"></div>
+<button class="mx-mi" role="menuitem" onClick="{{manageLayers}}">Manage layers…</button>
+</div>
+</sc-if>
+</div>
+<sc-if value="{{isKeys}}" hint-placeholder-val="{{true}}">
+<button class="mx-ib mx-press {{undoCls}}" aria-label="元に戻す" title="元に戻す" disabled="{{undoOff}}" onClick="{{undo}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 0 12h-3"></path></svg></button>
+<button class="mx-ib mx-press {{redoCls}}" aria-label="やり直す" title="やり直す" disabled="{{redoOff}}" onClick="{{redo}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0 0 12h3"></path></svg></button>
+</sc-if>
+<!--HDR-ACTIONS-->
+<label class="mx-hbtn mx-press" title="キーマップ（.json）を読み込む" style="position: relative; padding: 0 16px 0 14px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg><span class="lbl">Import</span><input type="file" accept=".json" aria-label="キーマップを読み込む" onChange="{{onImport}}" style="position: absolute; width: 1px; height: 1px; opacity: 0"></label>
+<button class="mx-hbtn mx-press" title="キーマップを .json で書き出す" onClick="{{exportKeymap}}" style="padding: 0 16px 0 14px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg><span class="lbl">Export</span></button>
+<a class="mx-hbtn mx-press" href="Firmware.dc.html" title="ファームウェアを書き込む" style="padding: 0 16px 0 14px; text-decoration: none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.5"></rect><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"></path></svg><span class="lbl">Firmware</span></a>
+<!--/HDR-ACTIONS-->
+</div>
+</header>
+<nav class="mx-big" aria-label="セクション"><sc-for list="{{bigTabs}}" as="b" hint-placeholder-count="3"><button class="{{b.cls}}" aria-current="{{b.ac}}" onClick="{{b.pick}}">{{b.label}}</button></sc-for></nav>
+<nav class="mx-subnav" aria-label="{{subLabel}}" style="{{subAnim}}"><sc-for list="{{subTabs}}" as="t" hint-placeholder-count="4"><sc-if value="{{t.isLink}}" hint-placeholder-val="{{false}}"><a href="{{t.href}}">{{t.label}}</a></sc-if><sc-if value="{{t.isBtn}}" hint-placeholder-val="{{true}}"><button class="{{t.cls}}" aria-current="{{t.ac}}" onClick="{{t.pick}}">{{t.label}}</button></sc-if></sc-for></nav>
+<div class="mx-rule" style="margin-top: 0"></div>
+</div>
+
+<main class="mx-main" style="margin-left: 0; display: flex; flex-direction: column; overflow: hidden; -webkit-mask-image: none; mask-image: none; padding-bottom: clamp(8px, 1.4vh, 14px)">
+<section class="mx-card" aria-label="キーボード" style="flex: 1 1 auto; min-height: 0; display: flex; padding: clamp(6px, 1.2vh, 12px); animation: mx-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s backwards">
+<div class="mx-stage {{stageCls}}" role="group" aria-label="3D キーボード" ref="{{stageRef}}" style="{{stageStyle}}">
+<button class="mx-stagebg" aria-label="設定ウィンドウを閉じる" tabindex="-1" onClick="{{closeWin}}"></button>
+<div class="mx-cam {{fxCls}}" style="{{camStyle}}">
+<div class="mx-half" style="{{halfL}}"></div>
+<div class="mx-half" style="{{halfR}}"></div>
+<div class="mx-pad {{padCls}}" role="button" tabindex="0" aria-label="Touchpad" aria-pressed="{{padOn}}" onClick="{{pickPad}}" onMouseMove="{{padMove}}" onMouseLeave="{{padLeave}}" style="{{padStyle}}">
+<span class="mx-padlbl" style="{{padLblStyle}}">TOUCHPAD</span>
+<sc-if value="{{padRingOn}}" hint-placeholder-val="{{false}}"><span style="position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -40px 0 0 -40px; border-radius: 40px; border: 2px dashed rgba(255, 255, 255, 0.4); pointer-events: none; animation: mx-fade 0.5s ease"></span></sc-if>
+<sc-if value="{{padArrowOn}}" hint-placeholder-val="{{false}}"><span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; animation: mx-fade 0.5s ease"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="{{padArrow}}"><path d="M12 20V4M6 10l6-6 6 6"></path></svg></span></sc-if>
+<sc-if value="{{padZonesOn}}" hint-placeholder-val="{{false}}"><sc-for list="{{padZones}}" as="z" hint-placeholder-count="8"><button class="mx-pzone {{z.cls}}" aria-label="{{z.label}}" aria-pressed="{{z.on}}" title="{{z.label}}" onClick="{{z.pick}}" style="{{z.style}}">{{z.mark}}</button></sc-for></sc-if>
+<sc-if value="{{padDotOn}}" hint-placeholder-val="{{false}}"><span style="{{padDot}}"></span></sc-if>
+</div>
+<sc-for list="{{knobs3d}}" as="k" hint-placeholder-count="2"><button class="mx-knob {{k.cls}}" aria-label="{{k.label}}" title="{{k.label}}" onClick="{{k.pick}}" style="{{k.style}}"></button></sc-for>
+<sc-for list="{{caps}}" as="k" hint-placeholder-count="42"><button class="mx-cap {{k.cls}}" aria-label="{{k.aria}}" aria-pressed="{{k.on}}" onClick="{{k.pick}}" style="{{k.style}}">{{k.label}}<sc-if value="{{k.changed}}" hint-placeholder-val="{{false}}"><span style="position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 4px; background: #3d6fd6"></span></sc-if><sc-if value="{{k.hasHold}}" hint-placeholder-val="{{false}}"><span style="{{k.holdStyle}}">{{k.hold}}</span></sc-if></button></sc-for>
+</div>
+
+<div class="mx-float" style="left: 16px; top: 16px">
+<sc-if value="{{chipOn}}" hint-placeholder-val="{{true}}"><span class="mx-chip mx-glass" style="{{chipStyle}}"><span style="{{chipDot}}"></span>{{chipTitle}}<span style="font-weight: 500; color: #6b6e75">· {{chipSub}}</span></span></sc-if>
+<sc-if value="{{isLighting}}" hint-placeholder-val="{{false}}"><div class="mx-seg mx-glass" role="radiogroup" aria-label="光り方を見るレイヤー" style="{{pvSegStyle}}"><sc-for list="{{pvLayers}}" as="o" hint-placeholder-count="4"><button class="mx-pill sm mx-press {{o.cls}}" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="border-color: transparent"><span style="{{o.dot}}"></span>{{o.label}}</button></sc-for></div></sc-if>
+</div>
+<sc-if value="{{isKeymap}}" hint-placeholder-val="{{true}}">
+<div class="mx-float {{toolsCls}}" style="right: 16px; top: 16px">
+<div class="mx-seg mx-glass" role="group" aria-label="キーボードの表示サイズ" title="{{sizeTitle}}" style="padding: 3px; border-radius: 19px"><sc-for list="{{sizes}}" as="z" hint-placeholder-count="3"><button class="mx-pill sm mx-press {{z.cls}}" aria-pressed="{{z.on}}" onClick="{{z.pick}}" style="border-color: transparent">{{z.label}}</button></sc-for></div>
+<button class="mx-tool mx-press mx-glass" disabled="{{nothingPending}}" onClick="{{askClear}}" title="Clear all changes" style="border: none">Clear</button>
+<button class="mx-tool mx-press mx-glass" onClick="{{cheatSheet}}" title="Get keymap cheat sheet (PDF)" style="border: none">PDF</button>
+<div style="position: relative">
+<button class="mx-dots mx-press mx-glass" aria-label="その他の操作" aria-haspopup="menu" aria-expanded="{{moreOpen}}" onClick="{{toggleMore}}" style="border: none"></button>
+<sc-if value="{{moreOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-menu r" role="menu" style="top: 44px; min-width: 280px">
+<label class="mx-mi">Import keyboard definition file<input type="file" accept=".json" onChange="{{onDefImport}}" style="position: absolute; width: 1px; height: 1px; opacity: 0"></label>
+<button class="mx-mi" role="menuitem" onClick="{{startTest}}">Test Matrix mode</button>
+<div class="mx-sep"></div>
+<button class="mx-mi danger" role="menuitem" onClick="{{askReset}}">Reset Keymap…</button>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{testing}}" hint-placeholder-val="{{false}}">
+<div class="mx-float" style="left: 50%; top: 60px; transform: translateX(-50%)"><span class="mx-glass" style="display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 18px; background: rgba(232, 244, 238, 0.92); font-size: 13px; color: #2f5f47"><b>Test Matrix</b>キーを押すと緑になります（見本ではクリックで代用）・{{testCount}}<button class="mx-pill sm mx-press" onClick="{{endTest}}">終了</button></span></div>
+</sc-if>
+<sc-if value="{{hintOn}}" hint-placeholder-val="{{true}}">
+<div class="mx-float opt {{hintCls}}" style="left: 16px; bottom: 16px; max-width: 46%">
+<span class="mx-chip mx-glass" style="{{hintStyle}}"><sc-if value="{{isKeymap}}" hint-placeholder-val="{{true}}"><span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 4px; background: #3d6fd6"></span>未反映</span><span><b style="color: #a3a6ad">▽</b> 透過</span></sc-if><span>{{hintText}}</span></span>
+</div>
+</sc-if>
+<sc-if value="{{isKeymap}}" hint-placeholder-val="{{true}}">
+<div class="mx-float {{toolsCls}}" style="right: 16px; bottom: 16px">
+<div class="mx-seg mx-glass" role="group" aria-label="キーの表記" style="padding: 3px; border-radius: 19px"><button class="mx-pill sm mx-press {{usCls}}" aria-pressed="{{isUS}}" onClick="{{setUS}}" style="border-color: transparent">US</button><button class="mx-pill sm mx-press {{jisCls}}" aria-pressed="{{isJIS}}" onClick="{{setJIS}}" style="border-color: transparent">JIS</button></div>
+<select class="mx-sel mx-glass" aria-label="キーの表記（言語・配列）" value="{{labelLang}}" onChange="{{onLabelLang}}" style="height: 34px; font-size: 12px; width: 180px; border: none"><sc-for list="{{langs}}" as="o" hint-placeholder-count="56"><option value="{{o}}">{{o}}</option></sc-for></select>
+<div class="mx-seg mx-glass" style="padding: 3px; border-radius: 19px">
+<button class="mx-pill sm mx-press {{ovCls}}" aria-pressed="{{isOverview}}" onClick="{{toOverview}}" title="キーボード全体を表示" style="border-color: transparent">Overview</button>
+<button class="mx-pill sm mx-press {{fcCls}}" aria-pressed="{{isFocus}}" onClick="{{toFocus}}" title="選択中の場所にズーム" style="border-color: transparent">Zoom</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{reopenOn}}" hint-placeholder-val="{{false}}">
+<div class="mx-float" style="right: 16px; bottom: 16px; animation: mx-chip-a 0.4s ease"><button class="mx-btn dark mx-press" onClick="{{reopen}}" style="height: 40px; display: flex; align-items: center; gap: 8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"></path></svg>{{reopenLabel}}</button></div>
+</sc-if>
+
+<sc-if value="{{keyWinOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-win {{winCls}}" role="dialog" aria-label="{{winTitle}}">
+<sc-if value="{{winKey}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; gap: 12px; flex: none">
+<span style="{{capStyle}}">{{selLabel}}</span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1">
+<span style="display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap"><b style="font-size: 15px">Selected key</b><span class="mx-sub" style="font-size: 12px">{{selWhere}}</span></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; word-break: break-all">{{selCode}} · Tap {{selLabel}} · Hold {{selHold}}</span>
+<span class="mx-sub mx-hide-short" style="font-size: 12px; line-height: 1.5">{{selDesc}}</span>
+</div>
+<button class="mx-ib mx-press" aria-label="閉じる" onClick="{{closeWin}}" style="width: 36px; height: 36px; flex: none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<sc-if value="{{selChanged}}" hint-placeholder-val="{{false}}"><div class="mx-row" style="padding: 6px 6px 6px 12px; background: rgba(61, 111, 214, 0.1); flex: none"><span>Before <b>{{selBefore}}</b> → <b>{{selLabel}}</b></span><button class="mx-pill sm mx-press" onClick="{{resetKey}}">Revert</button></div></sc-if>
+<div class="mx-tabs" role="tablist" style="flex: none"><sc-for list="{{winTabs}}" as="t" hint-placeholder-count="4"><button role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div>
+
+<sc-if value="{{tabKey}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0">
+<div class="mx-seg" role="group" aria-label="キーコードの種類" style="{{catsWrap}}"><sc-for list="{{cats}}" as="c" hint-placeholder-count="6"><button class="mx-pill sm mx-press {{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for></div>
+<label style="height: 34px; border-radius: 17px; background: rgba(255, 255, 255, 0.85); display: flex; align-items: center; gap: 8px; padding: 0 8px 0 14px; font-size: 13px; color: #6b6e75; flex: none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b6e75" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg><input placeholder="Search keycodes" aria-label="キーコードを検索" value="{{query}}" onChange="{{onQuery}}" style="border: none; background: transparent; outline: none; font: inherit; color: #0e0e10; width: 100%"><sc-if value="{{hasQuery}}" hint-placeholder-val="{{false}}"><button aria-label="検索をクリア" onClick="{{clearQuery}}" style="width: 22px; height: 22px; border: none; border-radius: 11px; background: #e1e3e8; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0e0e10" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></sc-if></label>
+<span class="mx-sub mx-hide-short" style="font-size: 11px; flex: none">{{paletteNote}}</span>
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 110px; overflow: auto; padding-right: 4px">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+<div class="mx-grp"><span class="mx-grph">{{g.title}}</span>
+<div style="display: flex; flex-wrap: wrap; gap: 5px">
+<sc-for list="{{g.keys}}" as="p" hint-placeholder-count="10"><button class="mx-tile mx-key" onClick="{{p.pick}}" onMouseEnter="{{p.hover}}" onMouseLeave="{{p.unhover}}" onFocus="{{p.hover}}" onBlur="{{p.unhover}}" title="{{p.tip}}" style="{{p.style}}">{{p.label}}</button></sc-for>
+</div></div>
+</sc-for>
+</div>
+<div role="status" aria-live="polite" style="{{descBar}}"><span style="{{descCap}}">{{hovLabel}}</span><span style="display: flex; flex-direction: column; gap: 1px; min-width: 0"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6b6e75">{{hovCode}}</span><span style="font-size: 12px; line-height: 1.5">{{hovDesc}}</span></span></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: none; font-size: 12px">
+<b>Modifiers</b><sc-for list="{{mods}}" as="m" hint-placeholder-count="4"><label class="mx-check" style="font-size: 12px"><input type="checkbox" checked="{{m.on}}" disabled="{{m.off}}" onChange="{{m.toggle}}" style="width: 15px; height: 15px">{{m.label}}</label></sc-for>
+<span class="mx-seg" style="margin-left: auto"><button class="mx-pill sm mx-press {{sideL}}" disabled="{{modsOff}}" onClick="{{setSideL}}" style="height: 26px; padding: 0 10px">L</button><button class="mx-pill sm mx-press {{sideR}}" disabled="{{modsOff}}" onClick="{{setSideR}}" style="height: 26px; padding: 0 10px">R</button></span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{tabHold}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0">
+<span class="mx-sub">タップでは {{selLabel}} を送り、長押しした時だけ下の動作をします。</span>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px"><sc-for list="{{holdOpts}}" as="h" hint-placeholder-count="9"><button class="mx-pill mx-press {{h.cls}}" role="radio" aria-checked="{{h.on}}" onClick="{{h.pick}}" style="padding: 0 6px">{{h.label}}</button></sc-for></div>
+<span class="mx-sub" style="font-size: 12px">Ctrl などはモッドタップ（MT）、LT はレイヤータップです。判定時間は Pointing › Timing で変えられます。</span>
+</div>
+</sc-if>
+
+<sc-if value="{{tabCustom}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0">
+<span class="mx-sub">キーコードを16進数で直接指定できます。</span>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b6e75"><span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #0e0e10">0x</span><input class="mx-input" maxlength="4" aria-label="Code (hex)" value="{{hex}}" onChange="{{onHex}}" style="font-family: 'JetBrains Mono', monospace; text-transform: uppercase; width: 140px"></label>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #4a4d54; letter-spacing: 0.06em">{{hexBits}}</span>
+<div><button class="mx-btn dark mx-press" disabled="{{hexOff}}" onClick="{{applyHex}}">Apply</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{tabPresets}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0">
+<div class="mx-seg" role="group" aria-label="OS"><button class="mx-pill sm mx-press {{macCls}}" onClick="{{setMac}}">Mac</button><button class="mx-pill sm mx-press {{winOsCls}}" onClick="{{setWin}}">Windows</button></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; overflow: auto; min-height: 0">
+<sc-for list="{{presets}}" as="p" hint-placeholder-count="16"><button class="mx-press" onClick="{{p.pick}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px; border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.85); cursor: pointer; text-align: left"><b style="font-size: 13px">{{p.combo}}</b><span style="font-size: 11px; color: #6b6e75">{{p.label}}</span></button></sc-for>
+</div>
+</div>
+</sc-if>
+
+<div class="mx-hide-short" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: none">
+<span class="mx-sub" style="font-size: 11px">キーコードを選ぶと割り当てて閉じます</span>
+<button class="mx-btn dark mx-press" onClick="{{closeWin}}" style="height: 38px">Done</button>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{secWinOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-win {{secWinCls}}" role="dialog" aria-label="{{secTitle}}" style="{{secWinStyle}}">
+<div style="display: flex; align-items: center; gap: 12px; flex: none">
+<span style="{{secIcon}}"></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1"><b style="font-size: 16px">{{secTitle}}</b><span class="mx-sub mx-help-t mx-whsub" title="{{secSub}}" style="font-size: 12px">{{secSub}}</span></div>
+<span class="mx-chip" style="height: 28px; font-size: 11px; background: rgba(255, 255, 255, 0.7); flex: none"><span style="{{secChipDot}}"></span>{{saveChip}}</span>
+<button class="mx-ib mx-press" aria-label="閉じる" onClick="{{closeWin}}" style="width: 36px; height: 36px; flex: none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<sc-if value="{{hasInner}}" hint-placeholder-val="{{true}}"><div class="mx-tabs n" role="tablist" aria-label="{{secTitle}} の設定項目" style="flex: none"><sc-for list="{{innerTabs}}" as="t" hint-placeholder-count="6"><button role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div></sc-if>
+<div class="mx-wpane" style="{{paneAnim}}">
+<sc-if value="{{isMacros}}" hint-placeholder-val="{{false}}">
+<div role="radiogroup" aria-label="マクロ" style="display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 4px; flex: none">
+<sc-for list="{{mList}}" as="m" hint-placeholder-count="16"><button class="mx-press" role="radio" aria-checked="{{m.on}}" title="{{m.preview}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.name}}<sc-if value="{{m.dirty}}" hint-placeholder-val="{{false}}"><span aria-label="未反映" style="position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 3px; background: #3d6fd6"></span></sc-if></button></sc-for>
+</div>
+<div style="flex: 1; min-height: 112px; display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; overflow: auto; padding: 10px; border-radius: 18px; background: rgba(255, 255, 255, 0.6)">
+<sc-if value="{{mEmpty}}" hint-placeholder-val="{{false}}"><span class="mx-sub" style="margin: auto; font-size: 12px">下のキーを押すか、テキストを追加してください。</span></sc-if>
+<sc-for list="{{mSteps}}" as="s" hint-placeholder-count="6">
+<div style="{{s.box}}">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 2px"><button class="mx-press" title="待ち時間（押すたびに増えます）" onClick="{{s.bump}}" style="height: 22px; border: none; border-radius: 11px; background: #eef0f3; padding: 0 7px; font-size: 10px; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums">⧗ {{s.delay}}</button><button aria-label="このステップを削除" onClick="{{s.remove}}" style="width: 22px; height: 22px; border: none; border-radius: 11px; background: transparent; cursor: pointer; color: #6b6e75">×</button></div>
+<button onClick="{{s.target}}" title="{{s.targetTitle}}" style="border: none; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 34px; padding: 0"><sc-for list="{{s.keys}}" as="k" hint-placeholder-count="1"><b style="font-size: 13px; white-space: pre-line; text-align: center">{{k}}</b></sc-for></button>
+<div style="display: flex; justify-content: space-between; align-items: center"><button aria-label="前へ" onClick="{{s.left}}" style="width: 20px; height: 20px; border: none; background: transparent; cursor: pointer; color: #6b6e75">‹</button><button disabled="{{s.noFlip}}" title="{{s.flipTitle}}" onClick="{{s.flip}}" style="{{s.tag}}">{{s.kind}}</button><button aria-label="後ろへ" onClick="{{s.right}}" style="width: 20px; height: 20px; border: none; background: transparent; cursor: pointer; color: #6b6e75">›</button></div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; gap: 6px; flex: none">
+<input class="mx-input" placeholder="テキストを入力（例：Hello）" aria-label="追加するテキスト" value="{{mText}}" onChange="{{onMText}}" style="height: 36px; flex: 1; width: auto; border-radius: 18px">
+<button class="mx-pill mx-press" disabled="{{mNoText}}" onClick="{{mAddText}}">Add text</button>
+<button class="mx-pill mx-press" disabled="{{mEmpty}}" onClick="{{mClear}}" title="このマクロを空にする">Clear</button>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: none"><span class="mx-grph">{{mPickTitle}}</span><input class="mx-input" placeholder="Search keycodes" aria-label="キーコードを検索" value="{{mKq}}" onChange="{{onMKq}}" style="height: 32px; width: 200px; border-radius: 16px; font-size: 13px"></div>
+<div class="mx-pick" style="display: flex; flex-wrap: wrap; gap: 5px; max-height: 80px; overflow: auto; flex: none">
+<sc-for list="{{mPick}}" as="p" hint-placeholder-count="20"><button class="mx-tile mx-key" onClick="{{p.add}}" title="{{p.code}}" style="height: 36px; min-width: 38px; padding: 0 8px">{{p.label}}</button></sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isCombos}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{cNotEditing}}" hint-placeholder-val="{{true}}">
+<div class="mx-row" style="flex: none; background: rgba(255, 255, 255, 0.7)"><span class="mx-sub" style="font-size: 12px">2〜4 個のキーを同時に押すと、別のキーを送ったりレイヤーを切り替えたりできます。保存した時点でキーボードに書き込まれます。</span><b style="font-size: 18px; flex: none">{{cUsed}}</b></div>
+<sc-if value="{{cNone}}" hint-placeholder-val="{{false}}"><span class="mx-sub">まだコンボはありません。Add combo か、3D キーボードのキーを押して追加できます。</span></sc-if>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow: auto">
+<sc-for list="{{cList}}" as="c" hint-placeholder-count="2">
+<div class="mx-row" onMouseEnter="{{c.hover}}" onMouseLeave="{{c.unhover}}" style="{{c.style}}"><span style="{{c.dot}}"></span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><b style="font-size: 14px">{{c.title}}</b><span class="mx-sub" style="font-size: 12px">{{c.meta}}</span></div><button class="mx-pill sm mx-press" onClick="{{c.edit}}">Edit</button><button class="mx-pill sm mx-press" onClick="{{c.remove}}" style="color: #a33a2c">Delete</button></div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{cEditing}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">1. Trigger keys <span class="mx-sub" style="font-weight: 500">3D キーボードのキーを 2〜4 個押す（レイヤー 0）</span></b>
+<div class="mx-seg" style="min-height: 28px; align-items: center"><sc-for list="{{cTrig}}" as="t" hint-placeholder-count="2"><button class="mx-pill sm mx-press on" onClick="{{t.remove}}" title="外す" style="animation: mx-pop-a 0.35s ease">{{t.label}} ×</button></sc-for><sc-if value="{{cTrigEmpty}}" hint-placeholder-val="{{false}}"><span class="mx-sub" style="font-size: 12px">まだ選ばれていません</span></sc-if></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">2. Output</b>
+<div style="display: flex; gap: 8px; align-items: center"><select class="mx-sel" aria-label="出力するキー" value="{{cOutSel}}" onChange="{{onCOut}}" style="height: 36px; flex: 1; min-width: 0"><option value="">Choose...</option><sc-for list="{{cGroups}}" as="g" hint-placeholder-count="8"><optgroup label="{{g.label}}"><sc-for list="{{g.opts}}" as="o" hint-placeholder-count="3"><option value="{{o}}">{{o}}</option></sc-for></optgroup></sc-for></select><label style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: #6b6e75; flex: none">0x<input class="mx-input" maxlength="4" aria-label="keycode (hex)" value="{{cHex}}" onChange="{{onCHex}}" style="width: 70px; height: 36px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase"></label></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">3. Combo term <span class="mx-sub" style="font-weight: 500">同時押しとみなす時間（ms）</span></b><div class="mx-seg"><sc-for list="{{cTerms}}" as="t" hint-placeholder-count="7"><button class="mx-pill sm mx-press {{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">4. Active layers <span class="mx-sub" style="font-weight: 500">選ばなければ全レイヤー</span></b><div class="mx-seg"><sc-for list="{{cLayerOpts}}" as="t" hint-placeholder-count="4"><button class="mx-pill sm mx-press {{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div></div>
+<div style="flex: 1"></div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: none"><sc-if value="{{cHasOut}}" hint-placeholder-val="{{false}}"><span style="height: 32px; border-radius: 12px; background: #0e0e10; color: #ffffff; padding: 0 12px; display: flex; align-items: center; font-size: 12px; font-weight: 600; animation: mx-pop-a 0.35s ease">{{cPreview}}</span></sc-if><span style="flex: 1"></span><button class="mx-btn mx-press" disabled="{{cBusy}}" onClick="{{cCancel}}" style="height: 38px">Cancel</button><button class="mx-btn dark mx-press" disabled="{{cSaveOff}}" onClick="{{cSave}}" style="height: 38px; display: flex; align-items: center; gap: 8px"><sc-if value="{{cBusy}}" hint-placeholder-val="{{false}}"><span class="mx-spin"></span></sc-if>Save to keyboard</button></div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{isLayersSub}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: none"><span class="mx-sub" style="font-size: 12px">{{lCount}}</span><button class="mx-tool mx-press" disabled="{{lAddOff}}" onClick="{{lAdd}}" title="{{lAddTitle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add layer</button></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow: auto">
+<sc-for list="{{lRows}}" as="r" hint-placeholder-count="4">
+<div class="mx-row" onClick="{{r.pick}}" style="{{r.style}}">
+<button class="mx-press" aria-label="{{r.colorLabel}}" aria-expanded="{{r.palOpen}}" onClick="{{r.togglePal}}" style="{{r.dot}}"></button>
+<sc-if value="{{r.renaming}}" hint-placeholder-val="{{false}}"><input class="mx-input" aria-label="レイヤー名" maxlength="24" value="{{r.draft}}" onChange="{{r.onDraft}}" onKeyDown="{{r.onKey}}" onClick="{{r.stop}}" style="height: 32px; flex: 1; width: auto"><button class="mx-pill sm mx-press on" onClick="{{r.saveName}}">Save</button></sc-if>
+<sc-if value="{{r.notRenaming}}" hint-placeholder-val="{{true}}"><b onDoubleClick="{{r.startRename}}" title="ダブルクリックで名前を変更" style="font-size: 14px">{{r.name}}</b><span class="mx-sub" style="font-family: 'JetBrains Mono', monospace; font-size: 12px">L{{r.index}}</span><button class="mx-press" aria-label="名前を変更" onClick="{{r.startRename}}" style="width: 28px; height: 28px; border: none; border-radius: 14px; background: transparent; cursor: pointer; color: #6b6e75"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"></path></svg></button><span style="flex: 1"></span></sc-if>
+<sc-if value="{{r.hasLed}}" hint-placeholder-val="{{false}}"><button onClick="{{r.toLed}}" title="Lighting › Layer colors を開く" style="height: 24px; border-radius: 12px; background: #ffffff; border: 1px solid #e1e3e8; display: flex; align-items: center; gap: 5px; padding: 0 8px; font-size: 10px; font-weight: 700; cursor: pointer">LED<span style="{{r.ledDot}}"></span></button></sc-if>
+<sc-if value="{{r.hasChanges}}" hint-placeholder-val="{{false}}"><span title="未反映の変更" style="min-width: 22px; height: 22px; border-radius: 11px; background: #fdebd6; color: #9a5310; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px; box-sizing: border-box">{{r.changes}}</span></sc-if>
+<button class="mx-pill sm mx-press" onClick="{{r.edit}}">Edit keys</button>
+<sc-if value="{{r.removable}}" hint-placeholder-val="{{false}}"><button class="mx-press" aria-label="レイヤーを削除" onClick="{{r.remove}}" style="width: 30px; height: 30px; border: none; border-radius: 15px; background: transparent; cursor: pointer; color: #a33a2c"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"></path></svg></button></sc-if>
+</div>
+<sc-if value="{{r.palOpen}}" hint-placeholder-val="{{false}}"><div role="radiogroup" aria-label="{{r.colorLabel}}" style="display: flex; gap: 6px; padding: 2px 12px 4px; animation: mx-menu 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)"><sc-for list="{{r.colors}}" as="c" hint-placeholder-count="9"><button class="mx-press" role="radio" aria-checked="{{c.on}}" aria-label="{{c.label}}" onClick="{{c.pick}}" style="{{c.style}}"></button></sc-for></div></sc-if>
+</sc-for>
+</div>
+<span class="mx-sub mx-hide-short" style="font-size: 12px; flex: none">行を押すと 3D キーボードがそのレイヤーに切り替わります。▽（透過）は下のレイヤーと同じ動作です。削除できるのは一番上のレイヤーだけです。</span>
+</sc-if>
+<sc-for list="{{paneCards}}" as="c" hint-placeholder-count="3">
+<section class="mx-card" aria-label="{{c.title}}" style="{{c.style}}">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px"><div style="display: flex; flex-direction: column; gap: 4px"><h2 class="mx-h1">{{c.title}}<sc-if value="{{c.hasBadge}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; background: #fdebd6; color: #9a5310">{{c.badge}}</span></sc-if></h2><span class="mx-sub mx-sub2" title="{{c.sub}}">{{c.sub}}</span></div></div>
+<div class="mx-rows" style="{{c.rowsStyle}}">
+<sc-for list="{{c.rows}}" as="r" hint-placeholder-count="3">
+<div style="{{r.dim}}">
+<sc-if value="{{r.isSlider}}" hint-placeholder-val="{{false}}"><label style="display: flex; flex-direction: column; gap: 6px"><span style="display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 600">{{r.label}}<span style="font-variant-numeric: tabular-nums; color: #4a4d54; font-weight: 600">{{r.valueText}}</span></span><input type="range" min="{{r.min}}" max="{{r.max}}" step="{{r.step}}" value="{{r.value}}" disabled="{{r.off}}" onChange="{{r.onChange}}" style="{{r.track}}"><span class="mx-sub mx-help-t" title="{{r.help}}" style="font-size: 12px">{{r.help}}</span></label></sc-if>
+<sc-if value="{{r.isSwitch}}" hint-placeholder-val="{{false}}"><div style="display: flex; justify-content: space-between; gap: 16px; align-items: center"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 14px; font-weight: 600">{{r.label}}</b><span class="mx-sub mx-help-t" title="{{r.help}}" style="font-size: 12px">{{r.help}}</span></span><button role="switch" aria-checked="{{r.on}}" aria-label="{{r.label}}" disabled="{{r.off}}" onClick="{{r.toggle}}" style="{{r.swStyle}}"><span style="{{r.knobStyle}}"></span></button></div></sc-if>
+<sc-if value="{{r.isSeg}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 8px"><b style="font-size: 14px; font-weight: 600">{{r.label}}</b><div class="mx-seg" role="radiogroup" aria-label="{{r.label}}"><sc-for list="{{r.opts}}" as="o" hint-placeholder-count="3"><button class="mx-pill sm mx-press {{o.cls}}" role="radio" aria-checked="{{o.on}}" disabled="{{o.off}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for></div><span class="mx-sub mx-help-t" title="{{r.help}}" style="font-size: 12px">{{r.help}}</span></div></sc-if>
+<sc-if value="{{r.isSelect}}" hint-placeholder-val="{{false}}"><label style="display: flex; flex-direction: column; gap: 8px"><b style="font-size: 14px; font-weight: 600">{{r.label}}</b><select class="mx-sel" value="{{r.value}}" disabled="{{r.off}}" onChange="{{r.onChange}}" style="height: 40px; border-radius: 12px"><sc-for list="{{r.groups}}" as="g" hint-placeholder-count="2"><optgroup label="{{g.label}}"><sc-for list="{{g.opts}}" as="o" hint-placeholder-count="4"><option value="{{o}}">{{o}}</option></sc-for></optgroup></sc-for></select><span class="mx-sub mx-help-t" title="{{r.help}}" style="font-size: 12px">{{r.help}}</span></label></sc-if>
+<sc-if value="{{r.isSwatches}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 8px"><span style="display: flex; justify-content: space-between; gap: 12px"><b style="font-size: 14px; font-weight: 600">{{r.label}}</b><span class="mx-sub">{{r.valueText}}</span></span><div style="display: flex; gap: 8px; flex-wrap: wrap" role="radiogroup" aria-label="{{r.label}}"><sc-for list="{{r.opts}}" as="o" hint-placeholder-count="8"><button class="mx-press mx-swatch" role="radio" aria-checked="{{o.on}}" aria-label="{{o.label}}" title="{{o.label}}" disabled="{{o.off}}" onClick="{{o.pick}}" style="{{o.style}}"></button></sc-for></div><span class="mx-sub mx-help-t" title="{{r.help}}" style="font-size: 12px">{{r.help}}</span></div></sc-if>
+<sc-if value="{{r.isNote}}" hint-placeholder-val="{{false}}"><div class="mx-sub mx-sub2" title="{{r.help}}" style="padding: 10px 14px; border-radius: 14px; background: #f5f6f8; font-size: 12px">{{r.help}}</div></sc-if>
+<sc-if value="{{r.isButton}}" hint-placeholder-val="{{false}}"><button class="mx-pill sm mx-press" onClick="{{r.onClick}}">{{r.label}}</button></sc-if>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+</section>
+</main>
+
+<footer class="mx-foot">
+<div class="mx-hgrp" style="position: relative; z-index: 30">
+<button class="mx-ib mx-press" aria-label="ヘルプ" aria-expanded="{{helpOpen}}" onClick="{{toggleHelp}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg></button>
+<sc-if value="{{helpOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-help" role="dialog" aria-label="使い方">
+<sc-if value="{{isKeymap}}" hint-placeholder-val="{{true}}">
+<b style="font-size: 15px">Keymap</b>
+<span>1. 3D キーボードのキーを押すと、そのキーにズームして設定ウィンドウが開きます。</span>
+<span>2. Keycode からキーを選ぶと割り当ててウィンドウが閉じます。長押しの動作・16進コード・ショートカットは他のタブで設定します。</span>
+<span>3. 右下の Write to keyboard でキーボードに書き込みます。それまでは青い点で表示されます。タッチパッドを押すと Pointing に移ります。</span>
+</sc-if>
+<sc-if value="{{isMacros}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Macros</b>
+<span>上の M0〜M15 からマクロを選び、テキストやキーを追加します。⧗ はそのステップの前に待つ時間です。TAP / HOLD の表示を押すと切り替わります。</span>
+<span>3D キーボードのキーを押すと、そのキーに選択中のマクロを割り当てます。Write to keyboard でまとめて書き込みます。</span>
+</sc-if>
+<sc-if value="{{isCombos}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Combos</b>
+<span>3D キーボードのキーを押すとコンボの作成が始まり、押したキーがトリガーになります。出力・判定時間・有効なレイヤーを選んで保存します。</span>
+<span>一覧の行にカーソルを合わせると、そのコンボのキーが 3D キーボード上で光ります。</span>
+</sc-if>
+<sc-if value="{{isLayersSub}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Layers</b>
+<span>行を押すと 3D キーボードがそのレイヤーの割り当てに切り替わります。名前はダブルクリックか鉛筆のボタンで変更できます（Enter で保存、Esc で取り消し）。</span>
+<span>レイヤーの削除は Write to keyboard を押すまでキーボードには書き込まれません。</span>
+</sc-if>
+<sc-if value="{{isPointing}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Pointing</b>
+<span>タッチパッドにズームした状態で、右のウィンドウから設定します。Edges タブでは 3D のタッチパッド上の縁や角を直接押して選べます。</span>
+<span>変更は約 0.4 秒後に自動でキーボードに保存されます。保存ボタンはありません。</span>
+</sc-if>
+<sc-if value="{{isLighting}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Lighting</b>
+<span>設定はすぐに 3D キーボードの光り方に反映されます。左上のレイヤーを切り替えると、そのレイヤーが有効なときの光り方を確認できます。</span>
+<span>Touch glow では、3D のタッチパッドの上でカーソルを動かすと対応する位置のキーが光ります。変更は自動で保存されます。</span>
+</sc-if>
+</div>
+</sc-if>
+<span class="mx-status" role="status"><span style="{{statusDot}}"></span>{{statusText}}</span>
+</div>
+<sc-if value="{{showWrite}}" hint-placeholder-val="{{true}}"><button class="mx-primary mx-press {{writeCls}}" onClick="{{write}}" disabled="{{writeOff}}"><sc-if value="{{writing}}" hint-placeholder-val="{{false}}"><span class="mx-spin"></span></sc-if>{{writeLabel}}<span style="{{badgeStyle}}">{{pending}}</span></button></sc-if>
+<sc-if value="{{isCombos}}" hint-placeholder-val="{{false}}"><button class="mx-primary mx-press {{cAddCls}}" onClick="{{cAdd}}" disabled="{{cAddOff}}" style="animation: mx-chip-a 0.4s ease">Add combo<span style="min-width: 32px; height: 32px; border-radius: 16px; background: #ffffff; color: #0e0e10; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></button></sc-if>
+<sc-if value="{{notKeys}}" hint-placeholder-val="{{false}}"><button class="mx-primary mx-press" onClick="{{resetSec}}" title="{{resetTitle}}" style="padding: 0 24px; animation: mx-chip-a 0.4s ease">Reset to defaults</button></sc-if>
+</footer>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+<div class="mx-toast" role="status" style="{{toastAnim}}"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></i>{{toast}}</div>
+</sc-if>
+
+<sc-if value="{{dialogOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-scrimwrap">
+<button class="mx-scrim" aria-label="閉じる" onClick="{{closeAll}}"></button>
+<div class="mx-dlg" role="dialog" aria-modal="true">
+<sc-if value="{{dlgReset}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 600">Are you sure to reset keymap?</h2>
+<span style="font-size: 14px; color: #4a4d54; line-height: 1.7">今のキーマップを破棄して、初期のキーマップをすぐにキーボードへ適用します。今のキーマップを使い回したい場合は、先に Export で保存してください。</span>
+<div style="display: flex; justify-content: flex-end; gap: 8px"><button class="mx-btn mx-press" onClick="{{closeAll}}">No</button><button class="mx-btn red mx-press" onClick="{{doReset}}">Yes</button></div>
+</div>
+</sc-if>
+<sc-if value="{{dlgClear}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 600">Clear all changes?</h2>
+<span style="font-size: 14px; color: #4a4d54; line-height: 1.7">まだキーボードに反映していない {{pending}} 件の変更をすべて取り消します。</span>
+<div style="display: flex; justify-content: flex-end; gap: 8px"><button class="mx-btn mx-press" onClick="{{closeAll}}">Cancel</button><button class="mx-btn red mx-press" onClick="{{doClear}}">Clear</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{dlgLRemove}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 600">Remove layer?</h2>
+<span style="font-size: 14px; color: #4a4d54; line-height: 1.7">このレイヤーにはキーが割り当てられています。すべてのキーを透過にして、レイヤーを削除しますか？（このあと Write to keyboard を押すと、キーボードに書き込まれます）</span>
+<div style="display: flex; justify-content: flex-end; gap: 8px"><button class="mx-btn mx-press" onClick="{{closeAll}}">Cancel</button><button class="mx-btn red mx-press" onClick="{{doLRemove}}">Remove</button></div>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+componentDidMount() {
+this._onScroll = (e) => {
+const t = e.target;
+if (!t || !t.classList || !t.classList.contains('mx-main')) return;
+const s = t.scrollTop > 8;
+if (s !== !!(this.state && this.state.scrolled)) this.setState({ scrolled: s });
+};
+document.addEventListener('scroll', this._onScroll, true);
+}
+componentWillUnmount() {
+document.removeEventListener('scroll', this._onScroll, true);
+if (this._ro) this._ro.disconnect();
+(this._timers || []).forEach((t) => clearTimeout(t));
+clearTimeout(this._tt); clearTimeout(this._ts);
+if (this._raf) cancelAnimationFrame(this._raf);
+}
+later(fn, ms) {
+this._timers = this._timers || [];
+const t = setTimeout(fn, ms);
+this._timers.push(t);
+return t;
+}
+showToast(msg) {
+clearTimeout(this._tt);
+this.setState({ toast: msg, toastN: ((this.state && this.state.toastN) || 0) + 1 });
+this._tt = setTimeout(() => this.setState({ toast: null }), 3200);
+}
+renderVals() {
+const st = this.state || {};
+const ptr = st.ptr || null;
+const gx = ptr ? ptr.x : 690;
+const gy = ptr ? ptr.y : 40;
+const glowBase = 'position: absolute; top: 0; left: 0; border-radius: 50%; pointer-events: none; will-change: transform; ';
+const at = (w, h, dx, dy) => 'translate(' + Math.round(gx - w / 2 + dx) + 'px, ' + Math.round(gy - h / 2 + dy) + 'px)';
+const open = st.open || null;
+const toggle = (name) => () => this.setState({ open: open === name ? null : name });
+const closeAll = () => this.setState({ open: null });
+const dlg = !!open && open.indexOf('dlg-') === 0;
+const sw = (on) => 'position: relative; width: 56px; height: 32px; border: none; border-radius: 16px; cursor: pointer; padding: 0; flex: none; transition: background-color 0.3s ease, transform 0.2s ease; background: ' + (on ? '#0e0e10' : '#d5d8de');
+const knob = (on) => 'position: absolute; top: 4px; left: ' + (on ? '28px' : '4px') + '; width: 24px; height: 24px; border-radius: 12px; background: #ffffff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18); transition: left 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)';
+const pillCls = (on) => (on ? 'on' : '');
+const autosave = (patch) => {
+this.setState(Object.assign({ saving: true }, patch));
+clearTimeout(this._ts);
+this._ts = setTimeout(() => this.setState({ saving: false }), 700);
+};
+const R = {
+slider: (label, value, min, max, step, text, help, onSet, off) => ({ isSlider: true, label, value, min, max, step, valueText: text, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', track: 'width: 100%; accent-color: #0e0e10', onChange: (e) => onSet(Number(e.target.value)) }),
+sw: (label, on, help, onSet, off) => ({ isSwitch: true, label, on: !!on, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', swStyle: sw(!!on), knobStyle: knob(!!on), toggle: () => onSet(!on) }),
+seg: (label, options, cur, help, onSet, off) => ({ isSeg: true, label, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', opts: options.map((o) => { const v = Array.isArray(o) ? o[0] : o; const l = Array.isArray(o) ? o[1] : o; return { label: l, on: v === cur, cls: v === cur ? 'on' : '', off: !!off, style: '', pick: () => onSet(v) }; }) }),
+select: (label, groups, cur, help, onSet, off) => ({ isSelect: true, label, value: cur, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', groups: groups.map(([g, opts]) => ({ label: g, opts })), onChange: (e) => onSet(e.target.value) }),
+swatches: (label, options, cur, help, onSet, off) => ({ isSwatches: true, label, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', valueText: (options.find((o) => o[0] === cur) || [0, ''])[1], opts: options.map(([v, l, color]) => ({ label: l, on: v === cur, off: !!off, pick: () => onSet(v), style: 'width: 34px; height: 34px; border-radius: 17px; cursor: pointer; padding: 0; transition: transform 0.2s ease; ' + (color ? 'background: ' + color : 'background: conic-gradient(#e5484d, #f5d90a, #30a46c, #05a2c2, #3e63dd, #d6409f, #e5484d)') + '; border: ' + (v === cur ? '3px solid #0e0e10' : '2px solid #ffffff') + '; box-shadow: 0 0 0 1px #d5d8de' })) }),
+note: (text) => ({ isNote: true, help: text, dim: '' }),
+button: (label, onClick) => ({ isButton: true, label, onClick, dim: '' })
+};
+const card = (title, sub, rows, extra) => Object.assign({ title, sub: sub || '', rows, hasBadge: false, badge: '', style: '', rowsStyle: 'display: flex; flex-direction: column; gap: 16px' }, extra || {});
+const rowsGrid = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px 28px';
+const ptabs = (key, list, def) => { const cur = st[key] || def; return { cur, tabs: list.map(([id, label]) => ({ label, on: cur === id, pick: () => this.setState({ [key]: id }) })) }; };
+const C = {
+glowStyle: glowBase + 'width: 1300px; height: 900px; background: radial-gradient(closest-side, rgba(70, 112, 210, 0.42), rgba(70, 112, 210, 0.16) 55%, rgba(70, 112, 210, 0) 100%); filter: blur(80px); transition: transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1); transform: ' + at(1300, 900, 0, -120),
+glowStyle2: glowBase + 'width: 760px; height: 560px; background: radial-gradient(closest-side, rgba(130, 168, 245, 0.5), rgba(130, 168, 245, 0) 100%); filter: blur(64px); transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); transform: ' + at(760, 560, 0, 0),
+glowStyle3: glowBase + 'width: 900px; height: 640px; background: radial-gradient(closest-side, rgba(160, 140, 235, 0.28), rgba(160, 140, 235, 0) 100%); filter: blur(90px); transition: transform 2.4s cubic-bezier(0.2, 0.7, 0.2, 1); transform: ' + at(900, 640, ptr ? (690 - gx) * 0.6 + 220 : 380, ptr ? (300 - gy) * 0.4 + 120 : 260),
+onMove: (e) => {
+if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+const el = e.currentTarget;
+const r = el.getBoundingClientRect();
+const k = el.offsetWidth ? r.width / el.offsetWidth : 1;
+this._ptr = { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k };
+if (!this._raf) this._raf = requestAnimationFrame(() => { this._raf = 0; this.setState({ ptr: this._ptr }); });
+},
+onLeave: () => this.setState({ ptr: null }),
+closeAll, menuOpen: !!open && !dlg, dialogOpen: dlg,
+hdrCls: st.scrolled ? 'scrolled' : '', miniCls: st.scrolled ? 'show' : '',
+kbdOpen: open === 'kbd', toggleKbd: toggle('kbd'),
+gearOpen: open === 'gear', toggleGear: toggle('gear'),
+helpOpen: open === 'help', toggleHelp: toggle('help'),
+onImport: (e) => { const f = e.target.files && e.target.files[0]; this.setState({ open: null }); if (f) this.showToast('Imported: ' + f.name); },
+exportKeymap: () => { this.setState({ open: null }); this.showToast('matrix-split42.matrix-keymap.json を書き出しました'); },
+hasToast: !!st.toast, toast: st.toast || '',
+toastAnim: 'animation: ' + ((st.toastN || 0) % 2 ? 'mx-pop-a' : 'mx-pop-b') + ' 0.4s cubic-bezier(0.3, 0.7, 0.4, 1)',
+saving: !!st.saving,
+autoStatusText: st.saving ? 'キーボードに保存中…' : 'キーボードに保存済み（自動保存）',
+autoStatusDot: 'width: 8px; height: 8px; border-radius: 4px; transition: background-color 0.3s ease; background: ' + (st.saving ? '#c08a1e' : '#1f8a55')
+};
+
+const KEYCODE_CATS = [["Basic",[["symbol","SYMBOL",[[" ","XXXXXXX"],["▽","_______"]]],["letter","LETTER",[["A","KC_A"],["B","KC_B"],["C","KC_C"],["D","KC_D"],["E","KC_E"],["F","KC_F"],["G","KC_G"],["H","KC_H"],["I","KC_I"],["J","KC_J"],["K","KC_K"],["L","KC_L"],["M","KC_M"],["N","KC_N"],["O","KC_O"],["P","KC_P"],["Q","KC_Q"],["R","KC_R"],["S","KC_S"],["T","KC_T"],["U","KC_U"],["V","KC_V"],["W","KC_W"],["X","KC_X"],["Y","KC_Y"],["Z","KC_Z"]]],["number","NUMBER",[["1","KC_1"],["2","KC_2"],["3","KC_3"],["4","KC_4"],["5","KC_5"],["6","KC_6"],["7","KC_7"],["8","KC_8"],["9","KC_9"],["0","KC_0"]]],["punctuation","PUNCTUATION",[["-","KC_MINS"],["=","KC_EQL"],["`","KC_GRV"],["[","KC_LBRC"],["]","KC_RBRC"],["\\","KC_BSLS"],["\\","KC_NUHS"],[";","KC_SCLN"],["'","KC_QUOT"],[",","KC_COMM"],[".","KC_DOT"],["/","KC_SLSH"],["NUBS","KC_NUBS"]]],["grave_escape","GRAVE ESCAPE",[["ESC `","QK_GESC"]]],["space_cadet","SPACE CADET",[["*Ctrl (","SC_LCPO"],["Ctrl* )","SC_RCPC"],["*Shift (","SC_LSPO"],["Shift* )","SC_RSPC"],["*Alt (","SC_LAPO"],["Alt* )","SC_RAPC"],["Shift* Enter","SC_SENT"]]],["f","F",[["F1","KC_F1"],["F2","KC_F2"],["F3","KC_F3"],["F4","KC_F4"],["F5","KC_F5"],["F6","KC_F6"],["F7","KC_F7"],["F8","KC_F8"],["F9","KC_F9"],["F10","KC_F10"],["F11","KC_F11"],["F12","KC_F12"],["F13","KC_F13"],["F14","KC_F14"],["F15","KC_F15"],["F16","KC_F16"],["F17","KC_F17"],["F18","KC_F18"],["F19","KC_F19"],["F20","KC_F20"],["F21","KC_F21"],["F22","KC_F22"],["F23","KC_F23"],["F24","KC_F24"]]],["mods","MODS",[["*Ctrl","KC_LCTL"],["*Shift","KC_LSFT"],["*Alt","KC_LALT"],["*Win","KC_LGUI"],["Ctrl*","KC_RCTL"],["Shift*","KC_RSFT"],["Alt*","KC_RALT"],["Win*","KC_RGUI"]]],["edit","EDIT",[["Enter","KC_ENT"],["Esc","KC_ESC"],["BS","KC_BSPC"],["Tab","KC_TAB"],["Space","KC_SPC"],["Del","KC_DEL"],["Insert","KC_INS"],["Undo","KC_UNDO"],["Cut","KC_CUT"],["Copy","KC_COPY"],["Paste","KC_PSTE"]]],["move","MOVE",[["Home","KC_HOME"],["Page Up","KC_PGUP"],["End","KC_END"],["Page Down","KC_PGDN"],["→","KC_RGHT"],["←","KC_LEFT"],["↓","KC_DOWN"],["↑","KC_UP"]]],["numpad","NUMPAD",[["Num 1","KC_P1"],["Num 2","KC_P2"],["Num 3","KC_P3"],["Num 4","KC_P4"],["Num 5","KC_P5"],["Num 6","KC_P6"],["Num 7","KC_P7"],["Num 8","KC_P8"],["Num 9","KC_P9"],["Num 0","KC_P0"],["Num +","KC_PPLS"],["Num -","KC_PMNS"],["Num *","KC_PAST"],["Num /","KC_PSLS"],["Num =","KC_PEQL"],["Num ,","KC_PCMM"],["Num = AS400","KC_KP_EQUAL_AS400"],["Num .","KC_PDOT"],["Num Enter","KC_PENT"]]]]],["Functions",[["int","INT",[["Ro","KC_INT1"],["かな","KC_INT2"],["¥","KC_INT3"],["変換","KC_INT4"],["無変換","KC_INT5"],["Int 7","KC_INT7"],["Int 8","KC_INT8"],["Int 9","KC_INT9"]]],["lang","LANG",[["Lang 1","KC_LNG1"],["Lang 2","KC_LNG2"],["JIS Katakana","KC_LNG3"],["JIS Hiragana","KC_LNG4"],["Lang 5","KC_LNG5"],["Lang 6","KC_LNG6"],["Lang 7","KC_LNG7"],["Lang 8","KC_LNG8"],["Lang 9","KC_LNG9"]]],["lock","LOCK",[["Caps Lock","KC_CAPS"],["Scroll Lock","KC_SCRL"],["Num Lock","KC_NUM"],["Locking Caps Lock","KC_LCAP"],["Locking Num Lock","KC_LNUM"],["Locking Scroll Lock","KC_LSCR"]]],["combo","COMBO",[["Combo On","CM_ON"],["Combo Off","CM_OFF"],["Combo Toggle","CM_TOGG"]]],["auto_shift","AUTO SHIFT",[["Auto Shift Down","AS_DOWN"],["Auto Shift Up","AS_UP"],["Auto Shift Report","AS_RPT"],["Auto Shift On","AS_ON"],["Auto Shift Off","AS_OFF"],["Auto Shift Toggle","AS_TOGG"]]],["via_user_key","VIA USER KEY",[["Kb 0","QK_KB_0"],["Kb 1","QK_KB_1"],["Kb 2","QK_KB_2"],["Kb 3","QK_KB_3"],["Kb 4","QK_KB_4"],["Kb 5","QK_KB_5"],["Kb 6","QK_KB_6"],["Kb 7","QK_KB_7"],["Kb 8","QK_KB_8"],["Kb 9","QK_KB_9"],["Kb 10","QK_KB_10"],["Kb 11","QK_KB_11"],["Kb 12","QK_KB_12"],["Kb 13","QK_KB_13"],["Kb 14","QK_KB_14"],["Kb 15","QK_KB_15"],["Kb 16","QK_KB_16"],["Kb 17","QK_KB_17"],["Kb 18","QK_KB_18"],["Kb 19","QK_KB_19"],["Kb 20","QK_KB_20"],["Kb 21","QK_KB_21"],["Kb 22","QK_KB_22"],["Kb 23","QK_KB_23"],["Kb 24","QK_KB_24"],["Kb 25","QK_KB_25"],["Kb 26","QK_KB_26"],["Kb 27","QK_KB_27"],["Kb 28","QK_KB_28"],["Kb 29","QK_KB_29"],["Kb 30","QK_KB_30"],["Kb 31","QK_KB_31"]]],["programmable_button","PROGRAMMABLE BUTTON",[["Programmable Button 1","PB_1"],["Programmable Button 2","PB_2"],["Programmable Button 3","PB_3"],["Programmable Button 4","PB_4"],["Programmable Button 5","PB_5"],["Programmable Button 6","PB_6"],["Programmable Button 7","PB_7"],["Programmable Button 8","PB_8"],["Programmable Button 9","PB_9"],["Programmable Button 10","PB_10"],["Programmable Button 11","PB_11"],["Programmable Button 12","PB_12"],["Programmable Button 13","PB_13"],["Programmable Button 14","PB_14"],["Programmable Button 15","PB_15"],["Programmable Button 16","PB_16"],["Programmable Button 17","PB_17"],["Programmable Button 18","PB_18"],["Programmable Button 19","PB_19"],["Programmable Button 20","PB_20"],["Programmable Button 21","PB_21"],["Programmable Button 22","PB_22"],["Programmable Button 23","PB_23"],["Programmable Button 24","PB_24"],["Programmable Button 25","PB_25"],["Programmable Button 26","PB_26"],["Programmable Button 27","PB_27"],["Programmable Button 28","PB_28"],["Programmable Button 29","PB_29"],["Programmable Button 30","PB_30"],["Programmable Button 31","PB_31"],["Programmable Button 32","PB_32"]]],["user","USER",[["User 0","QK_USER_0"],["User 1","QK_USER_1"],["User 2","QK_USER_2"],["User 3","QK_USER_3"],["User 4","QK_USER_4"],["User 5","QK_USER_5"],["User 6","QK_USER_6"],["User 7","QK_USER_7"],["User 8","QK_USER_8"],["User 9","QK_USER_9"],["User 10","QK_USER_10"],["User 11","QK_USER_11"],["User 12","QK_USER_12"],["User 13","QK_USER_13"],["User 14","QK_USER_14"],["User 15","QK_USER_15"],["User 16","QK_USER_16"],["User 17","QK_USER_17"],["User 18","QK_USER_18"],["User 19","QK_USER_19"],["User 20","QK_USER_20"],["User 21","QK_USER_21"],["User 22","QK_USER_22"],["User 23","QK_USER_23"],["User 24","QK_USER_24"],["User 25","QK_USER_25"],["User 26","QK_USER_26"],["User 27","QK_USER_27"],["User 28","QK_USER_28"],["User 29","QK_USER_29"],["User 30","QK_USER_30"],["User 31","QK_USER_31"]]],["leader_key","LEADER KEY",[["Leader","QK_LEAD"]]],["dynamic_macro","DYNAMIC MACRO",[["Dynamic Macro Record Start 1","DM_REC1"],["Dynamic Macro Record Start 2","DM_REC2"],["Dynamic Macro Record Stop","DM_RSTP"],["Dynamic Macro Play 1","DM_PLY1"],["Dynamic Macro Play 2","DM_PLY2"]]],["macro","MACRO",[["M0","QK_MACRO_0"],["M1","QK_MACRO_1"],["M2","QK_MACRO_2"],["M3","QK_MACRO_3"],["M4","QK_MACRO_4"],["M5","QK_MACRO_5"],["M6","QK_MACRO_6"],["M7","QK_MACRO_7"],["M8","QK_MACRO_8"],["M9","QK_MACRO_9"],["M10","QK_MACRO_10"],["M11","QK_MACRO_11"],["M12","QK_MACRO_12"],["M13","QK_MACRO_13"],["M14","QK_MACRO_14"],["M15","QK_MACRO_15"]]]]],["Layer",[["layers","LAYERS",[["TO(0)","TO(0)"],["TO(1)","TO(1)"],["TO(2)","TO(2)"],["TO(3)","TO(3)"],["TG(0)","TG(0)"],["TG(1)","TG(1)"],["TG(2)","TG(2)"],["TG(3)","TG(3)"],["TT(0)","TT(0)"],["TT(1)","TT(1)"],["TT(2)","TT(2)"],["TT(3)","TT(3)"],["MO(0)","MO(0)"],["MO(1)","MO(1)"],["MO(2)","MO(2)"],["MO(3)","MO(3)"],["OSL(0)","OSL(0)"],["OSL(1)","OSL(1)"],["OSL(2)","OSL(2)"],["OSL(3)","OSL(3)"],["DF(0)","DF(0)"],["DF(1)","DF(1)"],["DF(2)","DF(2)"],["DF(3)","DF(3)"]]],["layer_mod","LAYER MOD",[["LM(0)","LM"],["LM(1)","LM"],["LM(2)","LM"],["LM(3)","LM"]]],["tri_layer","TRI LAYER",[["Tri Layer Lower","TL_LOWR"],["Tri Layer Upper","TL_UPPR"]]]]],["Device",[["device","DEVICE",[["Power","KC_KB_POWER"],["System Power Down","KC_PWR"],["Sleep","KC_SLEP"],["Wake","KC_WAKE"],["Screen +","KC_BRIU"],["Screen -","KC_BRID"]]],["mouse","MOUSE",[["Mouse ↑","KC_MS_U"],["Mouse ↓","KC_MS_D"],["Mouse ←","KC_MS_L"],["Mouse →","KC_MS_R"],["Mouse Btn1","KC_BTN1"],["Mouse Btn2","KC_BTN2"],["Mouse Btn3","KC_BTN3"],["Mouse Btn4","KC_BTN4"],["Mouse Btn5","KC_BTN5"],["Mouse Btn6","KC_BTN6"],["Mouse Btn7","KC_BTN7"],["Mouse Btn8","KC_BTN8"],["Mouse Wh ↑","KC_WH_U"],["Mouse Wh ↓","KC_WH_D"],["Mouse Wh ←","KC_WH_L"],["Mouse Wh →","KC_WH_R"],["Mouse Acc0","KC_ACL0"],["Mouse Acc1","KC_ACL1"],["Mouse Acc2","KC_ACL2"]]],["keyboard","KEYBOARD",[["Bootloader","QK_BOOT"],["Reboot","QK_RBT"],["Debug Toggle","DB_TOGG"],["Clear Eeprom","EE_CLR"],["Make","QK_MAKE"]]],["underglow","UNDERGLOW",[["RGB Toggle","RGB_TOG"],["RGB Mode +","RGB_MOD"],["RGB Mode -","RGB_RMOD"],["RGB HUE +","RGB_HUI"],["RGB HUE -","RGB_HUD"],["RGB SAT +","RGB_SAI"],["RGB SAT -","RGB_SAD"],["RGB Bright +","RGB_VAI"],["RGB Bright -","RGB_VAD"],["RGB Effect Speed +","RGB_SPI"],["RGB Effect Speed -","RGB_SPD"],["RGB Mode Plain","RGB_M_P"],["RGB Mode Breathe","RGB_M_B"],["RGB Mode Rainbow","RGB_M_R"],["RGB Mode Swirl","RGB_M_SW"],["RGB Mode Snake","RGB_M_SN"],["RGB Mode Knight","RGB_M_K"],["RGB Mode Xmas","RGB_M_X"],["RGB Mode Gradient","RGB_M_G"],["RGB Mode RGB Test","RGB_M_T"],["RGB Mode Twinkle","RGB_M_TW"],["Velocikey Toggle","VK_TOGG"]]],["backlight","BACKLIGHT",[["Backlight On","BL_ON"],["Backlight Off","BL_OFF"],["Backlight Toggle","BL_TOGG"],["Backlight Down","BL_DOWN"],["Backlight Up","BL_UP"],["Backlight Step","BL_STEP"],["Backlight Toggle Breathing","BL_BRTG"]]],["audio","AUDIO",[["Audio On","AU_ON"],["Audio Off","AU_OFF"],["Audio Toggle","AU_TOGG"],["Audio Clicky Toggle","CK_TOGG"],["Audio Clicky On","CK_ON"],["Audio Clicky Off","CK_OFF"],["Audio Clicky Up","CK_UP"],["Audio Clicky Down","CK_DOWN"],["Audio Clicky Reset","CK_RST"],["Music On","MU_ON"],["Music Off","MU_OFF"],["Music Toggle","MU_TOGG"],["Music Mode Next","MU_NEXT"],["Audio Voice Next","AU_NEXT"],["Audio Voice Previous","AU_PREV"]]],["magic","MAGIC",[["Swap Ctrl CapsLock","CL_SWAP"],["Unswap Ctrl CapsLock","CL_NORM"],["Toggle Ctrl CapsLock","CL_TOGG"],["CapsLock As Ctrl Off","CL_CAPS"],["CapsLock As Ctrl On","CL_CTRL"],["Swap *Alt *GUI","AG_LSWP"],["Unswap *Alt *GUI","AG_LNRM"],["Swap Alt* GUI*","AG_RSWP"],["Unswap Alt* GUI*","AG_RNRM"],["GUI On","GU_ON"],["GUI Off","GU_OFF"],["Toggle GUI","GU_TOGG"],["Swap ` ESC","GE_SWAP"],["Unswap ` ESC","GE_NORM"],["Swap \\ Backspace","BS_SWAP"],["Unswap \\ Backspace","BS_NORM"],["Toggle \\ Backspace","BS_TOGG"],["NKRO On","NK_ON"],["NKRO Off","NK_OFF"],["Toggle NKRO","NK_TOGG"],["Swap Alt GUI","AG_SWAP"],["Unswap Alt GUI","AG_NORM"],["Toggle Alt GUI","AG_TOGG"],["Swap *Ctl *GUI","CG_LSWP"],["Unswap *Ctl *GUI","CG_LNRM"],["Swap Ctl* GUI*","CG_RSWP"],["Unswap Ctl* GUI*","CG_RNRM"],["Swap Ctrl GUI","CG_SWAP"],["Unswap Ctrl GUI","CG_NORM"],["Toggle Ctrl GUI","CG_TOGG"],["EE Hands Left","EH_LEFT"],["EE Hands Right","EH_RGHT"],["Swap ESC CapsLock","EC_SWAP"],["Unswap ESC CapsLock","EC_NORM"],["Toggle ESC CapsLock","EC_TOGG"]]],["bluetooth","BLUETOOTH",[["Bluetooth Output Auto","OU_AUTO"],["Bluetooth Output Usb","OU_USB"],["Bluetooth Output Bluetooth","OU_BT"]]],["joystick","JOYSTICK",[["Joystick Button 0","JS_0"],["Joystick Button 1","JS_1"],["Joystick Button 2","JS_2"],["Joystick Button 3","JS_3"],["Joystick Button 4","JS_4"],["Joystick Button 5","JS_5"],["Joystick Button 6","JS_6"],["Joystick Button 7","JS_7"],["Joystick Button 8","JS_8"],["Joystick Button 9","JS_9"],["Joystick Button 10","JS_10"],["Joystick Button 11","JS_11"],["Joystick Button 12","JS_12"],["Joystick Button 13","JS_13"],["Joystick Button 14","JS_14"],["Joystick Button 15","JS_15"],["Joystick Button 16","JS_16"],["Joystick Button 17","JS_17"],["Joystick Button 18","JS_18"],["Joystick Button 19","JS_19"],["Joystick Button 20","JS_20"],["Joystick Button 21","JS_21"],["Joystick Button 22","JS_22"],["Joystick Button 23","JS_23"],["Joystick Button 24","JS_24"],["Joystick Button 25","JS_25"],["Joystick Button 26","JS_26"],["Joystick Button 27","JS_27"],["Joystick Button 28","JS_28"],["Joystick Button 29","JS_29"],["Joystick Button 30","JS_30"],["Joystick Button 31","JS_31"]]],["haptic_feedback","HAPTIC FEEDBACK",[["Haptic On","HF_ON"],["Haptic Off","HF_OFF"],["Haptic Toggle","HF_TOGG"],["Haptic Reset","HF_RST"],["Haptic Feedback Toggle","HF_FDBK"],["Haptic Buzz Toggle","HF_BUZZ"],["Haptic Mode Next","HF_NEXT"],["Haptic Mode Previous","HF_PREV"],["Haptic Continuous Toggle","HF_CONT"],["Haptic Continuous Up","HF_CONU"],["Haptic Continuous Down","HF_COND"],["Haptic Dwell Up","HF_DWLU"],["Haptic Dwell Down","HF_DWLD"]]],["secure","SECURE",[["Secure Lock","SE_LOCK"],["Secure Unlock","SE_UNLK"],["Secure Toggle","SE_TOGG"],["Secure Request","SE_REQ"]]]]],["Special",[["gui","GUI",[["App","KC_APP"],["Menu","KC_MENU"],["Assistant","KC_ASST"],["Mission Control","KC_MCTL"],["Launchpad","KC_LPAD"]]],["command","COMMAND",[["Print Screen","KC_PSCR"],["Pause","KC_PAUS"],["Execute","KC_EXEC"],["Help","KC_HELP"],["Select","KC_SLCT"],["Stop","KC_STOP"],["Again","KC_AGIN"],["Find","KC_FIND"],["Alt Erase","KC_ERAS"],["SysReq","KC_SYRQ"],["Cancel","KC_CNCL"],["Clear","KC_CLR"],["Prior","KC_PRIR"],["Return","KC_RETN"],["Separator","KC_SEPR"],["Out","KC_OUT"],["Oper","KC_OPER"],["Clear/Again","KC_CLAG"],["CrSel/Props","KC_CRSL"],["ExSel","KC_EXSL"]]],["media","MEDIA",[["Audio Mute","KC_MUTE"],["Audio Vol +","KC_VOLU"],["Audio Vol -","KC_VOLD"],["Next","KC_MNXT"],["Previous","KC_MPRV"],["Media Stop","KC_MSTP"],["Play","KC_MPLY"],["Select","KC_MSEL"],["Eject","KC_EJCT"],["Mute","KC_KB_MUTE"],["Vol +","KC_KB_VOLUME_UP"],["Vol -","KC_KB_VOLUME_DOWN"],["Fast Forward","KC_MFFD"],["Rewind","KC_MRWD"]]],["app","APP",[["Mail","KC_MAIL"],["Calculator","KC_CALC"],["My Computer","KC_MYCM"],["WWW Search","KC_WSCH"],["WWW Home","KC_WHOM"],["WWW Back","KC_WBAK"],["WWW Forward","KC_WFWD"],["WWW Stop","KC_WSTP"],["WWW Refresh","KC_WREF"],["WWW Favorite","KC_WFAV"]]],["swap_hands","SWAP HANDS",[["SH TG","SH"],["SH TT","SH"],["SH_MON","SH"],["SH MOFF","SH"],["SH OFF","SH"],["SH ON","SH"],["SH ON","SH"]]],["one_shot_keys","ONE SHOT KEYS",[["One Shot On","OS_ON"],["One Shot Off","OS_OFF"],["One Shot Toggle","OS_TOGG"]]],["key_override","KEY OVERRIDE",[["Key Override Toggle","KO_TOGG"],["Key Override On","KO_ON"],["Key Override Off","KO_OFF"]]],["tapping_term","TAPPING TERM",[["Dynamic Tapping Term Print","DT_PRNT"],["Dynamic Tapping Term Up","DT_UP"],["Dynamic Tapping Term Down","DT_DOWN"]]],["auto_correct","AUTO CORRECT",[["Autocorrect On","AC_ON"],["Autocorrect Off","AC_OFF"],["Autocorrect Toggle","AC_TOGG"]]],["repeat_key","REPEAT KEY",[["Repeat Key","QK_REP"],["Alt Repeat Key","QK_AREP"]]],["key_lock","KEY LOCK",[["Key Lock","QK_LOCK"]]],["caps_word","CAPS WORD",[["Caps Word Toggle","CW_TOGG"]]],["steno","STENO",[["Steno Bolt","QK_STENO_BOLT"],["Steno Gemini","QK_STENO_GEMINI"],["Steno Comb","QK_STENO_COMB"],["Steno Comb Max","QK_STENO_COMB_MAX"]]],["unicode_mode","UNICODE MODE",[["Unicode Mode Next","UC_NEXT"],["Unicode Mode Previous","UC_PREV"],["Unicode Mode Macos","UC_MAC"],["Unicode Mode Linux","UC_LINX"],["Unicode Mode Windows","UC_WIN"],["Unicode Mode Bsd","UC_BSD"],["Unicode Mode Wincompose","UC_WINC"],["Unicode Mode Emacs","UC_EMAC"]]]]],["Midi",[["notes","NOTES",[["Midi Note C 0","MI_C"],["Midi Note C Sharp 0","MI_Cs"],["Midi Note D 0","MI_D"],["Midi Note D Sharp 0","MI_Ds"],["Midi Note E 0","MI_E"],["Midi Note F 0","MI_F"],["Midi Note F Sharp 0","MI_Fs"],["Midi Note G 0","MI_G"],["Midi Note G Sharp 0","MI_Gs"],["Midi Note A 0","MI_A"],["Midi Note A Sharp 0","MI_As"],["Midi Note B 0","MI_B"],["Midi Note C 1","MI_C1"],["Midi Note C Sharp 1","MI_Cs1"],["Midi Note D 1","MI_D1"],["Midi Note D Sharp 1","MI_Ds1"],["Midi Note E 1","MI_E1"],["Midi Note F 1","MI_F1"],["Midi Note F Sharp 1","MI_Fs1"],["Midi Note G 1","MI_G1"],["Midi Note G Sharp 1","MI_Gs1"],["Midi Note A 1","MI_A1"],["Midi Note A Sharp 1","MI_As1"],["Midi Note B 1","MI_B1"],["Midi Note C 2","MI_C2"],["Midi Note C Sharp 2","MI_Cs2"],["Midi Note D 2","MI_D2"],["Midi Note D Sharp 2","MI_Ds2"],["Midi Note E 2","MI_E2"],["Midi Note F 2","MI_F2"],["Midi Note F Sharp 2","MI_Fs2"],["Midi Note G 2","MI_G2"],["Midi Note G Sharp 2","MI_Gs2"],["Midi Note A 2","MI_A2"],["Midi Note A Sharp 2","MI_As2"],["Midi Note B 2","MI_B2"],["Midi Note C 3","MI_C3"],["Midi Note C Sharp 3","MI_Cs3"],["Midi Note D 3","MI_D3"],["Midi Note D Sharp 3","MI_Ds3"],["Midi Note E 3","MI_E3"],["Midi Note F 3","MI_F3"],["Midi Note F Sharp 3","MI_Fs3"],["Midi Note G 3","MI_G3"],["Midi Note G Sharp 3","MI_Gs3"],["Midi Note A 3","MI_A3"],["Midi Note A Sharp 3","MI_As3"],["Midi Note B 3","MI_B3"],["Midi Note C 4","MI_C4"],["Midi Note C Sharp 4","MI_Cs4"],["Midi Note D 4","MI_D4"],["Midi Note D Sharp 4","MI_Ds4"],["Midi Note E 4","MI_E4"],["Midi Note F 4","MI_F4"],["Midi Note F Sharp 4","MI_Fs4"],["Midi Note G 4","MI_G4"],["Midi Note G Sharp 4","MI_Gs4"],["Midi Note A 4","MI_A4"],["Midi Note A Sharp 4","MI_As4"],["Midi Note B 4","MI_B4"],["Midi Note C 5","MI_C5"],["Midi Note C Sharp 5","MI_Cs5"],["Midi Note D 5","MI_D5"],["Midi Note D Sharp 5","MI_Ds5"],["Midi Note E 5","MI_E5"],["Midi Note F 5","MI_F5"],["Midi Note F Sharp 5","MI_Fs5"],["Midi Note G 5","MI_G5"],["Midi Note G Sharp 5","MI_Gs5"],["Midi Note A 5","MI_A5"],["Midi Note A Sharp 5","MI_As5"],["Midi Note B 5","MI_B5"]]],["octave","OCTAVE",[["Midi Octave N2","MI_OCN2"],["Midi Octave N1","MI_OCN1"],["Midi Octave 0","MI_OC0"],["Midi Octave 1","MI_OC1"],["Midi Octave 2","MI_OC2"],["Midi Octave 3","MI_OC3"],["Midi Octave 4","MI_OC4"],["Midi Octave 5","MI_OC5"],["Midi Octave 6","MI_OC6"],["Midi Octave 7","MI_OC7"],["Midi Octave Down","MI_OCTD"],["Midi Octave Up","MI_OCTU"]]],["transpose","TRANSPOSE",[["Midi Transpose N6","MI_TRN6"],["Midi Transpose N5","MI_TRN5"],["Midi Transpose N4","MI_TRN4"],["Midi Transpose N3","MI_TRN3"],["Midi Transpose N2","MI_TRN2"],["Midi Transpose N1","MI_TRN1"],["Midi Transpose 0","MI_TR0"],["Midi Transpose 1","MI_TR1"],["Midi Transpose 2","MI_TR2"],["Midi Transpose 3","MI_TR3"],["Midi Transpose 4","MI_TR4"],["Midi Transpose 5","MI_TR5"],["Midi Transpose 6","MI_TR6"],["Midi Transpose Down","MI_TRSD"],["Midi Transpose Up","MI_TRSU"]]],["velocity","VELOCITY",[["Midi Velocity 0","MI_VL0"],["Midi Velocity 1","MI_VL1"],["Midi Velocity 2","MI_VL2"],["Midi Velocity 3","MI_VL3"],["Midi Velocity 4","MI_VL4"],["Midi Velocity 5","MI_VL5"],["Midi Velocity 6","MI_VL6"],["Midi Velocity 7","MI_VL7"],["Midi Velocity 8","MI_VL8"],["Midi Velocity 9","MI_VL9"],["Midi Velocity 10","MI_VL10"],["Midi Velocity Down","MI_VELD"],["Midi Velocity Up","MI_VELU"]]],["channel","CHANNEL",[["Midi Channel 1","MI_CH1"],["Midi Channel 2","MI_CH2"],["Midi Channel 3","MI_CH3"],["Midi Channel 4","MI_CH4"],["Midi Channel 5","MI_CH5"],["Midi Channel 6","MI_CH6"],["Midi Channel 7","MI_CH7"],["Midi Channel 8","MI_CH8"],["Midi Channel 9","MI_CH9"],["Midi Channel 10","MI_CH10"],["Midi Channel 11","MI_CH11"],["Midi Channel 12","MI_CH12"],["Midi Channel 13","MI_CH13"],["Midi Channel 14","MI_CH14"],["Midi Channel 15","MI_CH15"],["Midi Channel 16","MI_CH16"],["Midi Channel Down","MI_CHND"],["Midi Channel Up","MI_CHNU"]]],["misc","MISC",[["Midi On","MI_ON"],["Midi Off","MI_OFF"],["Midi Toggle","MI_TOGG"],["Midi All Notes Off","MI_AOFF"],["Midi Sustain","MI_SUST"],["Midi Portamento","MI_PORT"],["Midi Sostenuto","MI_SOST"],["Midi Soft","MI_SOFT"],["Midi Legato","MI_LEG"],["Midi Modulation","MI_MOD"],["Midi Modulation Speed Down","MI_MODD"],["Midi Modulation Speed Up","MI_MODU"],["Midi Pitch Bend Down","MI_BNDD"],["Midi Pitch Bend Up","MI_BNDU"]]],["sequencer","SEQUENCER",[["Sequencer On","SQ_ON"],["Sequencer Off","SQ_OFF"],["Sequencer Toggle","SQ_TOGG"],["Sequencer Tempo Down","SQ_TMPD"],["Sequencer Tempo Up","SQ_TMPU"],["Sequencer Resolution Down","SQ_RESD"],["Sequencer Resolution Up","SQ_RESU"],["Sequencer Steps All","SQ_SALL"],["Sequencer Steps Clear","SQ_SCLR"]]]]]];
+const KEY_DESC = {"XXXXXXX":"何もしないキー（無効化）","_______":"透過キー。下のレイヤーで割り当てたキーがそのまま使われます","KC_A":"a（Shift で A）","KC_B":"b（Shift で B）","KC_C":"c（Shift で C）","KC_D":"d（Shift で D）","KC_E":"e（Shift で E）","KC_F":"f（Shift で F）","KC_G":"g（Shift で G）","KC_H":"h（Shift で H）","KC_I":"i（Shift で I）","KC_J":"j（Shift で J）","KC_K":"k（Shift で K）","KC_L":"l（Shift で L）","KC_M":"m（Shift で M）","KC_N":"n（Shift で N）","KC_O":"o（Shift で O）","KC_P":"p（Shift で P）","KC_Q":"q（Shift で Q）","KC_R":"r（Shift で R）","KC_S":"s（Shift で S）","KC_T":"t（Shift で T）","KC_U":"u（Shift で U）","KC_V":"v（Shift で V）","KC_W":"w（Shift で W）","KC_X":"x（Shift で X）","KC_Y":"y（Shift で Y）","KC_Z":"z（Shift で Z）","KC_1":"1（Shift で !）","KC_2":"2（Shift で @）","KC_3":"3（Shift で #）","KC_4":"4（Shift で $）","KC_5":"5（Shift で %）","KC_6":"6（Shift で ^）","KC_7":"7（Shift で &）","KC_8":"8（Shift で *）","KC_9":"9（Shift で (）","KC_0":"0（Shift で )）","KC_MINS":"-（Shift で _）","KC_EQL":"=（Shift で +）","KC_GRV":"`（Shift で ~）","KC_LBRC":"[（Shift で {）","KC_RBRC":"]（Shift で }）","KC_BSLS":"\\（Shift で |）","KC_NUHS":"Non-US #（Shift で ~）","KC_SCLN":";（Shift で :）","KC_QUOT":"'（Shift で \"）","KC_COMM":",（Shift で <）","KC_DOT":".（Shift で >）","KC_SLSH":"/（Shift で ?）","KC_NUBS":"Non-US \\（Shift で |）","QK_GESC":"Esc。Shift か Win/Command と一緒なら `","SC_LCPO":"長押しで左 Ctrl、タップで (","SC_RCPC":"長押しで右 Ctrl、タップで )","SC_LSPO":"長押しで左 Shift、タップで (","SC_RSPC":"長押しで右 Shift、タップで )","SC_LAPO":"長押しで左 Alt、タップで (","SC_RAPC":"長押しで右 Alt、タップで )","SC_SENT":"長押しで右 Shift、タップで Enter","KC_F1":"ファンクションキー F1","KC_F2":"ファンクションキー F2","KC_F3":"ファンクションキー F3","KC_F4":"ファンクションキー F4","KC_F5":"ファンクションキー F5","KC_F6":"ファンクションキー F6","KC_F7":"ファンクションキー F7","KC_F8":"ファンクションキー F8","KC_F9":"ファンクションキー F9","KC_F10":"ファンクションキー F10","KC_F11":"ファンクションキー F11","KC_F12":"ファンクションキー F12","KC_F13":"ファンクションキー F13","KC_F14":"ファンクションキー F14","KC_F15":"ファンクションキー F15","KC_F16":"ファンクションキー F16","KC_F17":"ファンクションキー F17","KC_F18":"ファンクションキー F18","KC_F19":"ファンクションキー F19","KC_F20":"ファンクションキー F20","KC_F21":"ファンクションキー F21","KC_F22":"ファンクションキー F22","KC_F23":"ファンクションキー F23","KC_F24":"ファンクションキー F24","KC_LCTL":"左 Ctrl","KC_LSFT":"左 Shift","KC_LALT":"左 Alt（Mac は Option）","KC_LGUI":"左 Win（Mac は Command）","KC_RCTL":"右 Ctrl","KC_RSFT":"右 Shift","KC_RALT":"右 Alt（Mac は Option）","KC_RGUI":"右 Win（Mac は Command）","KC_ENT":"Enter（改行・決定）","KC_ESC":"Esc（取り消し）","KC_BSPC":"Backspace（左側の文字を削除）","KC_TAB":"Tab（次の項目へ移動・字下げ）","KC_SPC":"スペース","KC_DEL":"Delete（右側の文字を削除）","KC_INS":"Insert（挿入/上書きの切替）","KC_UNDO":"元に戻す","KC_CUT":"切り取り","KC_COPY":"コピー","KC_PSTE":"貼り付け","KC_HOME":"Home（行頭へ）","KC_PGUP":"Page Up（1 画面上へ）","KC_END":"End（行末へ）","KC_PGDN":"Page Down（1 画面下へ）","KC_RGHT":"→（右矢印）","KC_LEFT":"←（左矢印）","KC_DOWN":"↓（下矢印）","KC_UP":"↑（上矢印）","KC_P1":"Keypad 1（Shift で End）","KC_P2":"Keypad 2（Shift で Down Arrow）","KC_P3":"Keypad 3（Shift で Page Down）","KC_P4":"Keypad 4（Shift で Left Arrow）","KC_P5":"テンキーの 5","KC_P6":"Keypad 6（Shift で Right Arrow）","KC_P7":"Keypad 7（Shift で Home）","KC_P8":"Keypad 8（Shift で Up Arrow）","KC_P9":"Keypad 9（Shift で Page Up）","KC_P0":"Keypad 0（Shift で Insert）","KC_PPLS":"テンキーの +","KC_PMNS":"テンキーの -","KC_PAST":"テンキーの *","KC_PSLS":"テンキーの /","KC_PEQL":"テンキーの =","KC_PCMM":"テンキーの ,","KC_KP_EQUAL_AS400":"テンキーの = on AS/400 keyboards","KC_PDOT":"Keypad .（Shift で Delete）","KC_PENT":"テンキーの Enter","KC_INT1":"国際キー 1","KC_INT2":"国際キー 2","KC_INT3":"国際キー 3","KC_INT4":"国際キー 4","KC_INT5":"国際キー 5","KC_INT7":"国際キー 7","KC_INT8":"国際キー 8","KC_INT9":"国際キー 9","KC_LNG1":"言語キー 1","KC_LNG2":"言語キー 2","KC_LNG3":"言語キー 3","KC_LNG4":"言語キー 4","KC_LNG5":"言語キー 5","KC_LNG6":"言語キー 6","KC_LNG7":"言語キー 7","KC_LNG8":"言語キー 8","KC_LNG9":"言語キー 9","KC_CAPS":"Caps Lock（大文字固定）","KC_SCRL":"Scroll Lock（macOS では画面を暗く）","KC_NUM":"Keypad Num Lock（Shift で Clear）","KC_LCAP":"Caps Lock（ロック式）","KC_LNUM":"Num Lock（ロック式）","KC_LSCR":"Scroll Lock（ロック式）","CM_ON":"コンボを有効化","CM_OFF":"コンボを無効化","CM_TOGG":"コンボの有効/無効を切替","AS_DOWN":"オートシフトの判定時間を短く","AS_UP":"オートシフトの判定時間を長く","AS_RPT":"オートシフトの判定時間を入力して表示","AS_ON":"オートシフトをオン","AS_OFF":"オートシフトをオフ","AS_TOGG":"オートシフトのオン/オフ","QK_KB_0":"キーボード独自キー 0","QK_KB_1":"キーボード独自キー 1","QK_KB_2":"キーボード独自キー 2","QK_KB_3":"キーボード独自キー 3","QK_KB_4":"キーボード独自キー 4","QK_KB_5":"キーボード独自キー 5","QK_KB_6":"キーボード独自キー 6","QK_KB_7":"キーボード独自キー 7","QK_KB_8":"キーボード独自キー 8","QK_KB_9":"キーボード独自キー 9","QK_KB_10":"キーボード独自キー 10","QK_KB_11":"キーボード独自キー 11","QK_KB_12":"キーボード独自キー 12","QK_KB_13":"キーボード独自キー 13","QK_KB_14":"キーボード独自キー 14","QK_KB_15":"キーボード独自キー 15","QK_KB_16":"キーボード独自キー 16","QK_KB_17":"キーボード独自キー 17","QK_KB_18":"キーボード独自キー 18","QK_KB_19":"キーボード独自キー 19","QK_KB_20":"キーボード独自キー 20","QK_KB_21":"キーボード独自キー 21","QK_KB_22":"キーボード独自キー 22","QK_KB_23":"キーボード独自キー 23","QK_KB_24":"キーボード独自キー 24","QK_KB_25":"キーボード独自キー 25","QK_KB_26":"キーボード独自キー 26","QK_KB_27":"キーボード独自キー 27","QK_KB_28":"キーボード独自キー 28","QK_KB_29":"キーボード独自キー 29","QK_KB_30":"キーボード独自キー 30","QK_KB_31":"キーボード独自キー 31","PB_1":"プログラマブルボタン 1","PB_2":"プログラマブルボタン 2","PB_3":"プログラマブルボタン 3","PB_4":"プログラマブルボタン 4","PB_5":"プログラマブルボタン 5","PB_6":"プログラマブルボタン 6","PB_7":"プログラマブルボタン 7","PB_8":"プログラマブルボタン 8","PB_9":"プログラマブルボタン 9","PB_10":"プログラマブルボタン 10","PB_11":"プログラマブルボタン 11","PB_12":"プログラマブルボタン 12","PB_13":"プログラマブルボタン 13","PB_14":"プログラマブルボタン 14","PB_15":"プログラマブルボタン 15","PB_16":"プログラマブルボタン 16","PB_17":"プログラマブルボタン 17","PB_18":"プログラマブルボタン 18","PB_19":"プログラマブルボタン 19","PB_20":"プログラマブルボタン 20","PB_21":"プログラマブルボタン 21","PB_22":"プログラマブルボタン 22","PB_23":"プログラマブルボタン 23","PB_24":"プログラマブルボタン 24","PB_25":"プログラマブルボタン 25","PB_26":"プログラマブルボタン 26","PB_27":"プログラマブルボタン 27","PB_28":"プログラマブルボタン 28","PB_29":"プログラマブルボタン 29","PB_30":"プログラマブルボタン 30","PB_31":"プログラマブルボタン 31","PB_32":"プログラマブルボタン 32","QK_USER_0":"ユーザー定義キー 0","QK_USER_1":"ユーザー定義キー 1","QK_USER_2":"ユーザー定義キー 2","QK_USER_3":"ユーザー定義キー 3","QK_USER_4":"ユーザー定義キー 4","QK_USER_5":"ユーザー定義キー 5","QK_USER_6":"ユーザー定義キー 6","QK_USER_7":"ユーザー定義キー 7","QK_USER_8":"ユーザー定義キー 8","QK_USER_9":"ユーザー定義キー 9","QK_USER_10":"ユーザー定義キー 10","QK_USER_11":"ユーザー定義キー 11","QK_USER_12":"ユーザー定義キー 12","QK_USER_13":"ユーザー定義キー 13","QK_USER_14":"ユーザー定義キー 14","QK_USER_15":"ユーザー定義キー 15","QK_USER_16":"ユーザー定義キー 16","QK_USER_17":"ユーザー定義キー 17","QK_USER_18":"ユーザー定義キー 18","QK_USER_19":"ユーザー定義キー 19","QK_USER_20":"ユーザー定義キー 20","QK_USER_21":"ユーザー定義キー 21","QK_USER_22":"ユーザー定義キー 22","QK_USER_23":"ユーザー定義キー 23","QK_USER_24":"ユーザー定義キー 24","QK_USER_25":"ユーザー定義キー 25","QK_USER_26":"ユーザー定義キー 26","QK_USER_27":"ユーザー定義キー 27","QK_USER_28":"ユーザー定義キー 28","QK_USER_29":"ユーザー定義キー 29","QK_USER_30":"ユーザー定義キー 30","QK_USER_31":"ユーザー定義キー 31","QK_LEAD":"リーダーキー（続けて押したキーの並びで動作）","DM_REC1":"マクロ 1 の記録を開始","DM_REC2":"マクロ 2 の記録を開始","DM_RSTP":"記録中のマクロを終了","DM_PLY1":"記録したマクロ 1 を再生","DM_PLY2":"記録したマクロ 2 を再生","TO(0)":"レイヤー 0 に切り替え、ほかのレイヤーをオフにします（既定のレイヤーは除く）。","TO(1)":"レイヤー 1 に切り替え、ほかのレイヤーをオフにします（既定のレイヤーは除く）。","TO(2)":"レイヤー 2 に切り替え、ほかのレイヤーをオフにします（既定のレイヤーは除く）。","TO(3)":"レイヤー 3 に切り替え、ほかのレイヤーをオフにします（既定のレイヤーは除く）。","TG(0)":"押すたびにレイヤー 0 のオン／オフを切り替えます。","TG(1)":"押すたびにレイヤー 1 のオン／オフを切り替えます。","TG(2)":"押すたびにレイヤー 2 のオン／オフを切り替えます。","TG(3)":"押すたびにレイヤー 3 のオン／オフを切り替えます。","LM":"押している間だけレイヤー 3 を有効にし、修飾キーも同時に押した状態にします。","TT(0)":"押している間だけレイヤー 0 を有効にし、離すと元に戻ります。素早く何回かタップすると、オンのまま固定されます。","TT(1)":"押している間だけレイヤー 1 を有効にし、離すと元に戻ります。素早く何回かタップすると、オンのまま固定されます。","TT(2)":"押している間だけレイヤー 2 を有効にし、離すと元に戻ります。素早く何回かタップすると、オンのまま固定されます。","TT(3)":"押している間だけレイヤー 3 を有効にし、離すと元に戻ります。素早く何回かタップすると、オンのまま固定されます。","MO(0)":"押している間だけレイヤー 0 を有効にし、離すと元に戻ります。","MO(1)":"押している間だけレイヤー 1 を有効にし、離すと元に戻ります。","MO(2)":"押している間だけレイヤー 2 を有効にし、離すと元に戻ります。","MO(3)":"押している間だけレイヤー 3 を有効にし、離すと元に戻ります。","OSL(0)":"次のキーを押すまでだけレイヤー 0 を有効にします（ワンショット）。","OSL(1)":"次のキーを押すまでだけレイヤー 1 を有効にします（ワンショット）。","OSL(2)":"次のキーを押すまでだけレイヤー 2 を有効にします（ワンショット）。","OSL(3)":"次のキーを押すまでだけレイヤー 3 を有効にします（ワンショット）。","DF(0)":"既定のレイヤーをレイヤー 0 に切り替えます。既定のレイヤーは常に有効な土台で、他のレイヤーはこの上に重なります。","DF(1)":"既定のレイヤーをレイヤー 1 に切り替えます。既定のレイヤーは常に有効な土台で、他のレイヤーはこの上に重なります。","DF(2)":"既定のレイヤーをレイヤー 2 に切り替えます。既定のレイヤーは常に有効な土台で、他のレイヤーはこの上に重なります。","DF(3)":"既定のレイヤーをレイヤー 3 に切り替えます。既定のレイヤーは常に有効な土台で、他のレイヤーはこの上に重なります。","TL_LOWR":"トライレイヤー（Lower）","TL_UPPR":"トライレイヤー（Upper）","KC_KB_POWER":"電源","KC_PWR":"電源を切る","KC_SLEP":"スリープ","KC_WAKE":"スリープ解除","KC_BRIU":"画面を明るく","KC_BRID":"画面を暗く","KC_MS_U":"マウスカーソルを上へ","KC_MS_D":"マウスカーソルを下へ","KC_MS_L":"マウスカーソルを左へ","KC_MS_R":"マウスカーソルを右へ","KC_BTN1":"左クリック（マウスボタン 1）","KC_BTN2":"右クリック（マウスボタン 2）","KC_BTN3":"中クリック（マウスボタン 3）","KC_BTN4":"マウスの戻るボタン（ボタン 4）","KC_BTN5":"マウスの進むボタン（ボタン 5）","KC_BTN6":"マウスボタン 6","KC_BTN7":"マウスボタン 7","KC_BTN8":"マウスボタン 8","KC_WH_U":"ホイールを上へ（上スクロール）","KC_WH_D":"ホイールを下へ（下スクロール）","KC_WH_L":"ホイールを左へ（左スクロール）","KC_WH_R":"ホイールを右へ（右スクロール）","KC_ACL0":"マウスキーの速度を 0（遅い）に","KC_ACL1":"マウスキーの速度を 1（普通）に","KC_ACL2":"マウスキーの速度を 2（速い）に","QK_BOOT":"ファームウェア書き込みモード（ブートローダー）にする","QK_RBT":"キーボードを再起動（書き込みモードにはなりません）","DB_TOGG":"デバッグモードの切替","EE_CLR":"キーボードの保存領域（EEPROM）を初期化。設定がリセットされます","QK_MAKE":"QMK のビルドコマンドを入力（開発者向け）","RGB_TOG":"RGB ライトのオン/オフ","RGB_MOD":"ライトの効果を次へ（Shift で前へ）","RGB_RMOD":"ライトの効果を前へ（Shift で次へ）","RGB_HUI":"ライトの色相を進める（Shift で戻す）","RGB_HUD":"ライトの色相を戻す（Shift で進める）","RGB_SAI":"ライトの彩度を上げる（Shift で下げる）","RGB_SAD":"ライトの彩度を下げる（Shift で上げる）","RGB_VAI":"ライトを明るく（Shift で暗く）","RGB_VAD":"ライトを暗く（Shift で明るく）","RGB_SPI":"ライトの効果を速く（Shift で遅く。保存はされません）","RGB_SPD":"ライトの効果を遅く（Shift で速く。保存はされません）","RGB_M_P":"ライト：単色（アニメーションなし）","RGB_M_B":"ライト：呼吸","RGB_M_R":"ライト：レインボー","RGB_M_SW":"ライト：渦巻き","RGB_M_SN":"ライト：スネーク","RGB_M_K":"ライト：ナイトライダー","RGB_M_X":"ライト：クリスマス","RGB_M_G":"ライト：グラデーション","RGB_M_T":"ライト：RGB テスト","RGB_M_TW":"ライト：きらめき","VK_TOGG":"Velocikey の切替","BL_ON":"バックライトを最大の明るさに","BL_OFF":"バックライトを消す","BL_TOGG":"バックライトのオン/オフ","BL_DOWN":"バックライトを暗く","BL_UP":"バックライトを明るく","BL_STEP":"バックライトの明るさを順に切替","BL_BRTG":"バックライトの点滅（呼吸）を切替","AU_ON":"オーディオ機能をオン","AU_OFF":"オーディオ機能をオフ","AU_TOGG":"オーディオ機能のオン/オフ","CK_TOGG":"クリック音モードのオン/オフ","CK_ON":"クリック音モードをオン","CK_OFF":"クリック音モードをオフ","CK_UP":"クリック音を高く","CK_DOWN":"クリック音を低く","CK_RST":"クリック音の高さを初期値に","MU_ON":"ミュージックモードをオン","MU_OFF":"ミュージックモードをオフ","MU_TOGG":"ミュージックモードのオン/オフ","MU_NEXT":"ミュージックモードを切り替える","AU_NEXT":"音色を切り替える","AU_PREV":"音色を逆順に切り替える","CL_SWAP":"Swap Caps Lock（Shift で Left Control）","CL_NORM":"Unswap Caps Lock（Shift で Left Control）","CL_TOGG":"Toggle Caps Lock（Shift で Left Control swap）","CL_CAPS":"Caps Lock を Ctrl として扱うのをやめる","CL_CTRL":"Caps Lock を Ctrl として扱う","AG_LSWP":"Swap Left Alt（Shift で GUI）","AG_LNRM":"Unswap Left Alt（Shift で GUI）","AG_RSWP":"Swap Right Alt（Shift で GUI）","AG_RNRM":"Unswap Right Alt（Shift で GUI）","GU_ON":"Win/Command キーを有効化","GU_OFF":"Win/Command キーを無効化","GU_TOGG":"Win/Command キーの有効/無効を切替","GE_SWAP":"Swap `（Shift で Escape）","GE_NORM":"Unswap `（Shift で Escape）","BS_SWAP":"Swap \\（Shift で Backspace）","BS_NORM":"Unswap \\（Shift で Backspace）","BS_TOGG":"Toggle \\（Shift で Backspace swap state）","NK_ON":"同時押し無制限（NKRO）を有効化","NK_OFF":"同時押し無制限（NKRO）を無効化","NK_TOGG":"同時押し無制限（NKRO）を切替","AG_SWAP":"Swap Alt（Shift で GUI on both sides）","AG_NORM":"Unswap Alt（Shift で GUI on both sides）","AG_TOGG":"Toggle Alt（Shift で GUI swap on both sides）","CG_LSWP":"Swap Left Control（Shift で GUI）","CG_LNRM":"Unswap Left Control（Shift で GUI）","CG_RSWP":"Swap Right Control（Shift で GUI）","CG_RNRM":"Unswap Right Control（Shift で GUI）","CG_SWAP":"Swap Control（Shift で GUI on both sides）","CG_NORM":"Unswap Control（Shift で GUI on both sides）","CG_TOGG":"Toggle Control（Shift で GUI swap on both sides）","EH_LEFT":"分割キーボードの左側を USB 接続側に設定（EE_HANDS 用）","EH_RGHT":"分割キーボードの右側を USB 接続側に設定（EE_HANDS 用）","EC_SWAP":"Swap Caps Lock（Shift で Escape）","EC_NORM":"Unswap Caps Lock（Shift で Escape）","EC_TOGG":"Toggle Caps Lock（Shift で Escape swap）","OU_AUTO":"Automatically switch between USB（Shift で Bluetooth）","OU_USB":"USB 接続のみ","OU_BT":"Bluetooth 接続のみ","JS_0":"ジョイスティックのボタン 0","JS_1":"ジョイスティックのボタン 1","JS_2":"ジョイスティックのボタン 2","JS_3":"ジョイスティックのボタン 3","JS_4":"ジョイスティックのボタン 4","JS_5":"ジョイスティックのボタン 5","JS_6":"ジョイスティックのボタン 6","JS_7":"ジョイスティックのボタン 7","JS_8":"ジョイスティックのボタン 8","JS_9":"ジョイスティックのボタン 9","JS_10":"ジョイスティックのボタン 10","JS_11":"ジョイスティックのボタン 11","JS_12":"ジョイスティックのボタン 12","JS_13":"ジョイスティックのボタン 13","JS_14":"ジョイスティックのボタン 14","JS_15":"ジョイスティックのボタン 15","JS_16":"ジョイスティックのボタン 16","JS_17":"ジョイスティックのボタン 17","JS_18":"ジョイスティックのボタン 18","JS_19":"ジョイスティックのボタン 19","JS_20":"ジョイスティックのボタン 20","JS_21":"ジョイスティックのボタン 21","JS_22":"ジョイスティックのボタン 22","JS_23":"ジョイスティックのボタン 23","JS_24":"ジョイスティックのボタン 24","JS_25":"ジョイスティックのボタン 25","JS_26":"ジョイスティックのボタン 26","JS_27":"ジョイスティックのボタン 27","JS_28":"ジョイスティックのボタン 28","JS_29":"ジョイスティックのボタン 29","JS_30":"ジョイスティックのボタン 30","JS_31":"ジョイスティックのボタン 31","HF_ON":"振動をオン","HF_OFF":"振動をオフ","HF_TOGG":"振動のオン/オフ","HF_RST":"振動の設定を初期化","HF_FDBK":"振動フィードバックの切替","HF_BUZZ":"振動ブザーの切替","HF_NEXT":"振動パターンを次へ","HF_PREV":"振動パターンを前へ","HF_CONT":"連続振動の切替","HF_CONU":"連続振動を強く","HF_COND":"連続振動を弱く","HF_DWLU":"振動時間を長く","HF_DWLD":"振動時間を短く","SE_LOCK":"セキュアモードをロック","SE_UNLK":"セキュアモードを解除","SE_TOGG":"セキュアモードの切替","SE_REQ":"セキュアモードの解除を要求","KC_APP":"アプリケーションキー（Windows の右クリックメニュー）","KC_MENU":"メニュー","KC_ASST":"アシスタントを起動","KC_MCTL":"Mission Control を開く（macOS）","KC_LPAD":"Launchpad を開く（macOS）","KC_PSCR":"Print Screen（画面の撮影）","KC_PAUS":"Pause（macOS では画面を明るく）","KC_EXEC":"実行","KC_HELP":"ヘルプ","KC_SLCT":"選択","KC_STOP":"停止","KC_AGIN":"やり直し（Again）","KC_FIND":"検索","KC_ERAS":"代替消去","KC_SYRQ":"SysReq（システム要求）","KC_CNCL":"キャンセル","KC_CLR":"クリア","KC_PRIR":"Prior（古い規格のキーです。多くの OS では使われません）","KC_RETN":"Return（古い規格のキーです。多くの OS では使われません）","KC_SEPR":"区切り","KC_OUT":"Out（古い規格のキーです。多くの OS では使われません）","KC_OPER":"Oper（古い規格のキーです。多くの OS では使われません）","KC_CLAG":"Clear/Again（古い規格のキーです。多くの OS では使われません）","KC_CRSL":"CrSel/Props（古い規格のキーです。多くの OS では使われません）","KC_EXSL":"ExSel（古い規格のキーです。多くの OS では使われません）","KC_MUTE":"ミュート","KC_VOLU":"音量を上げる","KC_VOLD":"音量を下げる","KC_MNXT":"次の曲","KC_MPRV":"前の曲","KC_MSTP":"再生停止","KC_MPLY":"再生/一時停止","KC_MSEL":"メディアプレーヤーを起動","KC_EJCT":"取り出し","KC_KB_MUTE":"ミュート","KC_KB_VOLUME_UP":"音量を上げる","KC_KB_VOLUME_DOWN":"音量を下げる","KC_MFFD":"次の曲","KC_MRWD":"前の曲","KC_MAIL":"メールを起動","KC_CALC":"電卓を起動","KC_MYCM":"エクスプローラー（PC）を起動","KC_WSCH":"ブラウザで検索","KC_WHOM":"ブラウザのホーム","KC_WBAK":"ブラウザの戻る","KC_WFWD":"ブラウザの進む","KC_WSTP":"ブラウザの読み込み中止","KC_WREF":"ブラウザの再読み込み","KC_WFAV":"ブラウザのお気に入り","SH":"次のキーを押すまで左右入れ替え","OS_ON":"ワンショットキーを有効化","OS_OFF":"ワンショットキーを無効化","OS_TOGG":"ワンショットキーの有効/無効を切替","KO_TOGG":"キーオーバーライドの切替","KO_ON":"キーオーバーライドを有効化","KO_OFF":"キーオーバーライドを無効化","DT_PRNT":"現在の長押し判定時間（ミリ秒）を入力して表示","DT_UP":"長押し判定時間を長く（初期設定で 5ms ずつ）","DT_DOWN":"長押し判定時間を短く（初期設定で 5ms ずつ）","AC_ON":"自動修正をオン","AC_OFF":"自動修正をオフ","AC_TOGG":"自動修正のオン/オフ","QK_REP":"直前に押したキーを繰り返す","QK_AREP":"直前のキーの対になる動作をする","QK_LOCK":"次に押したキーを、もう一度押すまで押しっぱなしにする","CW_TOGG":"Caps Word（次の単語だけ大文字）の切替","QK_STENO_BOLT":"ステノ（Bolt）","QK_STENO_GEMINI":"ステノ（Gemini）","QK_STENO_COMB":"ステノ（Comb）","QK_STENO_COMB_MAX":"ステノ（Comb Max）","UC_NEXT":"Unicode 入力方式を切替","UC_PREV":"Unicode 入力方式を逆順に切替","UC_MAC":"Unicode 入力を macOS 用に","UC_LINX":"Unicode 入力を Linux 用に","UC_WIN":"Unicode 入力を Windows 用に","UC_BSD":"Unicode 入力を BSD 用に（未実装）","UC_WINC":"Unicode 入力を WinCompose 用に","UC_EMAC":"Unicode 入力を emacs 用に","MI_C":"MIDI の音 C（オクターブ 0）","MI_Cs":"MIDI の音 C♯/D♭（オクターブ 0）","MI_D":"MIDI の音 D（オクターブ 0）","MI_Ds":"MIDI の音 D♯/E♭（オクターブ 0）","MI_E":"MIDI の音 E（オクターブ 0）","MI_F":"MIDI の音 F（オクターブ 0）","MI_Fs":"MIDI の音 F♯/G♭（オクターブ 0）","MI_G":"MIDI の音 G（オクターブ 0）","MI_Gs":"MIDI の音 G♯/A♭（オクターブ 0）","MI_A":"MIDI の音 A（オクターブ 0）","MI_As":"MIDI の音 A♯/B♭（オクターブ 0）","MI_B":"MIDI の音 B（オクターブ 0）","MI_C1":"MIDI の音 C（オクターブ 1）","MI_Cs1":"MIDI の音 C♯/D♭（オクターブ 1）","MI_D1":"MIDI の音 D（オクターブ 1）","MI_Ds1":"MIDI の音 D♯/E♭（オクターブ 1）","MI_E1":"MIDI の音 E（オクターブ 1）","MI_F1":"MIDI の音 F（オクターブ 1）","MI_Fs1":"MIDI の音 F♯/G♭（オクターブ 1）","MI_G1":"MIDI の音 G（オクターブ 1）","MI_Gs1":"MIDI の音 G♯/A♭（オクターブ 1）","MI_A1":"MIDI の音 A（オクターブ 1）","MI_As1":"MIDI の音 A♯/B♭（オクターブ 1）","MI_B1":"MIDI の音 B（オクターブ 1）","MI_C2":"MIDI の音 C（オクターブ 2）","MI_Cs2":"MIDI の音 C♯/D♭（オクターブ 2）","MI_D2":"MIDI の音 D（オクターブ 2）","MI_Ds2":"MIDI の音 D♯/E♭（オクターブ 2）","MI_E2":"MIDI の音 E（オクターブ 2）","MI_F2":"MIDI の音 F（オクターブ 2）","MI_Fs2":"MIDI の音 F♯/G♭（オクターブ 2）","MI_G2":"MIDI の音 G（オクターブ 2）","MI_Gs2":"MIDI の音 G♯/A♭（オクターブ 2）","MI_A2":"MIDI の音 A（オクターブ 2）","MI_As2":"MIDI の音 A♯/B♭（オクターブ 2）","MI_B2":"MIDI の音 B（オクターブ 2）","MI_C3":"MIDI の音 C（オクターブ 3）","MI_Cs3":"MIDI の音 C♯/D♭（オクターブ 3）","MI_D3":"MIDI の音 D（オクターブ 3）","MI_Ds3":"MIDI の音 D♯/E♭（オクターブ 3）","MI_E3":"MIDI の音 E（オクターブ 3）","MI_F3":"MIDI の音 F（オクターブ 3）","MI_Fs3":"MIDI の音 F♯/G♭（オクターブ 3）","MI_G3":"MIDI の音 G（オクターブ 3）","MI_Gs3":"MIDI の音 G♯/A♭（オクターブ 3）","MI_A3":"MIDI の音 A（オクターブ 3）","MI_As3":"MIDI の音 A♯/B♭（オクターブ 3）","MI_B3":"MIDI の音 B（オクターブ 3）","MI_C4":"MIDI の音 C（オクターブ 4）","MI_Cs4":"MIDI の音 C♯/D♭（オクターブ 4）","MI_D4":"MIDI の音 D（オクターブ 4）","MI_Ds4":"MIDI の音 D♯/E♭（オクターブ 4）","MI_E4":"MIDI の音 E（オクターブ 4）","MI_F4":"MIDI の音 F（オクターブ 4）","MI_Fs4":"MIDI の音 F♯/G♭（オクターブ 4）","MI_G4":"MIDI の音 G（オクターブ 4）","MI_Gs4":"MIDI の音 G♯/A♭（オクターブ 4）","MI_A4":"MIDI の音 A（オクターブ 4）","MI_As4":"MIDI の音 A♯/B♭（オクターブ 4）","MI_B4":"MIDI の音 B（オクターブ 4）","MI_C5":"MIDI の音 C（オクターブ 5）","MI_Cs5":"MIDI の音 C♯/D♭（オクターブ 5）","MI_D5":"MIDI の音 D（オクターブ 5）","MI_Ds5":"MIDI の音 D♯/E♭（オクターブ 5）","MI_E5":"MIDI の音 E（オクターブ 5）","MI_F5":"MIDI の音 F（オクターブ 5）","MI_Fs5":"MIDI の音 F♯/G♭（オクターブ 5）","MI_G5":"MIDI の音 G（オクターブ 5）","MI_Gs5":"MIDI の音 G♯/A♭（オクターブ 5）","MI_A5":"MIDI の音 A（オクターブ 5）","MI_As5":"MIDI の音 A♯/B♭（オクターブ 5）","MI_B5":"MIDI の音 B（オクターブ 5）","MI_OCN2":"MIDI のオクターブを -2 にします","MI_OCN1":"MIDI のオクターブを -1 にします","MI_OC0":"MIDI のオクターブを 0 にします","MI_OC1":"MIDI のオクターブを 1 にします","MI_OC2":"MIDI のオクターブを 2 にします","MI_OC3":"MIDI のオクターブを 3 にします","MI_OC4":"MIDI のオクターブを 4 にします","MI_OC5":"MIDI のオクターブを 5 にします","MI_OC6":"MIDI のオクターブを 6 にします","MI_OC7":"MIDI のオクターブを 7 にします","MI_OCTD":"MIDI のオクターブを 1 つ下げます","MI_OCTU":"MIDI のオクターブを 1 つ上げます","MI_TRN6":"移調を -6 半音に","MI_TRN5":"移調を -5 半音に","MI_TRN4":"移調を -4 半音に","MI_TRN3":"移調を -3 半音に","MI_TRN2":"移調を -2 半音に","MI_TRN1":"移調を -1 半音に","MI_TR0":"移調なし","MI_TR1":"移調を +1 半音に","MI_TR2":"移調を +2 半音に","MI_TR3":"移調を +3 半音に","MI_TR4":"移調を +4 半音に","MI_TR5":"移調を +5 半音に","MI_TR6":"移調を +6 半音に","MI_TRSD":"移調を下げる","MI_TRSU":"移調を上げる","MI_VL0":"ベロシティを 0 に","MI_VL1":"ベロシティを 12 に","MI_VL2":"ベロシティを 25 に","MI_VL3":"ベロシティを 38 に","MI_VL4":"ベロシティを 51 に","MI_VL5":"ベロシティを 64 に","MI_VL6":"ベロシティを 76 に","MI_VL7":"ベロシティを 89 に","MI_VL8":"ベロシティを 102 に","MI_VL9":"ベロシティを 114 に","MI_VL10":"ベロシティを 127 に","MI_VELD":"ベロシティを下げる","MI_VELU":"ベロシティを上げる","MI_CH1":"MIDI チャンネルを 1 に","MI_CH2":"MIDI チャンネルを 2 に","MI_CH3":"MIDI チャンネルを 3 に","MI_CH4":"MIDI チャンネルを 4 に","MI_CH5":"MIDI チャンネルを 5 に","MI_CH6":"MIDI チャンネルを 6 に","MI_CH7":"MIDI チャンネルを 7 に","MI_CH8":"MIDI チャンネルを 8 に","MI_CH9":"MIDI チャンネルを 9 に","MI_CH10":"MIDI チャンネルを 10 に","MI_CH11":"MIDI チャンネルを 11 に","MI_CH12":"MIDI チャンネルを 12 に","MI_CH13":"MIDI チャンネルを 13 に","MI_CH14":"MIDI チャンネルを 14 に","MI_CH15":"MIDI チャンネルを 15 に","MI_CH16":"MIDI チャンネルを 16 に","MI_CHND":"チャンネルを下げる","MI_CHNU":"チャンネルを上げる","MI_ON":"MIDI をオン","MI_OFF":"MIDI をオフ","MI_TOGG":"MIDI のオン/オフ","MI_AOFF":"すべての音を止める","MI_SUST":"サステイン","MI_PORT":"ポルタメント","MI_SOST":"ソステヌート","MI_SOFT":"ソフトペダル","MI_LEG":"レガート","MI_MOD":"モジュレーション","MI_MODD":"モジュレーション速度を下げる","MI_MODU":"モジュレーション速度を上げる","MI_BNDD":"ピッチを下げる","MI_BNDU":"ピッチを上げる","SQ_ON":"シーケンサーをオン","SQ_OFF":"シーケンサーをオフ","SQ_TOGG":"シーケンサーのオン/オフ","SQ_TMPD":"シーケンサーのテンポを下げる","SQ_TMPU":"シーケンサーのテンポを上げる","SQ_RESD":"シーケンサーの分解能を下げる","SQ_RESU":"シーケンサーの分解能を上げる","SQ_SALL":"シーケンサーの全ステップを選択","SQ_SCLR":"シーケンサーのステップを消去","QK_MACRO_0":"マクロ M0 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_1":"マクロ M1 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_2":"マクロ M2 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_3":"マクロ M3 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_4":"マクロ M4 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_5":"マクロ M5 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_6":"マクロ M6 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_7":"マクロ M7 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_8":"マクロ M8 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_9":"マクロ M9 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_10":"マクロ M10 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_11":"マクロ M11 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_12":"マクロ M12 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_13":"マクロ M13 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_14":"マクロ M14 を送ります。内容は Keys › Macros で編集します。","QK_MACRO_15":"マクロ M15 を送ります。内容は Keys › Macros で編集します。"};
+const DEF_SECTION = 'keys'; const DEF_SUB = 'combos';
+const PRESETS = [['Copy', '⌘C', 'Ctrl+C'], ['Paste', '⌘V', 'Ctrl+V'], ['Cut', '⌘X', 'Ctrl+X'], ['Undo', '⌘Z', 'Ctrl+Z'], ['Redo', '⇧⌘Z', 'Ctrl+Y'], ['Select All', '⌘A', 'Ctrl+A'], ['Save', '⌘S', 'Ctrl+S'], ['Save As', '⇧⌘S', 'Ctrl+Shift+S'], ['Find', '⌘F', 'Ctrl+F'], ['New', '⌘N', 'Ctrl+N'], ['New Tab', '⌘T', 'Ctrl+T'], ['Close Tab', '⌘W', 'Ctrl+W'], ['Quit', '⌘Q', 'Alt+F4'], ['App Switch', '⌘Tab', 'Alt+Tab'], ['Spotlight', '⌘Space', null], ['IME Toggle', '⌃Space', 'Alt+`'], ['Screenshot', '⇧⌘3', null], ['Partial SS', '⇧⌘4', 'Shift+Win+S']];
+const LANGS = ['Canadian Multilingual (CSA)', 'Croatian', 'Czech', 'Danish', 'Dutch (Belgium)', 'English (Ireland)', 'English (US)', 'English (UK)', 'English (US International)', 'Estonian', 'Finnish', 'French', 'French (AFNOR)', 'French (BÉPO)', 'French (Belgium)', 'French (Switzerland)', 'French (macOS, ISO)', 'German', 'German (Switzerland)', 'German (macOS)', 'German (Neo2)', 'Greek', 'Hebrew', 'Hungarian', 'Icelandic', 'Italian', 'Italian (macOS, ANSI)', 'Italian (macOS, ISO)', 'Japanese', 'Korean', 'Latvian', 'Lithuanian (ĄŽERTY)', 'Lithuanian (QWERTY)', 'Norwegian', 'Polish', 'Portuguese', 'Portuguese (macOS, ISO)', 'Portuguese (Brazil)', 'Romanian', 'Russian', 'Serbian', 'Serbian (Latin)', 'Slovak', 'Slovenian', 'Spanish', 'Spanish (Dvorak)', 'Swedish', 'Turkish (F)', 'Turkish (Q)', 'Colemak', 'Dvorak', 'Dvorak (French)', 'Dvorak (Programmer)', 'Norman', 'Workman', 'Workman (ZXCVM)'];
+const PALETTE = ['#8d5129', '#275db9', '#366c1b', '#795c03', '#a83171', '#7345c1', '#b03229', '#09646f', '#383a3f'];
+const LMAX = 8;
+const lyrs = st.lyrs || [{ name: 'Base', color: 0 }, { name: 'Lower', color: 1 }, { name: 'Raise', color: 2 }, { name: 'Mouse', color: 3 }];
+const LAYERS = lyrs.map((l) => ({ name: l.name, color: PALETTE[l.color] }));
+const LAY = (i) => LAYERS[i] || { name: 'Layer ' + i, color: '#8f9197' };
+const LIDX = LAYERS.map((_, i) => i);
+const MAPS = {
+1: { Q: '1', W: '2', E: '3', R: '4', T: '5', Y: '6', U: '7', I: '8', O: '9', P: '0', A: 'F1', S: 'F2', D: 'F3', F: 'F4', G: 'F5', H: '←', J: '↓', K: '↑', L: '→', Z: 'F6', X: 'F7', C: 'F8', V: 'F9', B: 'F10' },
+2: { Q: '!', W: '@', E: '#', R: '$', T: '%', Y: '^', U: '&', I: '*', O: '(', P: ')', A: '-', S: '=', D: '[', F: ']', G: '\\', H: 'Home', J: 'Page Down', K: 'Page Up', L: 'End' },
+3: { U: 'Mouse Wh ↑', M: 'Mouse Wh ↓', H: 'Mouse Wh ←', ';': 'Mouse Wh →', J: 'Mouse Btn1', K: 'Mouse Btn2', L: 'Mouse Btn3' }
+};
+const CODES = { Tab: 'KC_TAB', Ctrl: 'KC_LCTL', Shift: 'KC_LSFT', Bksp: 'KC_BSPC', Esc: 'KC_ESC', Alt: 'KC_LALT', Lower: 'MO(1)', Space: 'KC_SPC', Enter: 'KC_ENT', Raise: 'MO(2)', GUI: 'KC_LGUI', '!': 'S(KC_1)', '@': 'S(KC_2)', '#': 'S(KC_3)', '$': 'S(KC_4)', '%': 'S(KC_5)', '^': 'S(KC_6)', '&': 'S(KC_7)', '*': 'S(KC_8)', '(': 'S(KC_9)', ')': 'S(KC_0)', '▽': 'KC_TRNS' };
+const CATOF = {};
+KEYCODE_CATS.forEach(([cat, subs]) => subs.forEach(([sid, title, keys]) => keys.forEach(([l, c]) => { if (!CODES[l]) CODES[l] = c; if (!CATOF[l]) CATOF[l] = cat; })));
+const custom = st.custom || {};
+const codeOf = (l) => custom[l] || CODES[l] || l;
+const JIS = { "'": ':', '@': '"', '^': '&', '&': "'", '*': '(', '(': ')', '=': '^', '[': '@', ']': '[', '\\': ']', '`': '半角/全角' };
+const HOLDS = [['None', null], ['Ctrl', 'LCTL'], ['Shift', 'LSFT'], ['Alt', 'LALT'], ['Win/Cmd', 'LGUI'], ['LT 1', '1'], ['LT 2', '2'], ['LT 3', '3'], ['Swap Hands', 'SH']];
+const START = ['Lower', ';'];
+
+// ---- sections: Keys / Pointing / Lighting share one stage; switching is a state change, not a page load ----
+const section = st.section || DEF_SECTION;
+const isKeys = section === 'keys', isPointing = section === 'pointing', isLighting = section === 'lighting';
+const ksub = st.ksub || (DEF_SECTION === 'keys' && DEF_SUB) || 'keymap';
+const psub = st.psub || (DEF_SECTION === 'pointing' && DEF_SUB) || 'touchpad';
+const lsub = st.lsub || (DEF_SECTION === 'lighting' && DEF_SUB) || 'eff';
+const isKeymap = isKeys && ksub === 'keymap', isMacros = isKeys && ksub === 'macros', isCombos = isKeys && ksub === 'combos', isLayersSub = isKeys && ksub === 'layers';
+const secN = st.secN || 0, paneN = st.paneN || 0;
+const secHide = !!st.secHide;
+const go = (sec, patch) => {
+if (sec === section && !patch) return;
+this.setState(Object.assign({ section: sec, win: false, winClosing: false, view: 'overview', secHide: false, secN: secN + 1, paneN: paneN + 1, open: null, hov: null, touch: null, testing: false }, patch || {}));
+};
+
+const layer = Math.min(st.layer ?? 0, lyrs.length - 1);
+const sel = st.sel || 'F';
+const n = st.n || 0;
+const labelLang = st.labelLang || 'English (US)';
+const jis = labelLang === 'Japanese';
+const A = st.A || {}, H = st.H || {}, W = st.W || {}, WH = st.WH || {};
+const past = st.past || [], future = st.future || [];
+const writing = !!st.writing;
+const query = st.query || '';
+const cat = st.cat || 'Basic';
+const size = st.size || 'M';
+const testing = !!st.testing;
+const tested = st.tested || {};
+const os = st.os || 'mac';
+const view = st.view || 'overview';
+const win = !!st.win;
+const wtab = st.wtab || 'key';
+const closeWin = () => {
+if (st.winClosing) return;
+if (isKeymap && !win) return;
+if (!isKeymap && secHide) return;
+this.setState({ winClosing: true });
+this.later(() => this.setState(isKeymap ? { win: false, winClosing: false, view: 'overview', hov: null } : { secHide: true, winClosing: false }), 230);
+};
+const openWin = (patch) => this.setState(Object.assign({ win: true, winClosing: false, wtab: 'key', view: 'focus', open: null, query: '' }, patch));
+
+const baseOf = (l, id) => l === 0 ? id : (MAPS[l] && MAPS[l][id] !== undefined ? MAPS[l][id] : '▽');
+const has = (o, l, id) => !!(o[l] && Object.prototype.hasOwnProperty.call(o[l], id));
+const labelOf = (l, id) => has(A, l, id) ? A[l][id] : (has(W, l, id) ? W[l][id] : baseOf(l, id));
+const holdOf = (l, id) => has(H, l, id) ? H[l][id] : (has(WH, l, id) ? WH[l][id] : null);
+const startLeft = st.startDone ? [] : START;
+const pendingOn = (l) => {
+const ids = {};
+Object.keys(A[l] || {}).forEach((id) => { ids[id] = 1; });
+Object.keys(H[l] || {}).forEach((id) => { ids[id] = 1; });
+if (l === 0) startLeft.forEach((id) => { ids[id] = 1; });
+return Object.keys(ids).length;
+};
+const isChanged = (l, id) => has(A, l, id) || has(H, l, id) || (l === 0 && startLeft.indexOf(id) >= 0);
+const kmPending = LIDX.reduce((s2, l) => s2 + pendingOn(l), 0);
+const disp = (l) => (jis && JIS[l] !== undefined ? JIS[l] : l);
+const holdShort = { LCTL: 'Ctrl', LSFT: 'Shift', LALT: 'Alt', LGUI: 'Win', '1': 'L1', '2': 'L2', '3': 'L3', SH: 'SH' };
+const setIn = (obj, l, id, val) => { const o = Object.assign({}, obj); const m = Object.assign({}, o[l] || {}); if (val === undefined) delete m[id]; else m[id] = val; o[l] = m; return o; };
+const commit = (nA, nH, extra) => this.setState(Object.assign({ A: nA, H: nH, past: past.concat([{ A, H }]).slice(-50), future: [], n: n + 1 }, extra || {}));
+const assign = (label, code, extra) => {
+const c = code && code !== label ? Object.assign({}, custom, { [label]: code }) : custom;
+commit(setIn(A, layer, sel, label), H, Object.assign({ custom: c }, extra || {}));
+};
+
+// ---- Macros (M0–M15, written with Write to keyboard) ----
+const MBUF = 1024;
+const MINIT = [
+[{ kind: 'ascii', keys: ['H'], delay: 0 }, { kind: 'ascii', keys: ['e'], delay: 0 }, { kind: 'ascii', keys: ['l'], delay: 0 }, { kind: 'ascii', keys: ['l'], delay: 0 }, { kind: 'ascii', keys: ['o'], delay: 0 }, { kind: 'tap', keys: ['Enter'], delay: 0 }],
+[{ kind: 'hold', keys: ['*Ctrl', '*Shift', 'Esc'], delay: 0 }]
+];
+const macros = st.macros || Array.from({ length: 16 }, (_, i) => MINIT[i] || []);
+const msaved = st.msaved || macros.map((m) => JSON.stringify(m));
+const msel = st.msel ?? 0;
+const mtarget = st.mtarget ?? -1;
+const mSteps0 = macros[msel];
+const setMacro = (list, extra) => { const ms = macros.slice(); ms[msel] = list; this.setState(Object.assign({ macros: ms }, extra || {})); };
+const stepBytes = (x) => (x.kind === 'ascii' ? 1 : (x.kind === 'tap' ? 3 : x.keys.length * 6)) + (x.delay ? 3 + String(x.delay).length : 0);
+const mUsed = macros.reduce((t, m) => t + m.reduce((u, x) => u + stepBytes(x), 0) + 1, 0);
+const mRemaining = MBUF - mUsed;
+const mDirty = macros.filter((m, i) => JSON.stringify(m) !== msaved[i]).length;
+const mPreview = (m) => m.length ? m.map((x) => x.kind === 'ascii' ? x.keys[0] : (x.kind === 'hold' ? '[' + x.keys.join('+') + ']' : '{' + x.keys[0] + '}')).join('') : '（空）';
+const mBump = (d) => (d < 1000 ? d + 50 : (d < 5000 ? d + 100 : (d + 1000 > 9999 ? 0 : d + 1000)));
+const mSteps = mSteps0.map((x, i) => {
+const isTarget = x.kind === 'hold' && i === mtarget;
+return {
+kind: x.kind.toUpperCase(), keys: x.kind === 'ascii' ? ['"' + x.keys[0] + '"'] : x.keys, delay: x.delay + 'ms',
+noFlip: x.kind === 'ascii', flipTitle: x.kind === 'tap' ? '押すと HOLD（まとめて押し続ける）に変えます' : (x.kind === 'hold' ? '押すと TAP に分けます' : ''),
+targetTitle: x.kind === 'hold' ? 'このグループにキーを追加する' : '',
+box: 'width: 92px; display: flex; flex-direction: column; gap: 4px; padding: 6px; box-sizing: border-box; border-radius: 14px; background: #ffffff; animation: mx-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; box-shadow: ' + (isTarget ? '0 0 0 2px #0e0e10' : '0 1px 3px rgba(20, 24, 40, 0.08)'),
+tag: 'height: 20px; border: none; cursor: ' + (x.kind === 'ascii' ? 'default' : 'pointer') + '; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; padding: 0 7px; border-radius: 8px; ' + (x.kind === 'hold' ? 'background: #0e0e10; color: #ffffff' : (x.kind === 'ascii' ? 'background: #e6edfb; color: #2a55b0' : 'background: #eef0f3; color: #4a4d54')),
+bump: () => { const l = mSteps0.slice(); l[i] = Object.assign({}, x, { delay: mBump(x.delay) }); setMacro(l); },
+remove: () => { const l = mSteps0.slice(); l.splice(i, 1); setMacro(l, { mtarget: -1 }); },
+left: () => { if (i === 0) return; const l = mSteps0.slice(); l.splice(i - 1, 0, l.splice(i, 1)[0]); setMacro(l); },
+right: () => { if (i === mSteps0.length - 1) return; const l = mSteps0.slice(); l.splice(i + 1, 0, l.splice(i, 1)[0]); setMacro(l); },
+target: () => this.setState({ mtarget: x.kind === 'hold' && mtarget !== i ? i : -1 }),
+flip: () => {
+if (x.kind === 'ascii') return;
+const l = mSteps0.slice();
+if (x.kind === 'tap') l[i] = Object.assign({}, x, { kind: 'hold' });
+else l.splice(i, 1, ...x.keys.map((k) => ({ kind: 'tap', keys: [k], delay: 0 })));
+setMacro(l, { mtarget: -1 });
+}
+};
+});
+const mkq = (st.mkq || '').trim().toLowerCase();
+const mPool = [];
+KEYCODE_CATS.forEach(([c, subs]) => { if (c === 'Midi' || c === 'Layer') return; subs.forEach(([sid, title, keys]) => { if (sid === 'macro') return; keys.forEach(([l, code]) => mPool.push([l, code, sid])); }); });
+const mPicks = mkq ? mPool.filter(([l, code]) => l.toLowerCase().indexOf(mkq) >= 0 || code.toLowerCase().indexOf(mkq) >= 0).slice(0, 80) : mPool.filter((x) => ['edit', 'mods', 'move', 'f'].indexOf(x[2]) >= 0);
+const mAddKey = (label) => {
+const l = mSteps0.slice();
+if (mtarget >= 0 && l[mtarget] && l[mtarget].kind === 'hold') { l[mtarget] = Object.assign({}, l[mtarget], { keys: l[mtarget].keys.concat([label]) }); setMacro(l); return; }
+l.push({ kind: 'tap', keys: [label], delay: 0 });
+setMacro(l);
+};
+const mText = st.mtext || '';
+
+// ---- Combos (saved to the keyboard one by one) ----
+const CSLOTS = 16;
+const CCOL = ['#3d6fd6', '#d6409f', '#1f8a55', '#c08a1e', '#7345c1', '#05a2c2', '#b03229', '#383a3f'];
+const CGROUPS = [['Common keys', ['Esc', 'Enter', 'Tab', 'Backspace', 'Delete', 'Space']], ['Japanese input', ['Eisu (LANG2)', 'Kana (LANG1)', 'Hankaku/Zenkaku (JIS `)']], ['Mouse', ['Left click', 'Right click', 'Middle click']], ['Layer (while held)', ['MO(1)', 'MO(2)', 'MO(3)']], ['Layer (toggle)', ['TG(1)', 'TG(2)', 'TG(3)']], ['Layer (switch)', ['TO(0)', 'TO(1)', 'TO(2)', 'TO(3)']], ['Mac', ['Cmd+C', 'Cmd+V', 'Cmd+Z']], ['Windows', ['Ctrl+C', 'Ctrl+V', 'Ctrl+Z']]];
+const CTERMS = [[null, '50 (既定)'], [30, '30'], [40, '40'], [60, '60'], [80, '80'], [100, '100'], [150, '150']];
+const cbs = st.cbs || [{ slot: 0, keys: ['J', 'K'], out: 'Esc', term: null, layers: [] }, { slot: 1, keys: ['D', 'F'], out: 'Tab', term: 40, layers: [0] }];
+const ced = st.ced || null;
+const cbusy = !!st.cbusy;
+const chov = st.chov ?? -1;
+const cOut = ced ? (ced.hex ? '0x' + ced.hex.padStart(4, '0') : ced.out) : '';
+const cNext = (() => { for (let i = 0; i < CSLOTS; i++) if (!cbs.some((c) => c.slot === i)) return i; return -1; })();
+const cOf = {};
+cbs.forEach((c) => c.keys.forEach((k) => { if (!(k in cOf)) cOf[k] = c.slot; }));
+const cStart = (keys) => { if (cNext < 0) return; this.setState({ ced: { isNew: true, slot: cNext, keys: keys || [], out: '', hex: '', term: null, layers: [] }, chov: -1 }); };
+const cToggleKey = (id) => {
+if (!ced) { cStart([id]); return; }
+const on = ced.keys.indexOf(id) >= 0;
+if (!on && ced.keys.length >= 4) { this.showToast('トリガーキーは 4 個までです'); return; }
+this.setState({ ced: Object.assign({}, ced, { keys: on ? ced.keys.filter((k) => k !== id) : ced.keys.concat([id]) }) });
+};
+
+// ---- Layers (names and colors are display-only; removal is written with Write to keyboard) ----
+const lremoved = st.lremoved || 0;
+const lren = st.lren ?? -1;
+const lpal = st.lpal ?? -1;
+const setLyr = (i, patch) => { const ls = lyrs.slice(); ls[i] = Object.assign({}, ls[i], patch); this.setState({ lyrs: ls }); };
+const lCommit = (i) => { const v2 = (st.ldraft || '').trim(); setLyr(i, { name: v2 || lyrs[i].name }); this.setState({ lren: -1 }); };
+const lHasKeys = (i) => !!(MAPS[i] || (W[i] && Object.keys(W[i]).length) || (A[i] && Object.keys(A[i]).length));
+const lRemoveTop = () => {
+const i = lyrs.length - 1;
+const nA = Object.assign({}, A), nH = Object.assign({}, H), nW = Object.assign({}, W), nWH = Object.assign({}, WH);
+delete nA[i]; delete nH[i]; delete nW[i]; delete nWH[i];
+this.setState({ lyrs: lyrs.slice(0, -1), A: nA, H: nH, W: nW, WH: nWH, lremoved: lremoved + (lHasKeys(i) ? 1 : 0), layer: Math.min(layer, i - 1), open: null, lpal: -1, lren: -1 });
+this.showToast(lyrs[i].name + ' を削除しました' + (lHasKeys(i) ? '（未反映）' : ''));
+};
+const pending = kmPending + lremoved + mDirty;
+
+// ---- Pointing values (auto-saved) ----
+const TPD = { smoothMove: true, thr: 20, startMove: 10, upd: 6, slow: 6, fast: 28, momentum: 20, prec: 33, cpi: 800, accel: true, glide: false, rot: 0, invX: false, invY: false, tap: true, two: true, drag: false, tapTerm: 200, scroll: 'Two finger', sSpeed: 8, natural: false, horiz: true, precision: false, sens: '2x', edgeWidth: 15, step: 8, zone: 'right', zones: { right: 'Scroll up / down', bottom: 'Scroll left / right' }, rev: {} };
+const MLD = { enabled: true, layer: 3, act: 10, release: 650, delay: 200, debounce: 25, nonMouse: true, keepMods: true };
+const TMD = { term: 200, decision: 'Tap preferred', left: 'Middle click', right: 'Mouse back button', up: 'Win / Cmd key', down: 'Esc' };
+const KND = { left: { p: 'Volume', rev: false }, right: { p: 'Scroll up / down', rev: false } };
+const tp = Object.assign({}, TPD, st.tp || {});
+const ml = Object.assign({}, MLD, st.ml || {});
+const tm = Object.assign({}, TMD, st.tm || {});
+const kn = Object.assign({}, KND, st.kn || {});
+const setTp = (p) => autosave({ tp: Object.assign({}, tp, p) });
+const setMl = (p) => autosave({ ml: Object.assign({}, ml, p) });
+const setTm = (p) => autosave({ tm: Object.assign({}, tm, p) });
+const setKn = (p) => autosave({ kn: Object.assign({}, kn, p) });
+const TP = (k) => (x) => setTp({ [k]: x });
+const ML = (k) => (x) => setMl({ [k]: x });
+const TM = (k) => (x) => setTm({ [k]: x });
+const tpTab = st.tpTab || 'pointer';
+const mlTab = st.mlTab || 'ov';
+const tmTab = st.tmTab || 'hold';
+const knobSel = st.knobSel || 'left';
+const EDGE_P = [['Volume', 'Volume down', 'Volume up'], ['Screen brightness', 'Brightness down', 'Brightness up'], ['Scroll up / down', 'Scroll down', 'Scroll up'], ['Scroll left / right', 'Scroll left', 'Scroll right'], ['Zoom (Ctrl + wheel)', 'Zoom out', 'Zoom in'], ['Zoom (Ctrl + keypad + / -)', 'Zoom out', 'Zoom in'], ['Zoom (Ctrl + = / -, US layout only)', 'Zoom out', 'Zoom in'], ['Switch tabs (Ctrl+Tab)', 'Previous tab', 'Next tab'], ['Undo / redo (Ctrl+Z / Ctrl+Y)', 'Undo', 'Redo'], ['Undo / redo (Cmd+Z / Cmd+Shift+Z)', 'Undo', 'Redo'], ['Previous / next track', 'Previous track', 'Next track'], ['Arrow keys up / down', 'Down', 'Up'], ['Arrow keys left / right', 'Left', 'Right'], ['Page up / down', 'Page down', 'Page up']];
+const CORNERS = ['None', 'Esc', 'Mute', 'Play / pause', 'Middle click', 'Right click', 'Browser back', 'Browser forward', 'Copy (Ctrl+C)', 'Paste (Ctrl+V)', 'Copy (Cmd+C)', 'Paste (Cmd+V)', 'Show desktop', 'Task view', 'Mission Control'];
+const ZONES = [['left', 'Left edge', 'edge', 'Left'], ['right', 'Right edge', 'edge', 'Right'], ['top', 'Top edge', 'edge', 'Top'], ['bottom', 'Bottom edge', 'edge', 'Bottom'], ['tl', 'Top-left corner', 'corner', '↖'], ['tr', 'Top-right corner', 'corner', '↗'], ['bl', 'Bottom-left corner', 'corner', '↙'], ['br', 'Bottom-right corner', 'corner', '↘']];
+const SWIPE = [['Common', ['None', 'Middle click', 'Mouse back button', 'Mouse forward button', 'Browser back', 'Browser forward', 'Esc', 'Win / Cmd key']], ['Mac', ['Previous desktop', 'Next desktop', 'Mission Control', 'App windows', 'Back (Cmd+[)', 'Forward (Cmd+])']], ['Windows', ['Previous desktop ', 'Next desktop ', 'Task view', 'Show desktop', 'Back (Alt+Left)', 'Forward (Alt+Right)']]];
+
+// ---- Lighting values (auto-saved) ----
+const EFFECTS = ['Off', 'Solid color', 'Alphas/mods', 'Gradient up-down', 'Gradient left-right', 'Breathing', 'Band sat', 'Band val', 'Pinwheel sat', 'Pinwheel val', 'Spiral sat', 'Spiral val', 'Cycle all', 'Cycle left-right', 'Cycle up-down', 'Rainbow moving chevron', 'Cycle out-in', 'Cycle out-in dual', 'Cycle pinwheel', 'Cycle spiral', 'Dual beacon', 'Rainbow beacon', 'Rainbow pinwheels', 'Raindrops', 'Jellybean raindrops', 'Hue breathing', 'Hue pendulum', 'Hue wave', 'Pixel rain', 'Pixel flow', 'Pixel fractal', 'Typing heatmap', 'Digital rain', 'Solid reactive simple', 'Solid reactive', 'Solid reactive wide', 'Solid reactive multiwide', 'Solid reactive cross', 'Solid reactive multicross', 'Solid reactive nexus', 'Solid reactive multinexus', 'Splash', 'Multisplash', 'Solid splash', 'Solid multisplash'];
+const LED = [[0, 'Lighting effect', null], [1, 'Off', '#1f2023'], [2, 'Red', '#e5484d'], [3, 'Green', '#30a46c'], [4, 'Yellow', '#f5d90a'], [5, 'Blue', '#3e63dd'], [6, 'Magenta', '#d6409f'], [7, 'Cyan', '#05a2c2'], [8, 'White', '#ffffff']];
+const GLOW = [[0, 'Same as the lighting', null], [2, 'Red', '#e5484d'], [3, 'Green', '#30a46c'], [4, 'Yellow', '#f5d90a'], [5, 'Blue', '#3e63dd'], [6, 'Magenta', '#d6409f'], [7, 'Cyan', '#05a2c2'], [8, 'White', '#ffffff']];
+const LTD = { effect: 'Cycle left-right', bright: 180, speed: 128, hue: 150, sat: 220, guide: 'Guide off', colorMode: 'Keep the colors', dim: 10, glow: true, glowColor: 0, size: 26, fade: 50, led: [0, 5, 3, 4] };
+const lt = Object.assign({}, LTD, st.lt || {});
+const setLt = (p) => autosave({ lt: Object.assign({}, lt, p) });
+const LT = (k) => (x) => setLt({ [k]: x });
+const fxKind = (e) => {
+if (e === 'Off') return 'off';
+if (e === 'Solid color' || e === 'Alphas/mods') return 'static';
+if (/^(Gradient|Band|Pinwheel|Spiral)/.test(e)) return 'grad';
+if (/[Bb]reathing|pendulum/.test(e)) return 'breathe';
+if (e === 'Cycle all') return 'cycle';
+if (/reactive|[Ss]plash/.test(e)) return 'react';
+if (/rain|Raindrops|fractal|heatmap/i.test(e)) return 'twinkle';
+return 'wave';
+};
+const FX_NOTE = { off: 'LED は消灯します。レイヤーの色も表示されません。', static: '一定の色で点灯します。', grad: '場所によって色が変わります（動きはありません）。', breathe: 'ゆっくり明るくなったり暗くなったりします。Speed で速さが変わります。', cycle: 'キーボード全体の色が順番に変わります。', wave: '虹色の波がキーボードを流れます。Speed で速さが変わります。', twinkle: 'ランダムな位置のキーが光ります。', react: '押したキーが光ります（見本ではキーにカーソルを合わせると光ります）。' };
+
+// ---- 3D keyboard geometry (board coordinates in px, origin between the halves) ----
+const P = [];
+const stagL = [16, 16, 6, 0, 6, 10], stagR = [10, 6, 0, 6, 16, 16];
+[['Tab', 'Ctrl', 'Shift'], ['Q', 'A', 'Z'], ['W', 'S', 'X'], ['E', 'D', 'C'], ['R', 'F', 'V'], ['T', 'G', 'B']].forEach((ks, c) => ks.forEach((id, r) => P.push({ id, side: 'Left', row: r + 1, col: c + 1, x: -370 + c * 60, y: -60 + r * 60 + stagL[c], w: 54 })));
+[['Y', 'H', 'N'], ['U', 'J', 'M'], ['I', 'K', ','], ['O', 'L', '.'], ['P', ';', '/'], ['Bksp', "'", 'Esc']].forEach((ks, c) => ks.forEach((id, r) => P.push({ id, side: 'Right', row: r + 1, col: c + 1, x: 70 + c * 60, y: -60 + r * 60 + stagR[c], w: 54 })));
+[['Alt', -190, 54, 4], ['Lower', -130, 54, 5], ['Space', -56, 84, 6]].forEach(([id, x, w, col]) => P.push({ id, side: 'Left', row: 4, col, x, y: 142, w }));
+[['Enter', 56, 84, 1], ['Raise', 130, 54, 2], ['GUI', 190, 54, 3]].forEach(([id, x, w, col]) => P.push({ id, side: 'Right', row: 4, col, x, y: 142, w }));
+const PAD = { x: 250, y: -215, w: 180, h: 118 };
+const KNOBS = [{ id: 'left', label: 'Left knob', x: -362, y: 150 }, { id: 'right', label: 'Right knob', x: 362, y: 150 }];
+const selPos = P.find((k) => k.id === sel) || P[0];
+
+// ---- camera: fit the board to the stage (stage size comes from a ResizeObserver) ----
+const stW = st.sw || 1200, stH = st.sh || 560;
+const narrow = stW < 820;
+const fit = Math.max(0.42, Math.min(stW * 0.9 / 840, stH * 0.82 / 370));
+const baseScale = fit * { S: 0.8, M: 0.9, L: 1 }[size];
+const keyWin = isKeymap && win && !st.winClosing;
+const secWin = !isKeymap && !secHide && !st.winClosing;
+const winW = Math.min(480, stW - 32);
+const wideW = isMacros ? Math.min(640, stW * 0.54, stW - 32) : Math.min(520, stW * 0.46, stW - 32);
+const sideW = Math.max(240, stW - wideW - 48);
+const leftPct = keyWin && !narrow ? Math.max(18, (stW - winW - 32) / 2 / stW * 100) : 50;
+const sideLeft = narrow ? 50 : (stW - wideW - 32) / 2 / stW * 100;
+const sideTop = narrow ? 20 : 52;
+const sideFit = narrow ? Math.min(stW * 0.9 / 840, stH * 0.34 / 370) : Math.max(0.36, Math.min(sideW * 0.94 / 840, stH * 0.8 / 370));
+const zoomS = Math.min(1.4, Math.max(0.6, fit * (keyWin && !narrow ? 0.95 : 1.3)));
+const padZoom = narrow ? Math.min(stW * 0.5 / PAD.w, stH * 0.24 / PAD.h) : Math.min(1.8, sideW * 0.42 / PAD.w, stH * 0.36 / PAD.h);
+const padFocus = isPointing && (psub === 'touchpad' || (psub === 'timing' && tmTab === 'swipe'));
+let cam = { s: baseScale, a: 44, x: 0, y: -40, left: 50, top: 52 };
+if (isKeys && !isKeymap) cam = { s: secWin ? sideFit : baseScale, a: 40, x: 0, y: -40, left: secWin ? sideLeft : 50, top: secWin ? sideTop : 52 };
+if (isKeymap && view === 'focus') cam = { s: zoomS, a: 34, x: selPos.x, y: selPos.y - 6, left: leftPct, top: keyWin && narrow ? 22 : 54 };
+if (isPointing) {
+if (padFocus) cam = secWin ? { s: padZoom, a: 30, x: PAD.x - 20, y: PAD.y + 40, left: sideLeft, top: sideTop } : { s: padZoom * 0.85, a: 32, x: PAD.x - 20, y: PAD.y + 40, left: 50, top: 50 };
+else if (psub === 'knobs') cam = { s: (secWin ? sideFit : baseScale) * 0.98, a: 52, x: 0, y: 30, left: secWin ? sideLeft : 50, top: secWin ? sideTop : 52 };
+else cam = { s: secWin ? sideFit : baseScale, a: 40, x: 0, y: -40, left: secWin ? sideLeft : 50, top: secWin ? sideTop : 52 };
+}
+if (isLighting) cam = { s: secWin ? sideFit : baseScale, a: 38, x: 0, y: -50, left: secWin ? sideLeft : 50, top: secWin ? sideTop : 52 };
+
+// ---- lighting model ----
+const viewLayer = isPointing && psub === 'mouse' ? ml.layer : (isCombos ? 0 : layer);
+const lkind = fxKind(lt.effect);
+const hueDeg = Math.round(lt.hue / 255 * 360);
+const satPct = Math.round(lt.sat / 255 * 100);
+const lightC = (h) => 'hsl(' + ((h % 360) + 360) % 360 + ', ' + satPct + '%, ' + (50 + (1 - lt.sat / 255) * 45).toFixed(0) + '%)';
+const ledIdx = lt.led[layer] || 0;
+const layerC = ledIdx > 1 ? LED[ledIdx][2] : null;
+const lightsOut = lkind === 'off' || ledIdx === 1;
+const effKind = layerC ? 'static' : lkind;
+const ledA = 0.3 + 0.7 * lt.bright / 255;
+const guideOn = lt.guide === 'Always' || (lt.guide === 'While a layer is on' && layer > 0);
+const MODK = ['Ctrl', 'Shift', 'Alt', 'GUI'];
+const kindColor = (lbl) => (MODK.indexOf(lbl) >= 0 ? '#3e63dd' : (/^(Lower|Raise)$|^MO\(|^LT/.test(lbl) ? '#d6409f' : (/^Mouse/.test(lbl) ? '#f5d90a' : (/Vol|Mute|Play/.test(lbl) ? '#30a46c' : (['Tab', 'Bksp', 'Esc', 'Enter', 'Space'].indexOf(lbl) >= 0 || lbl.length > 3 ? '#05a2c2' : '#ffffff')))));
+const touch = st.touch || null;
+const glowR = lt.size / 13 * 60;
+const glowC = lt.glowColor ? (GLOW.find((g) => g[0] === lt.glowColor) || GLOW[0])[2] : null;
+const effColor = (k, i) => {
+if (layerC) return layerC;
+if (lt.effect === 'Alphas/mods') return MODK.concat(['Tab', 'Esc', 'Bksp', 'Enter', 'Space', 'Lower', 'Raise']).indexOf(k.id) >= 0 ? lightC(hueDeg + 150) : lightC(hueDeg);
+if (lkind === 'grad') {
+if (/up-down|val/.test(lt.effect)) return lightC(hueDeg + (k.y + 80) * 0.35);
+if (/Pinwheel|Spiral/.test(lt.effect)) return lightC(hueDeg + Math.atan2(k.y - 40, k.x) * 57.3 * 0.5);
+return lightC(hueDeg + (k.x + 400) * 0.16);
+}
+if (lkind === 'wave') return lightC(hueDeg + (k.x + 400) * 0.45);
+if (lt.effect === 'Digital rain') return 'hsl(140, 80%, 55%)';
+if (lt.effect === 'Typing heatmap') return lightC(((i * 37) % 11) * 6);
+return lightC(hueDeg);
+};
+const spd = (0.8 + (255 - lt.speed) / 255 * 5.2);
+const lightOf = (k, i, lbl) => {
+if (!isLighting || lightsOut) return null;
+const held = (layer === 1 && k.id === 'Lower') || (layer === 2 && k.id === 'Raise');
+let c = effColor(k, i);
+let a = ledA;
+let cls = 'lit';
+if (guideOn && lbl === '▽' && !held) { if (!lt.dim) return null; cls = 'dimk'; a = lt.dim / 100; }
+else if (guideOn && lt.colorMode === 'Color by kind') c = kindColor(lbl);
+if (touch && lt.glow) {
+const d = Math.hypot(k.x - touch.x, k.y - touch.y);
+if (d < glowR) { c = glowC || c; a = Math.min(1, 0.55 + ledA * (0.9 - d / glowR * 0.5)); cls = 'lit touch'; } else a = a * 0.3;
+}
+let dly = 0;
+if (effKind === 'wave') dly = -((k.x + 400) / 800) * spd;
+if (effKind === 'twinkle') dly = -(((i * 37) % 17) / 17) * spd;
+return { c, a, cls, dly };
+};
+
+const caps = P.map((k, i) => {
+const lbl = labelOf(viewLayer, k.id);
+const hold = holdOf(viewLayer, k.id);
+const on = (isKeymap && k.id === sel && !testing && (win || view === 'focus')) || (isCombos && !!ced && ced.keys.indexOf(k.id) >= 0);
+const L = lightOf(k, i, lbl);
+let hl = '', hlc = '';
+if (isMacros && /^M\d+$/.test(lbl)) { hl = lbl === 'M' + msel ? 'hl hl2' : 'hl'; hlc = lbl === 'M' + msel ? '#3d6fd6' : '#a3a6ad'; }
+if (isCombos && !ced && k.id in cOf) { const sl = chov >= 0 && cbs.some((c) => c.slot === chov && c.keys.indexOf(k.id) >= 0) ? chov : cOf[k.id]; hl = sl === chov ? 'hl hl2' : 'hl'; hlc = CCOL[sl % CCOL.length]; }
+return {
+label: disp(lbl), on, changed: isKeys && isChanged(layer, k.id) && !testing, hasHold: !!hold && !testing && !isLighting, hold: hold ? holdShort[hold] : '',
+cls: (testing && tested[k.id] ? 'ok' : (on ? 'sel' : (lbl === '▽' ? 'trans' : ''))) + (L ? ' ' + L.cls : '') + (hl && !on ? ' ' + hl : ''),
+style: 'left: ' + (k.x - k.w / 2) + 'px; top: ' + (k.y - 27) + 'px; width: ' + k.w + 'px; font-size: ' + (lbl.length > 6 ? 9 : (lbl.length > 4 ? 10 : 12)) + 'px; --i: ' + i + (hlc ? '; --hl: ' + hlc : '') + (L ? '; --led: ' + L.c + '; --ledA: ' + L.a.toFixed(2) + '; --dly: ' + L.dly.toFixed(2) + 's' : ''),
+holdStyle: 'position: absolute; left: 0; right: 0; bottom: 4px; font-size: 9px; font-weight: 700; color: ' + (on ? '#b8bac0' : '#6b6e75'),
+aria: (lbl === '▽' ? 'Transparent' : disp(lbl)) + ' key',
+pick: () => {
+if (isLighting) return;
+if (isPointing) { go('keys', { layer: viewLayer, sel: k.id, win: true, view: 'focus', wtab: 'key', query: '', n: n + 1 }); return; }
+if (testing) { this.setState({ tested: Object.assign({}, tested, { [k.id]: true }) }); return; }
+if (isMacros) { commit(setIn(A, layer, k.id, 'M' + msel), H, { sel: k.id }); this.showToast(disp(lbl) + ' → M' + msel + ' を割り当てました（未反映）'); return; }
+if (isCombos) { if (cNext < 0 && !ced) { this.showToast('空いているスロットがありません'); return; } cToggleKey(k.id); return; }
+if (isLayersSub) { this.setState({ ksub: 'keymap', sel: k.id, win: true, winClosing: false, view: 'focus', wtab: 'key', query: '', n: n + 1, paneN: paneN + 1 }); return; }
+openWin({ sel: k.id, n: n + 1 });
+}
+};
+});
+
+// ---- keymap window (Keys) ----
+const rawSel = labelOf(layer, sel);
+const selHoldV = holdOf(layer, sel);
+const tapCode = codeOf(rawSel);
+const selCode = !selHoldV ? tapCode : (/^\d$/.test(selHoldV) ? 'LT(' + selHoldV + ', ' + tapCode + ')' : (selHoldV === 'SH' ? 'SH_T(' + tapCode + ')' : selHoldV + '_T(' + tapCode + ')'));
+let selDesc = KEY_DESC[tapCode] || (rawSel === '▽' ? KEY_DESC['_______'] : '') || 'このキーを送信します。';
+if (tapCode.indexOf('MO(') === 0) selDesc = '押している間だけレイヤー ' + tapCode.slice(3, -1) + ' を有効にし、離すと元に戻ります。';
+else if (/^(LCTL|LSFT|LALT|LGUI|RCTL|RSFT|RALT|RGUI)\(/.test(tapCode)) selDesc = '修飾キーを押しながらキーを送信します。';
+else if (/^0x/.test(tapCode)) selDesc = '16進数で直接指定したキーコードです。';
+if (selHoldV) selDesc = 'タップで ' + disp(rawSel) + '、長押しで ' + holdShort[selHoldV] + ' として働きます。';
+const before = has(W, layer, sel) ? W[layer][sel] : baseOf(layer, sel);
+
+const q = query.trim().toLowerCase();
+const hov = st.hov || null;
+const tile = (label, code, i) => ({
+label: disp(label) || '(none)', code, tip: code + ' — ' + (KEY_DESC[code] || ''),
+style: 'animation-delay: ' + (Math.min(i, 40) * 0.01).toFixed(2) + 's',
+hover: () => { if (!st.hov || st.hov.code !== code) this.setState({ hov: { label: disp(label) || '(none)', code, desc: KEY_DESC[code] || '' }, hovN: (st.hovN || 0) + 1 }); },
+unhover: () => this.setState({ hov: null }),
+pick: () => { assign(label, code); closeWin(); this.showToast(disp(rawSel) + ' → ' + (disp(label) || '(none)') + ' を割り当てました（未反映）'); }
+});
+let groups;
+let shown = 0;
+if (q) {
+const found = [];
+KEYCODE_CATS.forEach(([c, subs]) => subs.forEach(([sid, title, keys]) => keys.forEach(([l, code]) => { if (l.toLowerCase().indexOf(q) >= 0 || code.toLowerCase().indexOf(q) >= 0 || (KEY_DESC[code] || '').indexOf(query.trim()) >= 0) found.push([l, code, c]); })));
+shown = found.length;
+const byCat = {};
+found.slice(0, 160).forEach(([l, code, c]) => { (byCat[c] = byCat[c] || []).push([l, code]); });
+groups = Object.keys(byCat).map((c) => ({ title: c.toUpperCase(), keys: byCat[c].map(([l, code], i) => tile(l, code, i)) }));
+} else {
+const entry = KEYCODE_CATS.find((x) => x[0] === cat) || KEYCODE_CATS[0];
+groups = entry[1].map(([sid, title, keys]) => { shown += keys.length; return { title, keys: keys.map(([l, code], i) => tile(l, code, i)) }; });
+}
+const total = KEYCODE_CATS.reduce((s2, [c, subs]) => s2 + subs.reduce((s3, x) => s3 + x[2].length, 0), 0);
+const baseKey = (custom['__base_' + rawSel] || rawSel);
+const isBasic = /^KC_/.test(codeOf(baseKey)) && CATOF[baseKey] === 'Basic';
+const modState = st.modState || {};
+const side = st.side || 'L';
+const MODS = [['Ctrl', 'CTL'], ['Shift', 'SFT'], ['Alt', 'ALT'], ['Win/Cmd', 'GUI']];
+const applyMods = (ms, sd) => {
+const on = MODS.filter(([l, m]) => ms[m]);
+if (!on.length) { assign(baseKey, codeOf(baseKey), { modState: ms, side: sd }); return; }
+const lbl = on.map(([l]) => l.split('/')[0]).join('+') + '+' + baseKey;
+let code = codeOf(baseKey);
+on.slice().reverse().forEach(([l, m]) => { code = sd + m + '(' + code + ')'; });
+const c = Object.assign({}, custom, { [lbl]: code, ['__base_' + lbl]: baseKey });
+commit(setIn(A, layer, sel, lbl), H, { custom: c, modState: ms, side: sd });
+};
+const hex = st.hex || '';
+const hexOk = /^[0-9a-fA-F]{1,4}$/.test(hex);
+const hexVal = hexOk ? parseInt(hex, 16) : 0;
+const presets = PRESETS.filter((p) => (os === 'mac' ? p[1] : p[2])).map(([label, m, w]) => { const combo = os === 'mac' ? m : w; return { label, combo, pick: () => { assign(combo, label + ' (' + combo + ')'); closeWin(); this.showToast(disp(rawSel) + ' → ' + combo + ' を割り当てました（未反映）'); } }; });
+
+const write = () => {
+if (!pending || writing) return;
+const count = pending;
+this.setState({ writing: true, open: null });
+this.later(() => {
+const cur = this.state || {};
+const curM = cur.macros || macros;
+const cA = cur.A || {}, cH = cur.H || {};
+const nW = Object.assign({}, cur.W || {}), nWH = Object.assign({}, cur.WH || {});
+LIDX.forEach((l) => { nW[l] = Object.assign({}, nW[l] || {}, cA[l] || {}); nWH[l] = Object.assign({}, nWH[l] || {}, cH[l] || {}); });
+this.setState({ writing: false, W: nW, WH: nWH, A: {}, H: {}, startDone: true, past: [], future: [], msaved: curM.map((m) => JSON.stringify(m)), lremoved: 0 });
+this.showToast(count + '件の変更をキーボードに反映しました');
+}, 1500);
+};
+const selChanged = has(A, layer, sel) || has(H, layer, sel);
+
+// ---- settings window panes (Pointing / Lighting) ----
+const grid2 = 'display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; align-items: start';
+const col1 = 'display: flex; flex-direction: column; gap: 12px';
+const wide = (r) => Object.assign({}, r, { dim: (r.dim || '') + '; grid-column: 1 / -1' });
+const pd = tp.precision;
+const pdNote = pd ? [wide(R.note('高精度タッチパッドモード中は、この項目は Windows のタッチパッド設定に従います（Device タブで切り替え）。'))] : [];
+const zone = ZONES.find((z) => z[0] === tp.zone) || ZONES[1];
+const zv = tp.zones[zone[0]] || 'None';
+const zpre = EDGE_P.find((p) => p[0] === zv);
+const zSide = zone[0] === 'left' || zone[0] === 'right';
+const zDirs = zSide ? ['↓', '↑'] : ['←', '→'];
+const zRev = !!tp.rev[zone[0]];
+const zPair = zpre ? (zRev ? [zpre[2], zpre[1]] : [zpre[1], zpre[2]]) : null;
+const zAssigned = (id) => !!tp.zones[id] && tp.zones[id] !== 'None';
+const setZone = (x) => setTp({ zones: Object.assign({}, tp.zones, { [zone[0]]: x }) });
+const pickZone = (id) => this.setState({ tp: Object.assign({}, tp, { zone: id }) });
+const TP_TABS = [['pointer', 'Pointer'], ['tap', 'Tap'], ['scroll', 'Scroll'], ['edges', 'Edges'], ['sensor', 'Sensor'], ['device', 'Device']];
+const tpPane = {
+pointer: card('Pointer', 'カーソルの速さと加速です。値を変えるとすぐにキーボードへ保存されます。', pdNote.concat([
+R.slider('Speed (CPI)', tp.cpi, 100, 3200, 50, tp.cpi + ' cpi', '大きいほど少ない指の移動でカーソルが動きます', TP('cpi'), pd),
+R.sw('Acceleration', tp.accel, '速く動かすほど遠くまで動きます', TP('accel'), pd),
+R.slider('Slow speed', tp.slow, 3, 10, 1, '×' + (tp.slow / 10).toFixed(1), 'ゆっくり動かしたときの速さ（加速オン時）', TP('slow'), pd || !tp.accel),
+R.slider('Fast speed', tp.fast, 10, 50, 1, '×' + (tp.fast / 10).toFixed(1), '素早く動かしたときの速さ（加速オン時）', TP('fast'), pd || !tp.accel),
+R.slider('Precision mode speed', tp.prec, 10, 90, 1, tp.prec + '%', 'Sniping キーを押している間のカーソル速度', TP('prec'))
+]), { rowsStyle: grid2 }),
+tap: card('Tap & gestures', 'タップをクリックとして送るかどうかと、その判定時間です。', pdNote.concat([
+R.sw('Tap to click', tp.tap, '1 本指タップで左クリック', TP('tap'), pd),
+R.sw('Two-finger right click', tp.two, '2 本指タップで右クリック（マルチタッチ対応センサーのみ）', TP('two'), pd),
+R.sw('Tap and drag', tp.drag, 'ダブルタップして指を置いたまま動かすとドラッグ', TP('drag'), pd),
+R.slider('Tap term', tp.tapTerm, 100, 400, 10, tp.tapTerm + ' ms', 'これより短い接触をタップとみなします', TP('tapTerm'), pd)
+]), { rowsStyle: grid2 }),
+scroll: card('Scroll', 'スクロールの方式と速さ、指を離したあとの慣性です。', pdNote.concat([
+R.seg('Scroll method', [['Two finger', 'Two-finger'], ['Circular', 'Circle'], ['Edge', 'Edge']], tp.scroll, 'Circle は円を描くとスクロール', TP('scroll'), pd),
+R.slider('Scroll speed', tp.sSpeed, 1, 32, 1, '×' + (8 / tp.sSpeed).toFixed(2), '小さいほど速くスクロール（分周比）', TP('sSpeed'), pd),
+R.sw('Natural scroll', tp.natural, 'スクロール方向を反転します', TP('natural'), pd),
+R.sw('Horizontal scroll', tp.horiz, '左右方向のスクロールを有効にします', TP('horiz'), pd),
+R.sw('Glide (inertia)', tp.glide, '勢いよく離すと減速しながら続きます', TP('glide'), pd),
+R.slider('Momentum length', tp.momentum, 5, 60, 1, (tp.momentum / 100).toFixed(2) + ' s', '慣性スクロールが続く長さ', TP('momentum'), pd || !tp.glide)
+]), { rowsStyle: grid2 }),
+edges: card('Edge sliders and corner taps', '縁をなぞると音量やスクロールを操作でき、四隅のタップにはショートカットを割り当てられます。3D のタッチパッド上の縁・角を押しても選べます。', [
+wide(R.seg('Zone', ZONES.map(([id, l, kind, short]) => [id, short + (zAssigned(id) ? ' •' : '')]), zone[0], '', pickZone)),
+zone[2] === 'edge'
+? R.select(zone[1], [['Edge slider', ['None'].concat(EDGE_P.map((p) => p[0]))]], zv, zPair ? zDirs[0] + ' ' + zPair[0] + '　' + zDirs[1] + ' ' + zPair[1] : '割り当てなし（触れるとカーソルが動きます）', setZone)
+: R.select(zone[1], [['Corner tap', CORNERS]], zv, zv === 'None' ? '割り当てなし' : 'Tap → ' + zv, setZone),
+zone[2] === 'edge' ? R.sw('Reverse', zRev, '向きを入れ替えます', () => setTp({ rev: Object.assign({}, tp.rev, { [zone[0]]: !zRev }) }), !zpre) : R.note('指を動かさずに 0.3 秒以内に離したときだけ送ります。'),
+R.slider('Edge width', tp.edgeWidth, 5, 30, 1, tp.edgeWidth + '%', '各辺からどこまでを縁とみなすか', TP('edgeWidth')),
+R.slider('Step distance', tp.step, 2, 25, 1, tp.step + '%', '1 回送るまでに動かす距離', TP('step'))
+], { rowsStyle: grid2 }),
+sensor: card('Sensor', 'タッチセンサーの反応を調整します。誤反応が多い・反応が鈍いときに変更してください。', [
+R.seg('Sensor sensitivity', ['1x', '2x', '3x', '4x'], tp.sens, '厚いカバーを使う場合は高めに', TP('sens')),
+R.slider('Touch threshold', tp.thr, 10, 80, 1, String(tp.thr), '小さいほど軽いタッチで反応します', TP('thr')),
+R.slider('Movement to start', tp.startMove, 0, 40, 1, tp.startMove + ' (≈' + (tp.startMove / 100).toFixed(2) + ' mm)', '大きいとタップ時にカーソルがずれにくい', TP('startMove')),
+R.slider('Movement per update', tp.upd, 0, 40, 1, tp.upd + ' (≈' + (tp.upd / 100).toFixed(2) + ' mm)', '大きいほど指の小さなぶれを抑えます', TP('upd'))
+], { rowsStyle: grid2 }),
+device: card('Device', '取り付け向き、なめらか補間、パソコンからの見え方です。', [
+wide(R.seg('Rotation', [[0, '0°'], [90, '90°'], [180, '180°'], [270, '270°']], tp.rot, 'センサーの取り付け向き（3D のタッチパッドの矢印で確認できます）', TP('rot'))),
+R.sw('Invert X axis', tp.invX, '左右の動きを逆にします', TP('invX')),
+R.sw('Invert Y axis', tp.invY, '上下の動きを逆にします', TP('invY')),
+R.sw('Smooth movement', tp.smoothMove, '報告の間を補間して滑らかに動かします（約 3ms 遅延）', TP('smoothMove')),
+R.sw('Windows precision touchpad', tp.precision, 'オンにすると速度・タップ・スクロールは Windows 側の設定に従います', TP('precision'))
+], { rowsStyle: grid2 })
+};
+const mlOff = !ml.enabled;
+const mlPane = {
+ov: card('Auto mouse layer', 'タッチパッドを操作している間だけ、指定したレイヤーを自動で有効にします。左の 3D キーボードは対象レイヤーの割り当てを表示しています。', [
+wide(R.sw('Enable auto mouse layer', ml.enabled, 'オフにすると自動で切り替わらなくなります', ML('enabled'))),
+wide(R.seg('Target layer', [[1, 'Layer 1'], [2, 'Layer 2'], [3, 'Layer 3']], ml.layer, 'クリック類は左手側に置くのがおすすめです', ML('layer'), mlOff)),
+wide(R.note('① 指を動かす（移動量 ' + ml.act + ' 以上）→ ② Layer ' + ml.layer + ' が ON → ③ ' + ml.release + ' ms 操作なし' + (ml.nonMouse ? '、またはマウス以外のキー' : '') + ' → ④ 元のレイヤーに戻る')),
+R.button('このレイヤーのキーを編集', () => go('keys', { layer: ml.layer }))
+], { rowsStyle: grid2 }),
+cond: card('Switching conditions', 'マウスレイヤーが ON / OFF になる条件です。', [
+R.slider('Activation movement', ml.act, 1, 50, 1, String(ml.act), '小さいほど少し触れただけで切り替わります', ML('act'), mlOff),
+R.slider('Time until release', ml.release, 200, 3000, 50, ml.release + ' ms', '最後の操作からこの時間で元に戻ります', ML('release'), mlOff),
+R.slider('Delay after typing', ml.delay, 0, 1000, 50, ml.delay + ' ms', 'キー入力の直後はこの間切り替わりません', ML('delay'), mlOff),
+R.slider('Debounce', ml.debounce, 0, 100, 5, ml.debounce + ' ms', 'クリック直後の誤った解除を防ぎます', ML('debounce'), mlOff),
+R.sw('Release on non-mouse keys', ml.nonMouse, '文字キーを押すとすぐ戻ります', ML('nonMouse'), mlOff),
+R.sw('Keep while modifiers held', ml.keepMods, 'Shift / Ctrl + クリックを使いやすくします', ML('keepMods'), mlOff)
+], { rowsStyle: grid2 })
+};
+const tmPane = {
+hold: card('Tap-hold keys', 'すべてのレイヤータップ（LT）・モッドタップ（MT）キーに適用されます。左のキーボードの小さな表示が長押しの動作です。', [
+wide(R.slider('Tapping term', tm.term, 100, 400, 5, tm.term + ' ms', 'これより長く押すとホールド（レイヤー切替・修飾キー）と判定します', TM('term'))),
+R.seg('Presets (ms)', [150, 175, 200, 250, 300].map((t) => [t, String(t)]), tm.term, '', TM('term')),
+R.seg('Hold decision', [['Hold preferred', 'Hold'], ['Balanced', 'Balanced'], ['Tap preferred', 'Tap']], tm.decision, '', TM('decision')),
+wide(R.note('ホールド優先：別のキーを押した時点でホールド。バランス：押している間に別のキーを押して離すとホールド。タップ優先：判定時間が過ぎるまではタップ。'))
+], { rowsStyle: grid2 }),
+swipe: card('3-finger swipe', 'タッチパッドを 3 本指でスワイプしたときに送るキーです（マルチタッチ対応センサーのみ）。', [
+R.select('Swipe left', SWIPE, tm.left, '', TM('left')),
+R.select('Swipe right', SWIPE, tm.right, '', TM('right')),
+R.select('Swipe up', SWIPE, tm.up, '', TM('up')),
+R.select('Swipe down', SWIPE, tm.down, '', TM('down'))
+], { rowsStyle: grid2 })
+};
+const angle = st.angle || { left: 0, right: 0 };
+const knobRows = [];
+const knobInfo = KNOBS.map((K) => {
+const cur = kn[K.id];
+const p = EDGE_P.find((x) => x[0] === cur.p);
+const pair = p ? (cur.rev ? [p[2], p[1]] : [p[1], p[2]]) : ['—', '—'];
+return { K, cur, p, pair };
+});
+knobInfo.forEach(({ K, cur }) => knobRows.push(R.select(K.label + ' · Push and turn', [['Knob', ['None'].concat(EDGE_P.map((x) => x[0]))]], cur.p, '', (x) => setKn({ [K.id]: Object.assign({}, cur, { p: x }) }))));
+knobInfo.forEach(({ K, cur, p }) => knobRows.push(R.sw('Reverse', cur.rev, '回す向きを入れ替えます', () => setKn({ [K.id]: Object.assign({}, cur, { rev: !cur.rev }) }), !p)));
+knobInfo.forEach(({ pair }) => knobRows.push(R.note('↺ ' + pair[0] + '　/　↻ ' + pair[1])));
+knobInfo.forEach(({ K, pair }) => knobRows.push(R.seg('Try', [[-1, '↺ Turn'], [1, '↻ Turn']], null, '3D のノブが回ります', (dir) => { const a2 = (this.state && this.state.angle) || angle; this.setState({ knobSel: K.id, angle: Object.assign({}, a2, { [K.id]: (a2[K.id] || 0) + dir * 30 }) }); this.showToast(K.label + '：' + (dir < 0 ? '↺ ' + pair[0] : '↻ ' + pair[1])); })));
+const knPane = card('Knobs', 'ノブを押しながら回したときの動作です。押さずに回したときは Keymap でノブに割り当てたキーが送られます。', knobRows, { rowsStyle: grid2 });
+const LT_SUBS = [['eff', 'Effects'], ['led', 'Layer colors'], ['guide', 'Key guide'], ['glow', 'Touch glow']];
+const guideOff = lt.guide === 'Guide off';
+const ltPane = {
+eff: card('Effect', 'キーボードの LED の光り方です。左の 3D キーボードにそのまま反映されます。', [
+wide(R.select('Effect', [['RGB Matrix effects', EFFECTS]], lt.effect, FX_NOTE[lkind], LT('effect'))),
+R.slider('Brightness', lt.bright, 0, 255, 1, Math.round(lt.bright / 255 * 100) + '%', '', LT('bright'), lightsOut),
+R.slider('Speed', lt.speed, 0, 255, 1, Math.round(lt.speed / 255 * 100) + '%', '動きのあるエフェクトの速さ', LT('speed'), lightsOut),
+R.slider('Hue', lt.hue, 0, 255, 1, hueDeg + '°', '', LT('hue'), lightsOut),
+R.slider('Saturation', lt.sat, 0, 255, 1, satPct + '%', '0% で白になります', LT('sat'), lightsOut)
+].concat(layerC ? [wide(R.note('Layer ' + layer + ' には LED 色（' + LED[ledIdx][1] + '）が設定されているため、エフェクトより優先されています。Layer colors で「Lighting effect」に戻せます。'))] : []), { rowsStyle: grid2 }),
+led: card('LED color per layer', 'レイヤーが有効な間、LED をその色で点灯します。色を選ぶとそのレイヤーの光り方を表示します。', LAYERS.map((L, i) => R.swatches('L' + i + ' ' + L.name, LED, lt.led[i] || 0, '', (x) => { const led = lt.led.slice(); led[i] = x; setLt({ led }); this.setState({ layer: i }); })), { rowsStyle: col1 }),
+guide: card('Assigned keys only', '有効なレイヤーで割り当てのあるキーだけを光らせ、透過（▽）のキーは消灯します。左上でレイヤーを切り替えて確認できます。', [
+wide(R.seg('When to show', [['Guide off', 'Off'], ['While a layer is on', 'While a layer is on'], ['Always', 'Always']], lt.guide, '「While a layer is on」ではベースレイヤーは通常の光り方です', LT('guide'))),
+R.seg('Color of the assigned keys', [['Keep the colors', 'Keep'], ['Color by kind', 'By kind']], lt.colorMode, '種類別：修飾キー青・レイヤーキー桃・マウス黄・その他シアン', LT('colorMode'), guideOff),
+R.slider('Unassigned keys', lt.dim, 0, 50, 5, lt.dim + '%', '割り当てのないキーの明るさ。0% で消灯', LT('dim'), guideOff),
+wide(R.note('レイヤーを切り替えるために押しているキーは光ったままです。'))
+], { rowsStyle: grid2, hasBadge: true, badge: 'r20+' }),
+glow: card('Touch glow', 'タッチパッドに触れている間、キーボード上の対応する位置のキーが光ります。3D のタッチパッドの上でカーソルを動かして試せます。', [
+wide(R.sw('Light the touched position', lt.glow, '明るさはライティングの明るさに従います', LT('glow'))),
+wide(R.swatches('Glow color', GLOW, lt.glowColor, '', LT('glowColor'), !lt.glow)),
+R.slider('Glow size', lt.size, 10, 60, 1, '約 ' + (lt.size / 13).toFixed(1) + ' キー', '指の位置から光らせる半径', LT('size'), !lt.glow),
+R.slider('Fade-out time', lt.fade, 0, 200, 5, (lt.fade / 100).toFixed(2) + ' s', '指を離してから消えるまで', LT('fade'), !lt.glow)
+], { rowsStyle: grid2, hasBadge: true, badge: 'r18+' })
+};
+let inner = null, paneCard = null, secTitle = '', secSub = '';
+if (isPointing) {
+if (psub === 'touchpad') { inner = ['tpTab', TP_TABS, tpTab]; paneCard = tpPane[tpTab] || tpPane.pointer; secTitle = 'Touchpad'; secSub = '右手側キーボードの上部に取り付けたタッチパッドの設定です。'; }
+if (psub === 'mouse') { inner = ['mlTab', [['ov', 'Overview'], ['cond', 'Conditions']], mlTab]; paneCard = mlPane[mlTab] || mlPane.ov; secTitle = 'Mouse layer'; secSub = 'タッチパッド操作中に自動で有効になるレイヤーです。'; }
+if (psub === 'timing') { inner = ['tmTab', [['hold', 'Tap-hold'], ['swipe', '3-finger swipe']], tmTab]; paneCard = tmPane[tmTab] || tmPane.hold; secTitle = 'Timing & gestures'; secSub = 'タップ/ホールドの判定と 3 本指スワイプです。'; }
+if (psub === 'knobs') { paneCard = knPane; secTitle = 'Knobs'; secSub = '3D のノブを押すと選べます。Try で回して確認できます。'; }
+}
+if (isMacros) { secTitle = 'Macros · M' + msel; secSub = mRemaining + ' bytes 残り（全マクロ共通 ' + MBUF + ' バイト）。3D のキーを押すと M' + msel + ' を割り当てます。'; }
+if (isCombos) { secTitle = ced ? 'Combos · ' + (ced.isNew ? 'New' : 'Edit') + ' (Slot ' + ced.slot + ')' : 'Combos'; secSub = 'コンボ ' + cbs.length + ' / ' + CSLOTS + ' 使用中。3D のキーを押すと新しいコンボを作れます。'; }
+if (isLayersSub) { secTitle = 'Layers'; secSub = '名前と色は画面の表示に使います。'; }
+if (isLighting) { paneCard = ltPane[lsub] || ltPane.eff; secTitle = (LT_SUBS.find((x) => x[0] === lsub) || LT_SUBS[0])[1]; secSub = 'Layer ' + layer + ' · ' + LAY(layer).name + ' が有効なときの光り方を表示しています。'; }
+const pickInner = (key, id) => () => this.setState({ [key]: id, paneN: paneN + 1 });
+
+const resetSec = () => {
+if (isLighting) { setLt(LTD); this.showToast('Lighting を既定値に戻しました'); return; }
+if (psub === 'touchpad') setTp(TPD);
+if (psub === 'mouse') setMl(MLD);
+if (psub === 'timing') setTm(TMD);
+if (psub === 'knobs') setKn(KND);
+this.showToast(secTitle + ' を既定値に戻しました');
+};
+
+// ---- touchpad on the 3D board ----
+const ew = tp.edgeWidth;
+const geom = { left: 'left: 0; top: 18%; bottom: 18%; width: ' + ew + '%', right: 'right: 0; top: 18%; bottom: 18%; width: ' + ew + '%', top: 'top: 0; left: 18%; right: 18%; height: ' + ew + '%', bottom: 'bottom: 0; left: 18%; right: 18%; height: ' + ew + '%', tl: 'left: 0; top: 0; width: 18%; height: 18%', tr: 'right: 0; top: 0; width: 18%; height: 18%', bl: 'left: 0; bottom: 0; width: 18%; height: 18%', br: 'right: 0; bottom: 0; width: 18%; height: 18%' };
+const padZonesOn = isPointing && psub === 'touchpad' && tpTab === 'edges';
+const padTouchOn = isLighting && lt.glow && !lightsOut;
+const padMove = (e) => {
+if (!padTouchOn) return;
+const r = e.currentTarget.getBoundingClientRect();
+const fx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+const fy = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+this._touch = { x: -400 + fx * 800, y: -75 + fy * 250, fx, fy };
+if (!this._traf) this._traf = requestAnimationFrame(() => { this._traf = 0; this.setState({ touch: this._touch }); });
+};
+const glowOn = isLighting && lsub === 'glow';
+const hintText = isMacros ? 'キーを押すと M' + msel + ' を割り当てます（青枠はマクロのキー）' : (isCombos ? (ced ? 'キーを押してトリガーを選びます（2〜4 個）' : 'キーを押すと、そのキーから新しいコンボを作ります') : (isLayersSub ? 'Layer ' + layer + ' · ' + LAY(layer).name + ' を表示中。キーを押すとそのキーを編集します' : (isKeys ? 'キーを押すと設定ウィンドウが開きます' : (isPointing ? (padZonesOn ? 'タッチパッドの縁・角を押して選べます' : (psub === 'knobs' ? 'ノブを押して選べます' : (psub === 'mouse' ? 'キーを押すと Keys に移ってそのキーを編集します' : 'キーを押すと Keys に移ってそのキーを編集します'))) : (lightsOut ? 'ライトは消灯中です' : (padTouchOn && (glowOn || touch) ? 'タッチパッドの上でカーソルを動かすと、対応する位置のキーが光ります' : (lkind === 'react' && !layerC ? 'キーにカーソルを合わせると反応します' : 'Layer ' + layer + ' の光り方を表示中')))))));
+const chipAnim = 'animation: ' + (secN % 2 ? 'mx-chip-a' : 'mx-chip-b') + ' 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+const SUBS = {
+keys: [['keymap', 'Keymap'], ['macros', 'Macros'], ['combos', 'Combos'], ['layers', 'Layers']].map(([id, label]) => ({ label, isLink: false, isBtn: true, href: '', cls: ksub === id ? 'cur' : '', ac: ksub === id ? 'page' : 'false', pick: () => { if (ksub !== id) this.setState({ ksub: id, paneN: paneN + 1, secHide: false, winClosing: false, win: false, view: 'overview', hov: null, testing: false, open: null }); } })),
+pointing: [['touchpad', 'Touchpad'], ['mouse', 'Mouse layer'], ['timing', 'Timing'], ['knobs', 'Knobs']].map(([id, label]) => ({ label, isLink: false, isBtn: true, href: '', cls: psub === id ? 'cur' : '', ac: psub === id ? 'page' : 'false', pick: () => this.setState({ psub: id, paneN: paneN + 1, secHide: false, winClosing: false }) })),
+lighting: LT_SUBS.map(([id, label]) => ({ label, isLink: false, isBtn: true, href: '', cls: lsub === id ? 'cur' : '', ac: lsub === id ? 'page' : 'false', pick: () => this.setState({ lsub: id, paneN: paneN + 1, secHide: false, winClosing: false }) }))
+};
+
+return Object.assign(C, {
+section, isKeys, isPointing, isLighting, notKeys: !isKeys,
+isKeymap, isMacros, isCombos, isLayersSub, showWrite: isKeys && !isCombos,
+manageLayers: () => go('keys', { ksub: 'layers' }),
+dlgLRemove: open === 'dlg-lremove', doLRemove: lRemoveTop,
+mList: macros.map((m, i) => ({
+name: 'M' + i, preview: mPreview(m), on: i === msel, dirty: JSON.stringify(m) !== msaved[i],
+style: 'position: relative; height: 32px; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 11px; font-weight: 700; transition: background-color 0.25s ease, color 0.25s ease; ' + (i === msel ? 'background: #0e0e10; color: #ffffff' : (m.length ? 'background: rgba(255, 255, 255, 0.9); color: #0e0e10' : 'background: rgba(255, 255, 255, 0.45); color: #8f9197')),
+pick: () => this.setState({ msel: i, mtarget: -1, paneN: paneN + 1 })
+})),
+mSteps, mEmpty: !mSteps0.length, mClear: () => setMacro([], { mtarget: -1 }),
+mText, onMText: (e) => this.setState({ mtext: e.target.value }), mNoText: !mText,
+mAddText: () => { if (!mText) return; const add = mText.split('').filter((ch) => ch >= ' ' && ch <= '~').map((ch) => ({ kind: 'ascii', keys: [ch], delay: 0 })); setMacro(mSteps0.concat(add), { mtext: '' }); },
+mKq: st.mkq || '', onMKq: (e) => this.setState({ mkq: e.target.value }),
+mPickTitle: mkq ? 'SEARCH RESULTS' : (mtarget >= 0 ? 'ADD TO THE SELECTED HOLD' : 'COMMON KEYS'),
+mPick: mPicks.map(([l, code]) => ({ label: l, code, add: () => mAddKey(l) })),
+cNotEditing: !ced, cEditing: !!ced, cUsed: cbs.length + ' / ' + CSLOTS, cNone: !cbs.length,
+cList: cbs.map((c) => ({
+title: c.keys.join(' + ') + ' → ' + (c.hex ? '0x' + c.hex.padStart(4, '0') : c.out),
+meta: (c.term ? c.term + ' ms' : '50 ms (default)') + ' · ' + (c.layers.length ? c.layers.map((l) => 'L' + l).join(', ') : 'All layers') + ' · Slot ' + c.slot,
+dot: 'width: 10px; height: 10px; border-radius: 5px; flex: none; background: ' + CCOL[c.slot % CCOL.length],
+style: 'padding: 10px 12px; cursor: default; transition: background-color 0.25s ease, box-shadow 0.25s ease; background: ' + (chov === c.slot ? '#ffffff' : 'rgba(255, 255, 255, 0.7)') + '; box-shadow: ' + (chov === c.slot ? '0 0 0 2px ' + CCOL[c.slot % CCOL.length] : 'none'),
+hover: () => { if (chov !== c.slot) this.setState({ chov: c.slot }); }, unhover: () => this.setState({ chov: -1 }),
+edit: () => this.setState({ ced: Object.assign({ isNew: false }, c, { keys: c.keys.slice(), layers: c.layers.slice(), hex: c.hex || '' }), chov: -1 }),
+remove: () => { this.setState({ cbs: cbs.filter((x) => x.slot !== c.slot), chov: -1 }); this.showToast('コンボを削除しました'); }
+})),
+cEditTitle: ced && ced.isNew ? 'New combo' : 'Edit combo', cSlot: ced ? 'Slot ' + ced.slot : '',
+cTrig: ced ? ced.keys.map((k) => ({ label: disp(k), remove: () => cToggleKey(k) })) : [], cTrigEmpty: !!ced && !ced.keys.length,
+cGroups: CGROUPS.map(([label, opts]) => ({ label, opts })), cOutSel: ced ? (ced.hex ? '' : ced.out) : '',
+onCOut: (e) => this.setState({ ced: Object.assign({}, ced, { out: e.target.value, hex: '' }) }),
+cHex: ced ? ced.hex || '' : '', onCHex: (e) => this.setState({ ced: Object.assign({}, ced, { hex: e.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 4).toUpperCase() }) }),
+cHasOut: !!cOut && !!ced && ced.keys.length > 0, cPreview: ced ? ced.keys.map(disp).join(' + ') + ' → ' + cOut : '',
+cTerms: CTERMS.map(([v2, label]) => ({ label, on: !!ced && ced.term === v2, cls: !!ced && ced.term === v2 ? 'on' : '', pick: () => this.setState({ ced: Object.assign({}, ced, { term: v2 }) }) })),
+cLayerOpts: LAYERS.map((L, i) => { const on = !!ced && ced.layers.indexOf(i) >= 0; return { label: 'L' + i + ' ' + L.name, on, cls: on ? 'on' : '', pick: () => this.setState({ ced: Object.assign({}, ced, { layers: on ? ced.layers.filter((x) => x !== i) : ced.layers.concat([i]).sort() }) }) }; }),
+cBusy: cbusy, cSaveOff: cbusy || !ced || ced.keys.length < 2 || !cOut,
+cCancel: () => this.setState({ ced: null }),
+cSave: () => {
+if (!ced || ced.keys.length < 2 || !cOut) return;
+this.setState({ cbusy: true });
+this.later(() => {
+const item = { slot: ced.slot, keys: ced.keys, out: ced.out, hex: ced.hex, term: ced.term, layers: ced.layers };
+const list = ((this.state && this.state.cbs) || cbs).filter((c) => c.slot !== ced.slot).concat([item]).sort((a, b) => a.slot - b.slot);
+this.setState({ cbs: list, ced: null, cbusy: false });
+this.showToast('コンボをキーボードに保存しました');
+}, 900);
+},
+cAdd: () => { if (ced || cNext < 0) return; cStart([]); }, cAddOff: !!ced || cNext < 0, cAddCls: ced || cNext < 0 ? 'idle' : '',
+lCount: lyrs.length + ' / ' + LMAX + ' レイヤー表示中（ファームウェアは ' + LMAX + ' レイヤー）',
+lAddOff: lyrs.length >= LMAX, lAddTitle: lyrs.length >= LMAX ? 'ファームウェアにこれ以上のレイヤーはありません' : 'レイヤーを追加',
+lAdd: () => { if (lyrs.length >= LMAX) return; const i = lyrs.length; this.setState({ lyrs: lyrs.concat([{ name: 'Layer ' + i, color: i % PALETTE.length }]), layer: i }); this.showToast('Layer ' + i + ' を表示しました'); },
+lRows: lyrs.map((l, i) => {
+const stop = (e) => { if (e && e.stopPropagation) e.stopPropagation(); };
+return {
+index: i, name: l.name, renaming: lren === i, notRenaming: lren !== i, palOpen: lpal === i,
+style: 'padding: 8px 10px; gap: 8px; cursor: pointer; transition: background-color 0.25s ease, box-shadow 0.25s ease; background: ' + (i === layer ? '#ffffff' : 'rgba(255, 255, 255, 0.55)') + '; box-shadow: ' + (i === layer ? '0 0 0 2px ' + PALETTE[l.color] : 'none'),
+dot: 'width: 22px; height: 22px; border-radius: 11px; border: 3px solid #ffffff; box-shadow: 0 0 0 1px #d5d8de; cursor: pointer; padding: 0; flex: none; background: ' + PALETTE[l.color],
+colorLabel: 'レイヤー ' + i + ' の色',
+togglePal: (e) => { stop(e); this.setState({ lpal: lpal === i ? -1 : i }); },
+colors: PALETTE.map((c, ci) => ({ label: 'Color ' + (ci + 1), on: ci === l.color, style: 'width: 24px; height: 24px; border-radius: 12px; cursor: pointer; padding: 0; background: ' + c + '; border: ' + (ci === l.color ? '3px solid #0e0e10' : '2px solid #ffffff') + '; box-shadow: 0 0 0 1px #d5d8de', pick: () => { setLyr(i, { color: ci }); this.setState({ lpal: -1 }); } })),
+pick: () => { if (layer !== i) this.setState({ layer: i }); },
+stop, draft: st.ldraft || '', onDraft: (e) => this.setState({ ldraft: e.target.value }),
+onKey: (e) => { if (e.key === 'Enter') lCommit(i); if (e.key === 'Escape') this.setState({ lren: -1 }); },
+startRename: (e) => { stop(e); this.setState({ lren: i, ldraft: l.name }); }, saveName: (e) => { stop(e); lCommit(i); },
+hasLed: (lt.led[i] || 0) > 0, ledDot: 'width: 9px; height: 9px; border-radius: 5px; border: 1px solid rgba(0, 0, 0, 0.15); background: ' + ((lt.led[i] || 0) > 1 ? LED[lt.led[i]][2] : 'transparent'),
+toLed: (e) => { stop(e); go('lighting', { lsub: 'led', layer: i }); },
+hasChanges: pendingOn(i) > 0, changes: pendingOn(i),
+edit: (e) => { stop(e); this.setState({ ksub: 'keymap', layer: i, paneN: paneN + 1, win: false, view: 'overview' }); },
+removable: i > 0 && i === lyrs.length - 1,
+remove: (e) => { stop(e); if (lHasKeys(i)) this.setState({ open: 'dlg-lremove' }); else lRemoveTop(); }
+};
+}),
+bigTabs: [['keys', 'Keys'], ['pointing', 'Pointing'], ['lighting', 'Lighting']].map(([id, label]) => ({ label, cls: section === id ? 'cur' : '', ac: section === id ? 'page' : 'false', pick: () => go(id) })),
+subTabs: SUBS[section], subLabel: { keys: 'Keys', pointing: 'Pointing', lighting: 'Lighting' }[section] + ' のページ',
+subAnim: 'animation: ' + (secN % 2 ? 'mx-sub-a' : 'mx-sub-b') + ' 0.55s cubic-bezier(0.2, 0.8, 0.2, 1)',
+layerOpen: open === 'layer', toggleLayer: toggle('layer'),
+moreOpen: open === 'more', toggleMore: toggle('more'),
+dlgReset: open === 'dlg-reset', dlgClear: open === 'dlg-clear',
+layers: LAYERS.map((L, i) => ({
+title: 'Layer ' + i + ' · ' + L.name, on: i === layer, pending: pendingOn(i), hasPending: pendingOn(i) > 0,
+dot: 'width: 10px; height: 10px; border-radius: 5px; flex: none; background: ' + L.color,
+style: 'font-weight: ' + (i === layer ? 700 : 500) + '; background: ' + (i === layer ? '#f5f6f8' : 'transparent'),
+pick: () => this.setState({ layer: i, open: null, n: n + 1 })
+})),
+layerTitle: 'Layer ' + layer + ' · ' + LAY(layer).name,
+layerDot: 'width: 10px; height: 10px; border-radius: 5px; flex: none; transition: background-color 0.3s ease; background: ' + LAY(layer).color,
+undoOff: !past.length, redoOff: !future.length, undoCls: past.length ? '' : 'off', redoCls: future.length ? '' : 'off',
+undo: () => { if (!past.length) return; const p = past[past.length - 1]; this.setState({ A: p.A, H: p.H, past: past.slice(0, -1), future: [{ A, H }].concat(future), n: n + 1 }); },
+redo: () => { if (!future.length) return; const f = future[0]; this.setState({ A: f.A, H: f.H, future: future.slice(1), past: past.concat([{ A, H }]), n: n + 1 }); },
+onDefImport: (e) => { const f = e.target.files && e.target.files[0]; this.setState({ open: null }); if (f) this.showToast(f.name + ' を読み込みました'); },
+
+sizes: ['S', 'M', 'L'].map((z) => ({ label: z, on: z === size, cls: z === size ? 'on' : '', pick: () => this.setState({ size: z, view: 'overview' }) })),
+sizeTitle: 'Keyboard size: ' + { S: '60%', M: '70%', L: '85%' }[size],
+nothingPending: !pending, askClear: () => this.setState({ open: 'dlg-clear' }),
+doClear: () => { commit({}, {}, { open: null, startDone: true }); this.showToast('すべての変更を取り消しました'); },
+cheatSheet: () => this.showToast('キーマップのチートシート（PDF）を作成しました'),
+startTest: () => this.setState({ testing: true, tested: {}, open: null, view: 'overview', win: false }),
+endTest: () => this.setState({ testing: false }),
+testing, testCount: Object.keys(tested).length + ' / 42 キー確認済み',
+askReset: () => this.setState({ open: 'dlg-reset' }),
+doReset: () => { this.setState({ A: {}, H: {}, W: {}, WH: {}, startDone: true, past: [], future: [], open: null, n: n + 1 }); this.showToast('初期のキーマップを適用しました'); },
+
+stageCls: isLighting ? 'dark' : '',
+stageStyle: 'flex: 1; height: auto; min-height: 0; border-radius: clamp(14px, 2vh, 20px); --under: ' + (isLighting && !lightsOut ? 'color-mix(in srgb, ' + (layerC || lightC(hueDeg)) + ' 30%, transparent)' : 'rgba(0, 0, 0, 0)'),
+fxCls: (isLighting && !lightsOut ? 'fx-' + effKind + ' ' : '') + 'flip-' + viewLayer,
+camStyle: 'left: ' + cam.left.toFixed(2) + '%; top: ' + cam.top + '%; transform: scale(' + cam.s.toFixed(3) + ') rotateX(' + cam.a + 'deg) translate(' + (-cam.x) + 'px, ' + (-cam.y) + 'px); --spd: ' + spd.toFixed(2) + 's; --fade: ' + (touch || st.touchFading ? Math.max(0.05, lt.fade / 100) : 0.6).toFixed(2) + 's',
+halfL: 'left: -416px; top: -114px; width: 410px; height: 304px',
+halfR: 'left: 6px; top: -300px; width: 410px; height: 490px',
+padStyle: 'left: ' + (PAD.x - PAD.w / 2) + 'px; top: ' + (PAD.y - PAD.h / 2) + 'px; width: ' + PAD.w + 'px; height: ' + PAD.h + 'px' + (padTouchOn ? '; cursor: crosshair' : ''),
+padCls: isPointing && (psub === 'touchpad' || psub === 'timing' || psub === 'mouse') ? 'sel' : '', padOn: isPointing,
+padLblStyle: 'opacity: ' + (padZonesOn || (isPointing && psub === 'touchpad' && tpTab === 'device') || (touch && padTouchOn) ? 0 : 1),
+pickPad: () => {
+if (testing) return;
+if (isKeys) { go('pointing', { psub: 'touchpad' }); return; }
+if (isLighting) { this.setState({ lsub: 'glow', secHide: false, paneN: lsub === 'glow' ? paneN : paneN + 1 }); return; }
+if (psub === 'knobs') this.setState({ psub: 'touchpad', paneN: paneN + 1, secHide: false }); else this.setState({ secHide: false });
+},
+padMove, padLeave: () => { if (!st.touch) return; this.setState({ touch: null, touchFading: true }); this.later(() => this.setState({ touchFading: false }), Math.max(50, lt.fade * 10) + 100); },
+padZonesOn, padZones: ZONES.map(([id, label, kind]) => ({ label, on: id === zone[0], cls: (id === zone[0] ? 'on ' : '') + (zAssigned(id) ? 'set' : ''), mark: kind === 'corner' ? (zAssigned(id) ? '●' : '') : (zAssigned(id) ? 'SET' : ''), style: geom[id], pick: (e) => { if (e && e.stopPropagation) e.stopPropagation(); pickZone(id); } })),
+padArrowOn: isPointing && psub === 'touchpad' && tpTab === 'device',
+padArrow: 'transition: transform 0.6s cubic-bezier(0.34, 1.4, 0.64, 1); transform: rotate(' + tp.rot + 'deg) scale(' + (tp.invX ? -1 : 1) + ', ' + (tp.invY ? -1 : 1) + ')',
+padRingOn: isPointing && psub === 'touchpad' && tpTab === 'scroll' && tp.scroll === 'Circular',
+padDotOn: !!touch && padTouchOn,
+padDot: touch ? 'position: absolute; left: ' + (touch.fx * 100).toFixed(1) + '%; top: ' + (touch.fy * 100).toFixed(1) + '%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 11px; pointer-events: none; background: ' + (glowC || lightC(hueDeg)) + '; box-shadow: 0 0 18px ' + (glowC || lightC(hueDeg)) : '',
+knobs3d: KNOBS.map((K) => ({ label: K.label, cls: isPointing && psub === 'knobs' && knobSel === K.id ? 'sel' : '', style: 'left: ' + (K.x - 26) + 'px; top: ' + (K.y - 26) + 'px; transform: translateZ(14px) rotate(' + (angle[K.id] || 0) + 'deg)', pick: () => { if (isPointing) this.setState({ psub: 'knobs', knobSel: K.id, secHide: false, paneN: psub === 'knobs' ? paneN : paneN + 1 }); else go('pointing', { psub: 'knobs', knobSel: K.id }); } })),
+caps,
+isOverview: view === 'overview', isFocus: view === 'focus', ovCls: view === 'overview' ? 'on' : '', fcCls: view === 'focus' ? 'on' : '',
+toOverview: () => this.setState({ view: 'overview' }), toFocus: () => this.setState({ view: 'focus' }),
+stageRef: (el) => {
+if (!el || this._ro) return;
+this._ro = new ResizeObserver((entries) => {
+const r = entries[0].contentRect;
+const cur = this.state || {};
+if (Math.abs((cur.sw || 0) - r.width) > 4 || Math.abs((cur.sh || 0) - r.height) > 4) this.setState({ sw: Math.round(r.width), sh: Math.round(r.height) });
+});
+this._ro.observe(el);
+},
+
+chipOn: !isLighting, chipStyle: 'height: 34px; border-radius: 17px; gap: 8px; font-size: 13px; font-weight: 600; color: #0e0e10; ' + chipAnim,
+chipDot: isKeys || (isPointing && psub === 'mouse') ? 'width: 10px; height: 10px; border-radius: 5px; flex: none; background: ' + LAY(viewLayer).color : 'width: 10px; height: 10px; border-radius: 5px; flex: none; background: #7aa2ff; box-shadow: 0 0 8px #7aa2ff',
+chipTitle: isKeys ? 'Layer ' + viewLayer + ' · ' + LAY(viewLayer).name : (psub === 'mouse' ? 'Layer ' + ml.layer + ' · ' + LAY(ml.layer).name : (psub === 'knobs' ? 'Knobs' : 'Touchpad')),
+chipSub: isKeys ? (isCombos ? 'コンボのトリガーはレイヤー 0 のキー' : (isMacros ? 'マクロのキー ' + caps.filter((c) => /^M\d+$/.test(c.label)).length + '個' : '42 keys · このレイヤーの未反映 ' + pendingOn(layer) + '件')) : (psub === 'mouse' ? 'マウスレイヤーの割り当て' : (psub === 'knobs' ? '左右のノブ' : '右手側の上部')),
+pvSegStyle: 'padding: 3px; border-radius: 19px; ' + chipAnim,
+pvLayers: LAYERS.map((L, i) => ({ label: 'L' + i + ' ' + L.name, on: i === layer, cls: i === layer ? 'on' : '', dot: 'display: inline-block; width: 8px; height: 8px; border-radius: 4px; margin-right: 6px; background: ' + (lt.led[i] > 1 ? LED[lt.led[i]][2] : 'conic-gradient(#e5484d, #f5d90a, #30a46c, #05a2c2, #3e63dd, #d6409f, #e5484d)'), pick: () => this.setState({ layer: i }) })),
+hintOn: true, hintText, hintCls: isKeymap && win ? 'hide' : '', hintStyle: 'height: 32px; gap: 10px; ' + chipAnim,
+reopenOn: !isKeymap && secHide && !st.winClosing, reopenLabel: isLighting ? 'Lighting settings' : (isMacros ? 'Macros' : secTitle) + (isKeys ? '' : ' settings'), reopen: () => this.setState({ secHide: false }),
+
+closeWin, keyWinOpen: isKeymap && win, winCls: st.winClosing ? 'out' : '', winKey: true,
+winTitle: disp(rawSel) + ' キーの設定',
+toolsCls: win ? 'hide' : '',
+secWinOpen: !isKeymap && !secHide, secWinCls: (st.winClosing ? 'out ' : '') + (isLighting ? 'ondark ' : '') + (isMacros ? 'xwide' : 'wide'),
+secWinStyle: st.winClosing ? '' : 'animation-name: ' + (secN % 2 ? 'mx-win' : 'mx-win2'),
+secTitle, secSub,
+secIcon: 'width: 44px; height: 44px; border-radius: 14px; flex: none; background: linear-gradient(150deg, #2f3137, #1b1c20); box-shadow: inset 0 0 0 2px ' + (isLighting ? (layerC || lightC(hueDeg)) : (isKeys ? LAY(layer).color : '#7aa2ff')) + ', 0 0 18px ' + (isLighting ? (layerC || lightC(hueDeg)) : (isKeys ? 'rgba(14, 14, 16, 0.12)' : 'rgba(122, 162, 255, 0.5)')) + '; transition: box-shadow 0.5s ease',
+saveChip: isKeys ? (isCombos ? (cbusy ? '保存中…' : 'Save で書き込み') : (pending ? '未反映 ' + pending + '件' : '反映済み')) : (st.saving ? '保存中…' : '自動保存'),
+secChipDot: isKeys ? 'width: 8px; height: 8px; border-radius: 4px; background: ' + (isCombos ? (cbusy ? '#c08a1e' : '#1f8a55') : (pending ? '#3d6fd6' : '#1f8a55')) : C.autoStatusDot,
+hasInner: !!inner, innerTabs: inner ? inner[1].map(([id, label]) => ({ label, on: inner[2] === id, pick: pickInner(inner[0], id) })) : [],
+paneCards: paneCard ? [paneCard] : [],
+paneAnim: 'animation: ' + (paneN % 2 ? 'mx-pin-a' : 'mx-pin-b') + ' 0.45s cubic-bezier(0.2, 0.8, 0.2, 1)',
+resetSec, resetTitle: (isLighting ? 'Lighting' : secTitle) + ' を既定値に戻す',
+
+summary: '42 keys · このレイヤーの未反映 ' + pendingOn(layer) + '件',
+isUS: !jis, isJIS: jis, usCls: labelLang === 'English (US)' ? 'on' : '', jisCls: jis ? 'on' : '',
+setUS: () => this.setState({ labelLang: 'English (US)' }), setJIS: () => this.setState({ labelLang: 'Japanese' }),
+langs: LANGS, labelLang, onLabelLang: (e) => this.setState({ labelLang: e.target.value }),
+
+selLabel: disp(rawSel), selCode, selDesc, selHold: selHoldV ? holdShort[selHoldV] : 'None',
+selWhere: 'Layer ' + layer + ' · ' + selPos.side + ' · row ' + selPos.row + ', col ' + selPos.col,
+selChanged, selBefore: disp(before),
+resetKey: () => commit(setIn(A, layer, sel, undefined), setIn(H, layer, sel, undefined)),
+capStyle: 'min-width: 56px; height: 56px; border-radius: 16px; background: #0e0e10; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: ' + (rawSel.length > 5 ? 12 : 17) + 'px; font-weight: 700; flex: none; padding: 0 8px; box-sizing: border-box; text-align: center; white-space: pre-line; animation: ' + (n % 2 ? 'mx-swap-a' : 'mx-swap-b') + ' 0.45s cubic-bezier(0.2, 0.8, 0.2, 1)',
+macCls: os === 'mac' ? 'on' : '', winOsCls: os === 'win' ? 'on' : '', setMac: () => this.setState({ os: 'mac' }), setWin: () => this.setState({ os: 'win' }),
+presets,
+winTabs: [['key', 'Keycode'], ['hold', 'Hold/Tap'], ['custom', 'Custom'], ['presets', 'Presets']].map(([id, label]) => ({ label, on: wtab === id, pick: () => this.setState({ wtab: id }) })),
+tabKey: wtab === 'key', tabHold: wtab === 'hold', tabCustom: wtab === 'custom', tabPresets: wtab === 'presets',
+cats: KEYCODE_CATS.map(([c]) => ({ label: c, on: !q && c === cat, cls: !q && c === cat ? 'on' : '', pick: () => this.setState({ cat: c, query: '' }) })),
+catsWrap: 'flex: none; transition: opacity 0.2s ease; opacity: ' + (q ? 0.5 : 1),
+groups, query, hasQuery: !!query, onQuery: (e) => this.setState({ query: e.target.value }), clearQuery: () => this.setState({ query: '' }),
+paletteNote: q ? (shown ? '「' + query + '」に一致：' + shown + '件' + (shown > 160 ? '（先頭の160件）' : '') : '「' + query + '」に一致するキーコードはありません。') : cat + '：' + shown + '件（全 ' + total + ' 件）。押すと選択中のキーに割り当てます。',
+hovLabel: hov ? hov.label : '?', hovCode: hov ? hov.code : 'Keycodes',
+hovDesc: hov ? (hov.desc || '説明はありません。') : 'キーにカーソルを合わせると、どういうキーかをここに表示します。',
+descBar: 'flex: none; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 12px 6px 6px; border-radius: 18px; transition: background-color 0.25s ease; background: ' + (hov ? '#eef3fd' : '#f5f6f8'),
+descCap: 'min-width: 36px; height: 36px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; white-space: pre-line; text-align: center; flex: none; ' + (hov ? 'background: #0e0e10; color: #ffffff; animation: ' + ((st.hovN || 0) % 2 ? 'mx-pop-a' : 'mx-pop-b') + ' 0.3s ease' : 'background: #e1e3e8; color: #6b6e75'),
+modsOff: !isBasic, sideL: side === 'L' ? 'on' : '', sideR: side === 'R' ? 'on' : '',
+setSideL: () => applyMods(modState, 'L'), setSideR: () => applyMods(modState, 'R'),
+mods: MODS.map(([label, m]) => ({ label, on: !!modState[m], off: !isBasic, toggle: () => applyMods(Object.assign({}, modState, { [m]: !modState[m] }), side) })),
+holdOpts: HOLDS.map(([label, val]) => ({ label, on: selHoldV === val, cls: selHoldV === val ? 'on' : '', pick: () => { if (selHoldV !== val) commit(A, setIn(H, layer, sel, val)); } })),
+hex, onHex: (e) => this.setState({ hex: e.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 4).toUpperCase() }),
+hexBits: hexOk ? hexVal.toString(2).padStart(16, '0').replace(/(\d{4})(?=\d)/g, '$1 ') : '0000 0000 0000 0000',
+hexOff: !hexOk, applyHex: () => { if (!hexOk) return; const lbl = '0x' + hex.padStart(4, '0'); assign(lbl, lbl); closeWin(); },
+
+pending, writing, write,
+statusText: isCombos ? (cbusy ? 'キーボードに保存中…' : (ced ? 'コンボを編集中（まだ保存されていません）' : 'コンボ ' + cbs.length + ' / ' + CSLOTS + ' 使用中・キーボードに保存済み')) : isKeys ? (mRemaining < 0 ? 'マクロの容量が足りません（' + (-mRemaining) + ' バイト超過）' : writing ? 'キーボードに書き込み中…' : (pending ? '未反映の変更 ' + pending + '件' : 'すべてキーボードに反映済み')) : C.autoStatusText,
+statusDot: isKeys ? 'width: 8px; height: 8px; border-radius: 4px; transition: background-color 0.3s ease; background: ' + (writing ? '#c08a1e' : (pending ? '#3d6fd6' : '#1f8a55')) : C.autoStatusDot,
+writeOff: !pending || writing || mRemaining < 0, writeCls: !pending && !writing ? 'idle' : '',
+writeLabel: writing ? 'Writing…' : (pending ? 'Write to keyboard' : 'Up to date'),
+badgeStyle: 'min-width: 32px; height: 32px; border-radius: 16px; background: #ffffff; color: #0e0e10; display: flex; align-items: center; justify-content: center; font-size: 13px; padding: 0 6px; box-sizing: border-box; animation: ' + (pending % 2 ? 'mx-pop-a' : 'mx-pop-b') + ' 0.4s cubic-bezier(0.3, 0.7, 0.4, 1)'
+});
+}
+}
+</script>
+</body>
+</html>

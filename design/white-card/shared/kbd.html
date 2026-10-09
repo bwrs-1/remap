@@ -1,0 +1,10 @@
+<div style="position: relative">
+<button class="mx-hbtn mx-press" aria-haspopup="menu" aria-expanded="{{kbdOpen}}" onClick="{{toggleKbd}}"><span class="mx-dot32"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"></path></svg></span>Matrix Split 42<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+<sc-if value="{{kbdOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-menu l" role="menu" style="min-width: 290px">
+<div class="mx-row" style="background: #f5f6f8"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 14px">Matrix Split 42</b><span class="mx-sub" style="font-size: 12px">FEED:0000 · 接続中・左右とも</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f8a55" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></div>
+<a class="mx-mi" role="menuitem" href="Connect.dc.html" style="margin-top: 4px">＋ Keyboard</a>
+<a class="mx-mi danger" role="menuitem" href="Connect.dc.html">Disconnect</a>
+</div>
+</sc-if>
+</div>

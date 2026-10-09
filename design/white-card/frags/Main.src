@@ -1,0 +1,135 @@
+@@TITLE Keys · Keymap
+@@BIG Keys
+@@SUB Keymap
+@@NAVMODE state
+@@VARIANTS Main:keys/keymap:Keys · Keymap|Macros:keys/macros:Keys · Macros|Combos:keys/combos:Keys · Combos|Layers:keys/layers:Keys · Layers|Pointing:pointing/touchpad:Pointing · Touchpad|Lighting:lighting/eff:Lighting
+@@H 1080
+@@RIGHT
+%%RIGHT%%
+@@MAIN
+<main class="mx-main" style="margin-left: 0; display: flex; flex-direction: column; overflow: hidden; -webkit-mask-image: none; mask-image: none; padding-bottom: clamp(8px, 1.4vh, 14px)">
+<section class="mx-card" aria-label="キーボード" style="flex: 1 1 auto; min-height: 0; display: flex; padding: clamp(6px, 1.2vh, 12px); animation: mx-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s backwards">
+<div class="mx-stage {{stageCls}}" role="group" aria-label="3D キーボード" ref="{{stageRef}}" style="{{stageStyle}}">
+<button class="mx-stagebg" aria-label="設定ウィンドウを閉じる" tabindex="-1" onClick="{{closeWin}}"></button>
+<div class="mx-cam {{fxCls}}" style="{{camStyle}}">
+<div class="mx-half" style="{{halfL}}"></div>
+<div class="mx-half" style="{{halfR}}"></div>
+<div class="mx-pad {{padCls}}" role="button" tabindex="0" aria-label="Touchpad" aria-pressed="{{padOn}}" onClick="{{pickPad}}" onMouseMove="{{padMove}}" onMouseLeave="{{padLeave}}" style="{{padStyle}}">
+<span class="mx-padlbl" style="{{padLblStyle}}">TOUCHPAD</span>
+<sc-if value="{{padRingOn}}" hint-placeholder-val="{{false}}"><span style="position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -40px 0 0 -40px; border-radius: 40px; border: 2px dashed rgba(255, 255, 255, 0.4); pointer-events: none; animation: mx-fade 0.5s ease"></span></sc-if>
+<sc-if value="{{padArrowOn}}" hint-placeholder-val="{{false}}"><span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; animation: mx-fade 0.5s ease"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="{{padArrow}}"><path d="M12 20V4M6 10l6-6 6 6"></path></svg></span></sc-if>
+<sc-if value="{{padZonesOn}}" hint-placeholder-val="{{false}}"><sc-for list="{{padZones}}" as="z" hint-placeholder-count="8"><button class="mx-pzone {{z.cls}}" aria-label="{{z.label}}" aria-pressed="{{z.on}}" title="{{z.label}}" onClick="{{z.pick}}" style="{{z.style}}">{{z.mark}}</button></sc-for></sc-if>
+<sc-if value="{{padDotOn}}" hint-placeholder-val="{{false}}"><span style="{{padDot}}"></span></sc-if>
+</div>
+<sc-for list="{{knobs3d}}" as="k" hint-placeholder-count="2"><button class="mx-knob {{k.cls}}" aria-label="{{k.label}}" title="{{k.label}}" onClick="{{k.pick}}" style="{{k.style}}"></button></sc-for>
+<sc-for list="{{caps}}" as="k" hint-placeholder-count="42"><button class="mx-cap {{k.cls}}" aria-label="{{k.aria}}" aria-pressed="{{k.on}}" onClick="{{k.pick}}" style="{{k.style}}">{{k.label}}<sc-if value="{{k.changed}}" hint-placeholder-val="{{false}}"><span style="position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 4px; background: #3d6fd6"></span></sc-if><sc-if value="{{k.hasHold}}" hint-placeholder-val="{{false}}"><span style="{{k.holdStyle}}">{{k.hold}}</span></sc-if></button></sc-for>
+</div>
+
+<div class="mx-float" style="left: 16px; top: 16px">
+<sc-if value="{{chipOn}}" hint-placeholder-val="{{true}}"><span class="mx-chip mx-glass" style="{{chipStyle}}"><span style="{{chipDot}}"></span>{{chipTitle}}<span style="font-weight: 500; color: #6b6e75">· {{chipSub}}</span></span></sc-if>
+<sc-if value="{{isLighting}}" hint-placeholder-val="{{false}}"><div class="mx-seg mx-glass" role="radiogroup" aria-label="光り方を見るレイヤー" style="{{pvSegStyle}}"><sc-for list="{{pvLayers}}" as="o" hint-placeholder-count="4"><button class="mx-pill sm mx-press {{o.cls}}" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="border-color: transparent"><span style="{{o.dot}}"></span>{{o.label}}</button></sc-for></div></sc-if>
+</div>
+<sc-if value="{{isKeymap}}" hint-placeholder-val="{{true}}">
+<div class="mx-float {{toolsCls}}" style="right: 16px; top: 16px">
+<div class="mx-seg mx-glass" role="group" aria-label="キーボードの表示サイズ" title="{{sizeTitle}}" style="padding: 3px; border-radius: 19px"><sc-for list="{{sizes}}" as="z" hint-placeholder-count="3"><button class="mx-pill sm mx-press {{z.cls}}" aria-pressed="{{z.on}}" onClick="{{z.pick}}" style="border-color: transparent">{{z.label}}</button></sc-for></div>
+<button class="mx-tool mx-press mx-glass" disabled="{{nothingPending}}" onClick="{{askClear}}" title="Clear all changes" style="border: none">Clear</button>
+<button class="mx-tool mx-press mx-glass" onClick="{{cheatSheet}}" title="Get keymap cheat sheet (PDF)" style="border: none">PDF</button>
+<div style="position: relative">
+<button class="mx-dots mx-press mx-glass" aria-label="その他の操作" aria-haspopup="menu" aria-expanded="{{moreOpen}}" onClick="{{toggleMore}}" style="border: none"></button>
+<sc-if value="{{moreOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-menu r" role="menu" style="top: 44px; min-width: 280px">
+<label class="mx-mi">Import keyboard definition file<input type="file" accept=".json" onChange="{{onDefImport}}" style="position: absolute; width: 1px; height: 1px; opacity: 0"></label>
+<button class="mx-mi" role="menuitem" onClick="{{startTest}}">Test Matrix mode</button>
+<div class="mx-sep"></div>
+<button class="mx-mi danger" role="menuitem" onClick="{{askReset}}">Reset Keymap…</button>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{testing}}" hint-placeholder-val="{{false}}">
+<div class="mx-float" style="left: 50%; top: 60px; transform: translateX(-50%)"><span class="mx-glass" style="display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 18px; background: rgba(232, 244, 238, 0.92); font-size: 13px; color: #2f5f47"><b>Test Matrix</b>キーを押すと緑になります（見本ではクリックで代用）・{{testCount}}<button class="mx-pill sm mx-press" onClick="{{endTest}}">終了</button></span></div>
+</sc-if>
+<sc-if value="{{hintOn}}" hint-placeholder-val="{{true}}">
+<div class="mx-float opt {{hintCls}}" style="left: 16px; bottom: 16px; max-width: 46%">
+<span class="mx-chip mx-glass" style="{{hintStyle}}"><sc-if value="{{isKeymap}}" hint-placeholder-val="{{true}}"><span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 4px; background: #3d6fd6"></span>未反映</span><span><b style="color: #a3a6ad">▽</b> 透過</span></sc-if><span>{{hintText}}</span></span>
+</div>
+</sc-if>
+<sc-if value="{{isKeymap}}" hint-placeholder-val="{{true}}">
+<div class="mx-float {{toolsCls}}" style="right: 16px; bottom: 16px">
+<div class="mx-seg mx-glass" role="group" aria-label="キーの表記" style="padding: 3px; border-radius: 19px"><button class="mx-pill sm mx-press {{usCls}}" aria-pressed="{{isUS}}" onClick="{{setUS}}" style="border-color: transparent">US</button><button class="mx-pill sm mx-press {{jisCls}}" aria-pressed="{{isJIS}}" onClick="{{setJIS}}" style="border-color: transparent">JIS</button></div>
+<select class="mx-sel mx-glass" aria-label="キーの表記（言語・配列）" value="{{labelLang}}" onChange="{{onLabelLang}}" style="height: 34px; font-size: 12px; width: 180px; border: none"><sc-for list="{{langs}}" as="o" hint-placeholder-count="56"><option value="{{o}}">{{o}}</option></sc-for></select>
+<div class="mx-seg mx-glass" style="padding: 3px; border-radius: 19px">
+<button class="mx-pill sm mx-press {{ovCls}}" aria-pressed="{{isOverview}}" onClick="{{toOverview}}" title="キーボード全体を表示" style="border-color: transparent">Overview</button>
+<button class="mx-pill sm mx-press {{fcCls}}" aria-pressed="{{isFocus}}" onClick="{{toFocus}}" title="選択中の場所にズーム" style="border-color: transparent">Zoom</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{reopenOn}}" hint-placeholder-val="{{false}}">
+<div class="mx-float" style="right: 16px; bottom: 16px; animation: mx-chip-a 0.4s ease"><button class="mx-btn dark mx-press" onClick="{{reopen}}" style="height: 40px; display: flex; align-items: center; gap: 8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"></path></svg>{{reopenLabel}}</button></div>
+</sc-if>
+
+<sc-if value="{{keyWinOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-win {{winCls}}" role="dialog" aria-label="{{winTitle}}">
+%%KEYWIN%%
+</div>
+</sc-if>
+
+<sc-if value="{{secWinOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-win {{secWinCls}}" role="dialog" aria-label="{{secTitle}}" style="{{secWinStyle}}">
+<div style="display: flex; align-items: center; gap: 12px; flex: none">
+<span style="{{secIcon}}"></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1"><b style="font-size: 16px">{{secTitle}}</b><span class="mx-sub mx-help-t mx-whsub" title="{{secSub}}" style="font-size: 12px">{{secSub}}</span></div>
+<span class="mx-chip" style="height: 28px; font-size: 11px; background: rgba(255, 255, 255, 0.7); flex: none"><span style="{{secChipDot}}"></span>{{saveChip}}</span>
+<button class="mx-ib mx-press" aria-label="閉じる" onClick="{{closeWin}}" style="width: 36px; height: 36px; flex: none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<sc-if value="{{hasInner}}" hint-placeholder-val="{{true}}"><div class="mx-tabs n" role="tablist" aria-label="{{secTitle}} の設定項目" style="flex: none"><sc-for list="{{innerTabs}}" as="t" hint-placeholder-count="6"><button role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div></sc-if>
+<div class="mx-wpane" style="{{paneAnim}}">
+%%KEYSPANES%%
+<!--CARDS:paneCards-->
+</div>
+</div>
+</sc-if>
+</div>
+</section>
+</main>
+@@HELP
+<sc-if value="{{isKeymap}}" hint-placeholder-val="{{true}}">
+<b style="font-size: 15px">Keymap</b>
+<span>1. 3D キーボードのキーを押すと、そのキーにズームして設定ウィンドウが開きます。</span>
+<span>2. Keycode からキーを選ぶと割り当ててウィンドウが閉じます。長押しの動作・16進コード・ショートカットは他のタブで設定します。</span>
+<span>3. 右下の Write to keyboard でキーボードに書き込みます。それまでは青い点で表示されます。タッチパッドを押すと Pointing に移ります。</span>
+</sc-if>
+<sc-if value="{{isMacros}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Macros</b>
+<span>上の M0〜M15 からマクロを選び、テキストやキーを追加します。⧗ はそのステップの前に待つ時間です。TAP / HOLD の表示を押すと切り替わります。</span>
+<span>3D キーボードのキーを押すと、そのキーに選択中のマクロを割り当てます。Write to keyboard でまとめて書き込みます。</span>
+</sc-if>
+<sc-if value="{{isCombos}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Combos</b>
+<span>3D キーボードのキーを押すとコンボの作成が始まり、押したキーがトリガーになります。出力・判定時間・有効なレイヤーを選んで保存します。</span>
+<span>一覧の行にカーソルを合わせると、そのコンボのキーが 3D キーボード上で光ります。</span>
+</sc-if>
+<sc-if value="{{isLayersSub}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Layers</b>
+<span>行を押すと 3D キーボードがそのレイヤーの割り当てに切り替わります。名前はダブルクリックか鉛筆のボタンで変更できます（Enter で保存、Esc で取り消し）。</span>
+<span>レイヤーの削除は Write to keyboard を押すまでキーボードには書き込まれません。</span>
+</sc-if>
+<sc-if value="{{isPointing}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Pointing</b>
+<span>タッチパッドにズームした状態で、右のウィンドウから設定します。Edges タブでは 3D のタッチパッド上の縁や角を直接押して選べます。</span>
+<span>変更は約 0.4 秒後に自動でキーボードに保存されます。保存ボタンはありません。</span>
+</sc-if>
+<sc-if value="{{isLighting}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Lighting</b>
+<span>設定はすぐに 3D キーボードの光り方に反映されます。左上のレイヤーを切り替えると、そのレイヤーが有効なときの光り方を確認できます。</span>
+<span>Touch glow では、3D のタッチパッドの上でカーソルを動かすと対応する位置のキーが光ります。変更は自動で保存されます。</span>
+</sc-if>
+@@PRIMARY
+<sc-if value="{{showWrite}}" hint-placeholder-val="{{true}}"><button class="mx-primary mx-press {{writeCls}}" onClick="{{write}}" disabled="{{writeOff}}"><sc-if value="{{writing}}" hint-placeholder-val="{{false}}"><span class="mx-spin"></span></sc-if>{{writeLabel}}<span style="{{badgeStyle}}">{{pending}}</span></button></sc-if>
+<sc-if value="{{isCombos}}" hint-placeholder-val="{{false}}"><button class="mx-primary mx-press {{cAddCls}}" onClick="{{cAdd}}" disabled="{{cAddOff}}" style="animation: mx-chip-a 0.4s ease">Add combo<span style="min-width: 32px; height: 32px; border-radius: 16px; background: #ffffff; color: #0e0e10; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></button></sc-if>
+<sc-if value="{{notKeys}}" hint-placeholder-val="{{false}}"><button class="mx-primary mx-press" onClick="{{resetSec}}" title="{{resetTitle}}" style="padding: 0 24px; animation: mx-chip-a 0.4s ease">Reset to defaults</button></sc-if>
+@@DIALOGS
+%%DIALOGS%%
+@@JS
+%%JS%%

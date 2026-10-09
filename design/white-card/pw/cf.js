@@ -1,0 +1,30 @@
+// walks Connect -> connect flow -> Firmware -> flash, measuring overflow
+const { chromium } = require('playwright-core');
+const http = require('http'), fs = require('fs'), path = require('path');
+const ROOT = path.join(__dirname, '..', 'render');
+const srv = http.createServer((req, res) => { const f = path.join(ROOT, decodeURIComponent(req.url.split('?')[0])); if (!fs.existsSync(f)) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'Content-Type': f.endsWith('.js') ? 'text/javascript' : 'text/html; charset=utf-8' }); fs.createReadStream(f).pipe(res); }).listen(8769);
+const [W, H] = [+process.argv[2], +process.argv[3]];
+(async () => {
+  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const page = await browser.newPage({ viewport: { width: W, height: H } });
+  const errs = []; page.on('pageerror', (e) => errs.push(String(e).slice(0, 300)));
+  const m = () => page.evaluate(() => { const d = document.documentElement, p = document.querySelector('.mx-wpane'); return { page: d.scrollHeight - d.clientHeight, pane: p ? p.scrollHeight - p.clientHeight : null }; });
+  const shot = async (n) => { if (process.env.SHOT) await page.screenshot({ path: path.join(__dirname, '..', 'shots', `cf-${W}x${H}-${n}.png`) }); };
+  await page.goto('http://localhost:8769/Connect.dc.html'); await page.waitForTimeout(1800);
+  console.log(W + 'x' + H, 'Connect idle', JSON.stringify(await m())); await shot('1-idle');
+  await page.locator('.mx-subnav button', { hasText: 'Saved definitions' }).click(); await page.waitForTimeout(700);
+  console.log(W + 'x' + H, 'Connect defs', JSON.stringify(await m())); await shot('2-defs');
+  await page.locator('.mx-subnav button', { hasText: 'Keyboards' }).click(); await page.waitForTimeout(500);
+  await page.locator('footer .mx-primary').click(); await page.waitForTimeout(600);
+  console.log(W + 'x' + H, 'Connect pick', JSON.stringify(await m())); await shot('3-pick');
+  await page.locator('[role=option]').first().click(); await page.locator('.mx-win button', { hasText: /^Connect$/ }).click(); await page.waitForTimeout(700); await shot('4-busy');
+  await page.waitForTimeout(1600); console.log(W + 'x' + H, 'Connect done', JSON.stringify(await m())); await shot('5-done');
+  await page.locator('.mx-big button', { hasText: 'Firmware' }).click(); await page.waitForTimeout(1300);
+  console.log(W + 'x' + H, 'Firmware', JSON.stringify(await m())); await shot('6-fw');
+  await page.locator('.mx-cap', { hasText: /^H$/ }).click(); await page.waitForTimeout(1300); console.log('side chip', await page.locator('.mx-float .mx-chip').first().innerText()); await shot('7-right');
+  await page.setInputFiles('input[accept=".uf2"]', { name: 'matrix-r21.uf2', mimeType: 'application/octet-stream', buffer: Buffer.from('x') });
+  await page.locator('footer .mx-primary').click(); await page.waitForTimeout(1300); console.log(W + 'x' + H, 'Flashing', JSON.stringify(await m()), 'lit', await page.locator('.mx-cap.flashk').count()); await shot('8-flash');
+  await page.waitForTimeout(1800); await shot('9-done');
+  console.log('errors', JSON.stringify(errs));
+  await browser.close(); srv.close();
+})().catch((e) => { console.error('FAILED', e.message); process.exit(1); });

@@ -1,0 +1,127 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-09T06:50:00Z"
+  },
+  "title": "Remap 新UI（ホワイトカード版）",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Keys · Keymap（3D ステージ）",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Macros.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Keys · Macros（同じ 3D ステージ）",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Combos.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Keys · Combos（3D でトリガー選択）",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Layers.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Keys · Layers（3D がレイヤーに切替）",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Lighting.dc.html": {
+      "x": 0,
+      "y": 2700,
+      "w": 1440,
+      "h": 900,
+      "title": "Lighting（同じ 3D ステージ・キーが発光）",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Connect.dc.html": {
+      "x": 0,
+      "y": 4050,
+      "w": 1440,
+      "h": 900,
+      "title": "Connect（未接続の 3D キーボードが接続で点灯）",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Firmware.dc.html": {
+      "x": 1520,
+      "y": 4050,
+      "w": 1440,
+      "h": 900,
+      "title": "Firmware（選んだ側に光が流れて書き込み）",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Pointing.dc.html": {
+      "x": 0,
+      "y": 1350,
+      "w": 1440,
+      "h": 900,
+      "title": "Pointing（同じ 3D ステージ・タッチパッドにズーム）",
+      "expand": "fill",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Macros.dc.html",
+    "Combos.dc.html",
+    "Layers.dc.html",
+    "Pointing.dc.html",
+    "Lighting.dc.html",
+    "Connect.dc.html",
+    "Firmware.dc.html"
+  ],
+  "notes": {
+    "heading": {
+      "x": 0,
+      "y": -300,
+      "text": "Keys",
+      "kind": "title1",
+      "maxW": 6000
+    },
+    "pointing": {
+      "x": 0,
+      "y": 1050,
+      "text": "Pointing",
+      "kind": "title1",
+      "maxW": 1440
+    },
+    "lighting": {
+      "x": 0,
+      "y": 2400,
+      "text": "Lighting",
+      "kind": "title1",
+      "maxW": 1440
+    },
+    "connect": {
+      "x": 0,
+      "y": 3750,
+      "text": "Connect & Firmware",
+      "kind": "title1",
+      "maxW": 2960
+    }
+  },
+  "designSystems": []
+}
