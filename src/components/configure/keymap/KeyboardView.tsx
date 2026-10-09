@@ -7,10 +7,8 @@ import React from 'react';
 import Keycap from '../keycap/Keycap.container';
 import { LayoutOption } from './Keymap';
 import { t } from 'i18next';
-import {
-  OPEN_TOUCHPAD_SETTINGS_EVENT,
-  touchpadRect,
-} from '../../../services/pointing/TouchpadLayout';
+import { touchpadRect } from '../../../services/pointing/TouchpadLayout';
+import { openEditorView } from '../remap/EditorViews';
 import { useMatrixDeviceDataValue } from '../../../services/matrix/MatrixDeviceData';
 import { isComboUsed } from '../../../services/combos/Combos';
 import { KeycodeList } from '../../../services/hid/KeycodeList';
@@ -200,9 +198,7 @@ function Touchpad(props: { keys: KeyModel[] }) {
       }}
       title={t('Touchpad: click to open its settings')}
       aria-label={t('Touchpad: click to open its settings')}
-      onClick={() =>
-        window.dispatchEvent(new Event(OPEN_TOUCHPAD_SETTINGS_EVENT))
-      }
+      onClick={() => openEditorView('touchpad')}
     >
       <span className="keyboard-touchpad-label">{t('Touchpad')}</span>
     </button>

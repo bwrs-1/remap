@@ -78,6 +78,3 @@ export function touchpadRect(keys: KeyModel[]): TouchpadRect | null {
     height: (y1 - y0) * KEY_SIZE,
   };
 }
-
-// Clicking the touchpad on the keyboard view opens its settings.
-export const OPEN_TOUCHPAD_SETTINGS_EVENT = 'matrix:open-touchpad-settings';

@@ -101,11 +101,3 @@ export function useMatrixDeviceDataValue(): MatrixDeviceData {
     () => data
   );
 }
-
-// Opens a settings tab of the editor (Key Config, Touchpad, LED, ...).
-export const OPEN_EDITOR_VIEW_EVENT = 'matrix:open-editor-view';
-export function openEditorView(view: string) {
-  window.dispatchEvent(
-    new CustomEvent(OPEN_EDITOR_VIEW_EVENT, { detail: view })
-  );
-}

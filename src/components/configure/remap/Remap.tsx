@@ -15,8 +15,6 @@ import EditorSidebar from '../sidebar/EditorSidebar.container';
 import KeyInspector from '../inspector/KeyInspector.container';
 import Combos from '../combos/Combos';
 import LayerBar, { EditorFooter } from '../layerbar/LayerBar';
-import { OPEN_TOUCHPAD_SETTINGS_EVENT } from '../../../services/pointing/TouchpadLayout';
-import { OPEN_EDITOR_VIEW_EVENT } from '../../../services/matrix/MatrixDeviceData';
 import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/state';
@@ -29,9 +27,11 @@ import {
   EDITOR_VIEWS,
   EditorViewIcon,
   editorViewLabel,
+  getEditorView,
   KEYBOARD_SCALES,
   loadKeyboardScale,
   saveKeyboardScale,
+  subscribeEditorView,
 } from './EditorViews';
 
 type OwnProp = {};
@@ -80,11 +80,8 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     this.editorMainRef = React.createRef();
   }
 
-  private readonly openTouchpad = () => this.setState({ view: 'touchpad' });
-  private readonly openView = (e: Event) => {
-    const view = (e as CustomEvent).detail as ConfigureView;
-    if (this.availableViews().includes(view)) this.setState({ view });
-  };
+  // Other parts of the editor open a screen (see openEditorView).
+  private unsubscribeView: (() => void) | null = null;
 
   private setScale(scale: number) {
     saveKeyboardScale(scale);
@@ -96,8 +93,9 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
     if (scale !== this.state.scale) {
       this.setState({ scale, zoom: scale }, () => this.updateZoom());
     }
-    window.addEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
-    window.addEventListener(OPEN_EDITOR_VIEW_EVENT, this.openView);
+    this.unsubscribeView = subscribeEditorView(() =>
+      this.setState({ view: getEditorView() })
+    );
     if (typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(() => this.updateZoom());
       if (this.editorMainRef.current) {
@@ -107,8 +105,7 @@ export default class Remap extends React.Component<RemapPropType, OwnState> {
   }
 
   componentWillUnmount() {
-    window.removeEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, this.openTouchpad);
-    window.removeEventListener(OPEN_EDITOR_VIEW_EVENT, this.openView);
+    this.unsubscribeView?.();
     this.resizeObserver?.disconnect();
   }
 

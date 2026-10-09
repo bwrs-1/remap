@@ -4,10 +4,8 @@ import { t } from 'i18next';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 import LicenseLink from '../../common/license/LicenseLink';
 import { SplitFirmwareLine } from '../split/SplitFirmwareStatus';
-import {
-  openEditorView,
-  useMatrixDeviceData,
-} from '../../../services/matrix/MatrixDeviceData';
+import { useMatrixDeviceData } from '../../../services/matrix/MatrixDeviceData';
+import { openEditorView } from '../remap/EditorViews';
 import { LED_COLORS } from '../../../services/pointing/PointingSettings';
 import {
   hasSavedLocalDefinition,
