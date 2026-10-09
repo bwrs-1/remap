@@ -1,3 +1,9 @@
+import {
+  APPLICATION_DESCRIPTION,
+  APPLICATION_NAME,
+  APPLICATION_URL,
+} from '../utils/Brand';
+
 export type IMetaData = {
   title?: string;
   description?: string;
@@ -12,12 +18,10 @@ export const MetaActions = {
     return {
       type: META_UPDATE,
       value: {
-        title: data.title || 'Remap',
-        description:
-          data.description ||
-          'Remap allows you to find, build, set up and customize your keyboard quickly and easily in Web Browser.',
-        url: data.url || 'https://remap-keys.app/',
-        image: data.image || 'https://remap-keys.app/ogp_image.png',
+        title: data.title || APPLICATION_NAME,
+        description: data.description || APPLICATION_DESCRIPTION,
+        url: data.url || APPLICATION_URL,
+        image: data.image || `${APPLICATION_URL}ogp_image.png`,
       },
     };
   },
