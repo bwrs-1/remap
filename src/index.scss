@@ -28,6 +28,20 @@ h2 {
   flex-grow: 1;
 }
 
+// Snackbar backgrounds (SnackbarProvider classes in App.tsx).
+.mx-snackbar-success {
+  background-color: var(--mx-status-success) !important;
+}
+.mx-snackbar-error {
+  background-color: var(--mx-status-error) !important;
+}
+.mx-snackbar-warning {
+  background-color: var(--mx-status-warning) !important;
+}
+.mx-snackbar-info {
+  background-color: var(--mx-status-info) !important;
+}
+
 .notify-success {
   background-color: $success;
 }

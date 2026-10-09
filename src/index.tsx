@@ -9,27 +9,16 @@ import reducers from './store/reducers';
 import reportWebVitals from './reportWebVitals';
 import OGP from './components/common/ogp/OGP.container';
 import { HelmetProvider } from 'react-helmet-async';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import { createRoot } from 'react-dom/client';
+import { muiTheme } from './theme/muiTheme';
+import MxTokenStyles from './theme/MxTokenStyles';
 
 const store = createStore(
   reducers,
   composeWithDevTools(applyMiddleware(thunk))
 );
 
-// Monochrome palette of the reference editor (see $cfg-* in _variables.scss).
-const theme = createTheme({
-  palette: {
-    primary: { main: '#333438', contrastText: '#ffffff' },
-    secondary: { main: '#6b6c70', contrastText: '#ffffff' },
-  },
-  shape: { borderRadius: 8 },
-  typography: {
-    fontFamily:
-      "'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-    button: { textTransform: 'none', fontWeight: 500 },
-  },
-});
 const container = document.getElementById('root');
 const root = createRoot(container!);
 
@@ -38,7 +27,8 @@ root.render(
     <React.StrictMode>
       <HelmetProvider>
         <OGP />
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={muiTheme}>
+          <MxTokenStyles />
           <App />
         </ThemeProvider>
       </HelmetProvider>

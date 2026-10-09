@@ -3,7 +3,6 @@ import { SnackbarProvider } from 'notistack';
 // import './App.css';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import Configure from './components/configure/Configure.container';
-import { StyledComponentProps, withStyles } from '@mui/styles';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import enJson from './assets/locales/en.json';
@@ -26,12 +25,7 @@ i18n
     interpolation: { escapeValue: false },
   });
 
-class App extends React.Component<StyledComponentProps, {}> {
-  constructor(
-    props: StyledComponentProps<string> | Readonly<StyledComponentProps<string>>
-  ) {
-    super(props);
-  }
+class App extends React.Component<{}, {}> {
   render() {
     return (
       <SnackbarProvider
@@ -44,10 +38,10 @@ class App extends React.Component<StyledComponentProps, {}> {
           horizontal: 'right',
         }}
         classes={{
-          variantSuccess: this.props.classes!.success,
-          variantError: this.props.classes!.error,
-          variantWarning: this.props.classes!.warning,
-          variantInfo: this.props.classes!.info,
+          variantSuccess: 'mx-snackbar-success',
+          variantError: 'mx-snackbar-error',
+          variantWarning: 'mx-snackbar-warning',
+          variantInfo: 'mx-snackbar-info',
         }}
       >
         {/* Matrix ships only the keyboard editor: it is the top page, and
@@ -62,11 +56,4 @@ class App extends React.Component<StyledComponentProps, {}> {
     );
   }
 }
-const styles = () => ({
-  success: { backgroundColor: '#3f51b5!important' },
-  error: { backgroundColor: '#f44336!important' },
-  warning: { backgroundColor: '#ff9800!important' },
-  info: { backgroundColor: '#8bc34a!important' },
-});
-
-export default withStyles(styles, { withTheme: true })(App);
+export default App;
