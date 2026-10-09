@@ -3,8 +3,12 @@ import { useSyncExternalStore } from 'react';
 // Which editor layout is shown while a keyboard is open:
 // - 'classic': header, layer side bar and settings tabs below the keyboard.
 // - 'shell': the redesigned layout (icon rail, side panel, main area).
-// The classic layout stays the default until the new one is complete.
+// The new layout is the default; the classic one stays reachable (side
+// panel button, ?ui=classic) until it is removed. A layout someone chose is
+// remembered and wins over the default.
 export type UiLayout = 'classic' | 'shell';
+
+const DEFAULT_LAYOUT: UiLayout = 'shell';
 
 const STORAGE_KEY = 'matrix.uiLayout';
 // ?ui=new or ?ui=classic picks the layout and remembers it.
@@ -31,10 +35,10 @@ function load(): UiLayout {
       window.localStorage.setItem(STORAGE_KEY, fromQuery);
       return fromQuery;
     }
-    return parse(window.localStorage.getItem(STORAGE_KEY)) || 'classic';
+    return parse(window.localStorage.getItem(STORAGE_KEY)) || DEFAULT_LAYOUT;
   } catch {
     // Storage blocked: what the URL asks for, else the default layout.
-    return fromQuery || 'classic';
+    return fromQuery || DEFAULT_LAYOUT;
   }
 }
 
