@@ -1,0 +1,22 @@
+<sc-if value="{{dlgReset}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 600">Are you sure to reset keymap?</h2>
+<span style="font-size: 14px; color: #4a4d54; line-height: 1.7">今のキーマップを破棄して、初期のキーマップをすぐにキーボードへ適用します。今のキーマップを使い回したい場合は、先に Export で保存してください。</span>
+<div style="display: flex; justify-content: flex-end; gap: 8px"><button class="mx-btn mx-press" onClick="{{closeAll}}">No</button><button class="mx-btn red mx-press" onClick="{{doReset}}">Yes</button></div>
+</div>
+</sc-if>
+<sc-if value="{{dlgClear}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 600">Clear all changes?</h2>
+<span style="font-size: 14px; color: #4a4d54; line-height: 1.7">まだキーボードに反映していない {{pending}} 件の変更をすべて取り消します。</span>
+<div style="display: flex; justify-content: flex-end; gap: 8px"><button class="mx-btn mx-press" onClick="{{closeAll}}">Cancel</button><button class="mx-btn red mx-press" onClick="{{doClear}}">Clear</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{dlgLRemove}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 600">Remove layer?</h2>
+<span style="font-size: 14px; color: #4a4d54; line-height: 1.7">このレイヤーにはキーが割り当てられています。すべてのキーを透過にして、レイヤーを削除しますか？（このあと Write to keyboard を押すと、キーボードに書き込まれます）</span>
+<div style="display: flex; justify-content: flex-end; gap: 8px"><button class="mx-btn mx-press" onClick="{{closeAll}}">Cancel</button><button class="mx-btn red mx-press" onClick="{{doLRemove}}">Remove</button></div>
+</div>
+</sc-if>

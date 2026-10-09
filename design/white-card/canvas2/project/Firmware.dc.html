@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Firmware</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=IBM+Plex+Sans+JP:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#e9ecf1}
+a{color:#0e0e10}a:hover{color:#3b3d42}
+button,input,select{font-family:inherit}
+button:disabled{cursor:default}
+.mx-root{--px:clamp(14px,2vw,28px);--py:clamp(10px,2vh,24px);--ind:clamp(0px,calc((100vw - 1100px) * .5),116px);height:100vh;height:100dvh;box-sizing:border-box;padding:clamp(6px,2.4vh,32px) clamp(6px,2.2vw,32px);display:flex;background:#e9ecf1;font-family:'Manrope','IBM Plex Sans JP',system-ui,sans-serif;color:#0e0e10}
+.mx-panel{flex:1;min-width:0;min-height:0;max-width:1376px;margin:0 auto;position:relative;overflow:clip;background:#f5f6f8;border-radius:clamp(18px,3vh,32px);padding:var(--py) var(--px) 0;box-sizing:border-box;display:flex;flex-direction:column}
+.mx-hdr{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.mx-top{position:relative;flex:none;z-index:30;margin:calc(-1 * var(--py)) calc(-1 * var(--px)) 0;padding:var(--py) var(--px) 0;background:rgba(245,246,248,.55);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
+.mx-top.scrolled{box-shadow:0 10px 30px rgba(20,24,40,.06)}
+.mx-mini{display:flex;align-items:center;gap:18px;font-size:15px;font-weight:700;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.mx-mini.show{opacity:1;transform:none;pointer-events:auto}
+.mx-mini a{color:#8f9197;text-decoration:none;transition:color .25s ease}.mx-mini a:hover,.mx-mini a[aria-current]{color:#0e0e10}
+.mx-mini i{font-style:normal;color:#c5c8ce;font-weight:500}.mx-mini b{font-weight:600;font-size:14px}
+.mx-hgrp{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mx-ib{width:44px;height:44px;border:none;border-radius:22px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(20,24,40,.06);cursor:pointer;color:#0e0e10;flex:none}
+.mx-ib.off{opacity:.4}
+.mx-hbtn{height:44px;border:none;border-radius:22px;background:#fff;display:flex;align-items:center;gap:10px;padding:0 14px 0 6px;box-shadow:0 2px 8px rgba(20,24,40,.06);font-size:14px;font-weight:600;color:#0e0e10;cursor:pointer}
+.mx-hbtn .mx-dot32{width:32px;height:32px;border-radius:16px;background:#0e0e10;display:flex;align-items:center;justify-content:center}
+.mx-chip{height:32px;border-radius:16px;background:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px;padding:0 12px;font-size:12px;color:#4a4d54}
+.mx-big{position:relative;display:flex;align-items:baseline;gap:clamp(14px,2.2vw,32px);margin:clamp(8px,2.6vh,30px) 0 0 var(--ind);flex-wrap:wrap}
+.mx-big button,.mx-subnav button{border:none;background:none;padding:0;margin:0;font:inherit;cursor:pointer}
+.mx-big a,.mx-big button{font-size:clamp(24px,min(5.2vh,4.2vw),52px);font-weight:700;letter-spacing:-.02em;line-height:1.05;color:#8f9197;text-decoration:none;transition:color .25s ease}
+.mx-big a:hover,.mx-big a[aria-current],.mx-big button:hover,.mx-big button.cur{color:#0e0e10}
+.mx-big button{transition:color .45s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+.mx-big button.cur{transform:translateY(-1px)}
+.mx-subnav{position:relative;display:flex;gap:clamp(14px,1.8vw,26px);margin:clamp(6px,1.4vh,16px) 0 0 var(--ind);font-size:14px;font-weight:600;flex-wrap:wrap}
+.mx-subnav a,.mx-subnav button{color:#4a4d54;text-decoration:none;padding-bottom:9px;transition:color .25s ease;display:flex;flex-direction:column;gap:9px}
+.mx-subnav a:hover,.mx-subnav a[aria-current],.mx-subnav button:hover,.mx-subnav button.cur{color:#0e0e10}
+.mx-subnav a[aria-current]::after,.mx-subnav button.cur::after{content:'';height:2px;background:#0e0e10;margin-bottom:-9px;transform-origin:left center;animation:mx-line .5s cubic-bezier(.2,.8,.2,1) .3s backwards}
+.mx-rule{position:relative;height:1px;background:#e1e3e8;margin:0 calc(-1 * var(--px))}
+.mx-main{position:relative;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;margin:clamp(10px,2.4vh,32px) calc(-1 * var(--px)) 0 var(--ind);padding:0 var(--px) 14px 0;max-width:none;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
+.mx-main::-webkit-scrollbar{display:none}
+.mx-main>*{flex-shrink:0}
+.mx-main *{scrollbar-width:none}
+.mx-main *::-webkit-scrollbar{display:none}
+.mx-card{background:#fff;border-radius:28px;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;min-width:0}
+.mx-h1{margin:0;font-size:19px;font-weight:600;display:flex;align-items:center;gap:10px}
+.mx-sub{font-size:13px;color:#6b6e75;line-height:1.6}
+.mx-pill{height:36px;border-radius:18px;padding:0 16px;cursor:pointer;border:1px solid #e1e3e8;background:#fff;color:#0e0e10;font-size:13px;font-weight:600;white-space:nowrap}
+.mx-pill.on{border-color:#0e0e10;background:#0e0e10;color:#fff}
+.mx-pill.sm{height:32px;padding:0 12px;font-size:12px}
+.mx-dots{width:36px;height:36px;border:1px solid #e1e3e8;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;flex:none}
+.mx-dots::before,.mx-dots::after{content:'';width:4px;height:4px;border-radius:2px;background:#0e0e10}
+.mx-tool{height:36px;border:1px solid #e1e3e8;border-radius:18px;background:#fff;display:flex;align-items:center;gap:6px;padding:0 12px;font-size:12px;font-weight:600;color:#0e0e10;cursor:pointer;white-space:nowrap}
+.mx-tool:disabled{color:#b5b8be}
+.mx-menu{position:absolute;top:52px;min-width:260px;background:#fff;border-radius:18px;padding:6px;box-shadow:0 18px 48px rgba(20,24,40,.16),0 2px 6px rgba(20,24,40,.06);animation:mx-menu .22s cubic-bezier(.2,.8,.2,1);z-index:31}
+.mx-menu.r{right:0;transform-origin:top right}.mx-menu.l{left:0;transform-origin:top left}
+.mx-mi{display:flex;align-items:center;gap:10px;width:100%;height:42px;padding:0 12px;border:none;border-radius:12px;background:transparent;font-size:14px;color:#0e0e10;cursor:pointer;text-decoration:none;box-sizing:border-box;text-align:left;transition:background-color .15s ease;position:relative}
+.mx-mi:hover:not(:disabled){background:#f2f3f6}
+.mx-mi:disabled{color:#b5b8be}
+.mx-mi.danger{color:#a33a2c}
+.mx-sep{height:1px;background:#eceef2;margin:4px 8px}
+.mx-seg{display:flex;gap:6px;flex-wrap:wrap}
+.mx-sel{height:36px;border:1px solid #e1e3e8;border-radius:18px;background:#fff;padding:0 12px;font-size:13px;color:#0e0e10;max-width:100%}
+.mx-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;background:#f5f6f8;border-radius:14px;font-size:13px}
+.mx-foot{position:relative;flex:none;z-index:29;display:flex;justify-content:space-between;align-items:center;margin:0 calc(-1 * var(--px));padding:clamp(8px,1.4vh,14px) var(--px);gap:12px;flex-wrap:wrap;background:rgba(245,246,248,.8);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-radius:0 0 32px 32px;animation:mx-in .6s cubic-bezier(.2,.8,.2,1) .45s backwards}
+.mx-status{height:32px;border-radius:16px;background:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;padding:0 14px;font-size:13px;color:#4a4d54}
+.mx-primary{height:48px;border:none;border-radius:24px;background:#0e0e10;color:#fff;display:flex;align-items:center;gap:12px;padding:0 8px 0 24px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(14,14,16,.18);text-decoration:none}
+.mx-primary:hover{color:#fff}
+.mx-primary.idle{opacity:.55}
+.mx-help{position:absolute;bottom:54px;left:0;width:340px;background:#0e0e10;color:#fff;border-radius:20px;padding:18px 20px;box-sizing:border-box;box-shadow:0 18px 48px rgba(20,24,40,.28);animation:mx-menu .22s cubic-bezier(.2,.8,.2,1);transform-origin:bottom left;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.7;z-index:31}
+.mx-toast{position:fixed;right:56px;bottom:104px;z-index:45;display:flex;align-items:center;gap:10px;padding:12px 18px 12px 12px;border-radius:18px;background:#0e0e10;color:#fff;font-size:13px;box-shadow:0 18px 40px rgba(14,14,16,.25)}
+.mx-toast i{width:22px;height:22px;border-radius:11px;background:#1f8a55;display:flex;align-items:center;justify-content:center;flex:none}
+.mx-scrimwrap{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}
+.mx-scrim{position:absolute;inset:0;border:none;background:rgba(14,14,16,.26);backdrop-filter:blur(6px);cursor:default;animation:mx-fade .25s ease}
+.mx-dlg{position:relative;width:100%;max-width:520px;max-height:100%;overflow:auto;background:#fff;border-radius:28px;padding:26px;box-sizing:border-box;box-shadow:0 30px 80px rgba(14,14,16,.25);animation:mx-dialog .32s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;gap:18px}
+.mx-btn{height:44px;border:1px solid #e1e3e8;border-radius:22px;background:#fff;color:#0e0e10;padding:0 20px;font-size:14px;font-weight:600;cursor:pointer}
+.mx-btn.dark{border:none;background:#0e0e10;color:#fff}
+.mx-btn.red{border:none;background:#a33a2c;color:#fff}
+.mx-btn:disabled{opacity:.4}
+.mx-close{position:fixed;inset:0;z-index:25;border:none;background:transparent;cursor:default}
+.mx-tile{min-width:44px;height:44px;padding:0 10px;border:none;border-radius:12px;background:#eef0f3;font-size:12px;font-weight:600;color:#0e0e10;cursor:pointer;line-height:1.15;white-space:pre-line;max-width:150px;animation:mx-in .4s cubic-bezier(.2,.8,.2,1) backwards}
+.mx-grp{display:flex;flex-direction:column;gap:8px}
+.mx-grph{font-size:11px;font-weight:700;letter-spacing:.08em;color:#6b6e75}
+.mx-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:4px;border-radius:22px;background:#eef0f3;gap:4px}
+.mx-tabs button{height:36px;border:none;border-radius:18px;background:transparent;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;color:#4a4d54;transition:background-color .25s ease,color .25s ease}
+.mx-tabs button[aria-selected=true]{background:#0e0e10;color:#fff}
+.mx-input{height:44px;border:1px solid #d5d8de;border-radius:14px;padding:0 14px;font:inherit;font-size:14px;color:#0e0e10;outline-color:#0e0e10;box-sizing:border-box;width:100%}
+.mx-check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.mx-check input{width:18px;height:18px;accent-color:#0e0e10}
+.mx-stage{position:relative;height:100%;z-index:0;border-radius:22px;overflow:hidden;background:radial-gradient(120% 95% at 50% 0%,#ffffff 0%,#eceff4 55%,#dde2ea 100%);perspective:1400px;perspective-origin:50% 35%}
+.mx-stage::after{content:'';position:absolute;left:10%;right:10%;bottom:18px;height:40px;border-radius:50%;background:radial-gradient(closest-side,rgba(14,14,16,.18),rgba(14,14,16,0));pointer-events:none}
+.mx-cam{position:absolute;z-index:1;left:50%;top:52%;width:0;height:0;transform-style:preserve-3d;transition:transform 1.1s cubic-bezier(.65,0,.2,1),left 1.1s cubic-bezier(.65,0,.2,1),top 1.1s cubic-bezier(.65,0,.2,1)}
+.mx-half{position:absolute;transform-style:preserve-3d;border-radius:26px;background:linear-gradient(160deg,#3b3d44,#25262b);box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 40px 60px rgba(14,14,16,.28)}
+.mx-half::before{content:'';position:absolute;inset:0;border-radius:inherit;background:#15161a;transform:translateZ(-18px)}
+.mx-cap{position:absolute;width:54px;height:54px;border:none;border-radius:12px;transform:translateZ(10px);background-color:#f6f7f9;background-image:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,0));color:#0e0e10;font-size:12px;font-weight:700;line-height:1.1;white-space:pre-line;overflow:hidden;cursor:pointer;padding:0 3px;box-shadow:0 6px 0 #b9bdc6,0 10px 12px rgba(0,0,0,.35);transition:transform .25s cubic-bezier(.3,.7,.4,1),box-shadow .6s ease,background-color .7s ease,color .7s ease,text-shadow .6s ease,opacity .6s ease,filter .6s ease}
+.mx-cap:hover{transform:translateZ(14px)}
+.mx-cap:active{transform:translateZ(4px);box-shadow:0 1px 0 #b9bdc6,0 3px 4px rgba(0,0,0,.3);transition-duration:.06s}
+.mx-cap.trans{color:#a3a6ad}
+.mx-cap.sel{background:linear-gradient(#26272c,#0e0e10);color:#fff;transform:translateZ(16px);box-shadow:0 6px 0 #000,0 0 0 3px rgba(61,111,214,.55),0 16px 26px rgba(14,14,16,.45)}
+.mx-cap.ok{background:linear-gradient(#36a46c,#1f8a55);color:#fff;box-shadow:0 6px 0 #146b40,0 10px 12px rgba(0,0,0,.35)}
+.mx-pad{position:absolute;border:none;border-radius:18px;transform:translateZ(5px);background:linear-gradient(150deg,#2f3137,#1b1c20);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 10px 24px rgba(255,255,255,.04),0 4px 0 #0c0d0f;color:#8f9197;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:box-shadow .3s ease,color .3s ease,transform .25s ease}
+.mx-pad:hover{color:#e1e3e8;transform:translateZ(7px)}
+.mx-pad.sel{color:#fff;box-shadow:inset 0 0 0 2px #7aa2ff,0 0 30px rgba(122,162,255,.55),0 4px 0 #0c0d0f}
+.mx-zoom{position:absolute;right:12px;bottom:12px;display:flex;gap:6px;z-index:2}
+.mx-win{position:absolute;right:16px;top:16px;bottom:16px;width:min(480px,calc(100% - 32px));display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;border-radius:26px;background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 30px 80px rgba(14,14,16,.22),inset 0 0 0 1px rgba(255,255,255,.75);z-index:6;animation:mx-win .42s cubic-bezier(.2,.8,.2,1);transform-origin:0 50%}
+.mx-win.out{animation:mx-win-out .24s ease forwards}
+.mx-win::before{content:'';position:absolute;left:-9px;top:50%;width:18px;height:18px;margin-top:-9px;background:rgba(255,255,255,.66);transform:rotate(45deg);border-radius:3px;box-shadow:-1px 1px 0 rgba(255,255,255,.75)}
+.mx-win .mx-tabs{grid-template-columns:repeat(4,minmax(0,1fr));background:rgba(14,14,16,.06)}
+.mx-win .mx-tile{background:rgba(255,255,255,.85);box-shadow:0 1px 2px rgba(14,14,16,.08)}
+.mx-win .mx-tile:hover{background:#ffffff}
+.mx-stagebg{position:absolute;inset:0;border:none;background:transparent;cursor:default;z-index:0}
+.mx-float{position:absolute;z-index:3;display:flex;gap:6px;align-items:center;flex-wrap:wrap;transition:opacity .3s ease,transform .3s ease}
+.mx-float.hide{opacity:0;transform:translateY(-6px);pointer-events:none}
+.mx-glass{background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(20,24,40,.08)}
+.mx-stage::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(120% 100% at 50% 0%,#2c2f37 0%,#17181c 58%,#0c0d10 100%);opacity:0;transition:opacity 1s cubic-bezier(.2,.8,.2,1)}
+.mx-stage.dark::before{opacity:1}
+.mx-stage::after{z-index:0;transition:background .8s ease}
+.mx-stage.dark::after{background:radial-gradient(closest-side,var(--under,rgba(90,120,255,.22)),rgba(0,0,0,0))}
+.mx-stage.dark .mx-cap:not(.sel){background-color:#2a2c32;background-image:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0));color:#7d8089;box-shadow:0 6px 0 #0d0e11,0 10px 12px rgba(0,0,0,.5)}
+.mx-cap::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background-color:var(--led,#ffffff);opacity:0;mix-blend-mode:screen;transition:opacity var(--fade,.6s) ease,background-color .6s ease}
+.mx-stage.dark .mx-cap.lit{color:#ffffff;text-shadow:0 0 8px var(--led);box-shadow:0 6px 0 #0d0e11,0 0 24px -3px var(--led),0 10px 14px rgba(0,0,0,.45)}
+.mx-stage.dark .mx-cap.lit::after,.mx-stage.dark .mx-cap.dimk::after{opacity:var(--ledA,.6)}
+.mx-stage.dark .mx-cap.dimk{color:#5d6068}
+.fx-breathe .mx-cap.lit::after{animation:mx-breathe var(--spd,3s) ease-in-out infinite}
+.fx-cycle .mx-cap.lit::after{animation:mx-hue var(--spd,3s) linear infinite}
+.fx-wave .mx-cap.lit::after{animation:mx-hue var(--spd,3s) linear infinite;animation-delay:var(--dly,0s)}
+.fx-twinkle .mx-cap.lit::after{animation:mx-twinkle var(--spd,3s) ease-in-out infinite;animation-delay:var(--dly,0s)}
+.fx-react .mx-cap.lit::after{opacity:calc(var(--ledA,.6) * .14)}
+.fx-react .mx-cap.lit:hover::after,.fx-react .mx-cap.lit:active::after{opacity:var(--ledA,.6);transition-duration:.05s}
+.mx-cap.touch::after{animation:none !important;opacity:var(--ledA,.8) !important}
+@keyframes mx-breathe{0%,100%{opacity:calc(var(--ledA,.6) * .12)}50%{opacity:var(--ledA,.6)}}
+@keyframes mx-hue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
+@keyframes mx-twinkle{0%,100%{opacity:calc(var(--ledA,.6) * .1)}12%{opacity:var(--ledA,.6)}45%{opacity:calc(var(--ledA,.6) * .2)}}
+.mx-pad{overflow:hidden}
+.mx-padlbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .4s ease}
+.mx-pzone{position:absolute;border:none;padding:0;cursor:pointer;border-radius:7px;background:rgba(122,162,255,.1);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background-color .3s ease,box-shadow .3s ease;animation:mx-fade .5s ease backwards}
+.mx-pzone:hover{background:rgba(122,162,255,.3)}
+.mx-pzone.set{background:rgba(122,162,255,.5)}
+.mx-pzone.on{box-shadow:inset 0 0 0 2px #ffffff,0 0 14px rgba(122,162,255,.7)}
+.mx-knob{position:absolute;width:52px;height:52px;border:none;border-radius:26px;padding:0;cursor:pointer;background:radial-gradient(circle at 35% 30%,#5d5e64,#1a1b1f 70%);box-shadow:0 6px 0 #0c0d0f,0 10px 14px rgba(0,0,0,.4);transition:transform .6s cubic-bezier(.34,1.4,.64,1),box-shadow .3s ease}
+.mx-knob::before{content:'';position:absolute;top:5px;left:50%;width:4px;height:12px;margin-left:-2px;border-radius:2px;background:#ffffff}
+.mx-knob:hover{box-shadow:0 6px 0 #0c0d0f,0 0 0 2px rgba(122,162,255,.4),0 10px 14px rgba(0,0,0,.4)}
+.mx-knob.sel{box-shadow:0 6px 0 #0c0d0f,0 0 0 3px rgba(122,162,255,.75),0 0 26px rgba(122,162,255,.55)}
+.mx-win.wide{width:min(520px,46%,calc(100% - 32px))}
+.mx-win.ondark,.mx-win.ondark::before{background:rgba(255,255,255,.84)}
+.mx-win .mx-card{background:transparent;padding:0;border-radius:0;gap:10px;flex:none;animation:none}
+.mx-win .mx-card .mx-h1{font-size:15px}
+.mx-win .mx-help-t{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.mx-win .mx-sub2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mx-win .mx-rows{gap:12px 18px !important}
+.mx-win .mx-swatch{width:30px !important;height:30px !important}
+.mx-win .mx-tabs.n{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.mx-win .mx-tabs.n button{font-size:12px;letter-spacing:0;padding:0 4px}
+.mx-wpane{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.mx-help-t:empty{display:none}
+.mx-win .mx-pill.sm{padding:0 9px}
+@media (max-height: 720px){.mx-win .mx-whsub{display:none}.mx-win .mx-card{gap:6px}.mx-steps{max-height:110px !important;min-height:88px !important}.mx-win .mx-swatch{width:26px !important;height:26px !important}.mx-win .mx-rows{gap:8px 14px !important}}
+@media (max-height: 800px){.mx-win .mx-sub2{-webkit-line-clamp:1}.mx-win .mx-help-t.mx-sub[style*='12px']{font-size:11px !important}.mx-win.wide{gap:8px}.mx-win .mx-tabs button{height:30px}.mx-win .mx-pill.sm{height:28px}.mx-win .mx-sel{height:34px !important}.mx-win .mx-rows{gap:10px 16px !important}}
+.mx-cap.hl{box-shadow:0 6px 0 #b9bdc6,0 0 0 3px var(--hl,#3d6fd6),0 10px 12px rgba(0,0,0,.3)}
+.mx-cap.hl2{transform:translateZ(18px);box-shadow:0 6px 0 #b9bdc6,0 0 0 4px var(--hl,#3d6fd6),0 0 24px var(--hl,#3d6fd6),0 14px 18px rgba(0,0,0,.35)}
+.mx-win.xwide{width:min(640px,54%,calc(100% - 32px))}
+.flip-0 .mx-cap{animation:mx-flip0 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip0{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-1 .mx-cap{animation:mx-flip1 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip1{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-2 .mx-cap{animation:mx-flip2 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip2{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-3 .mx-cap{animation:mx-flip3 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip3{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-4 .mx-cap{animation:mx-flip4 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip4{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-5 .mx-cap{animation:mx-flip5 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip5{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-6 .mx-cap{animation:mx-flip6 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip6{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.flip-7 .mx-cap{animation:mx-flip7 .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 9ms)}@keyframes mx-flip7{from{transform:translateZ(10px) rotateX(-75deg);opacity:0}to{transform:translateZ(10px);opacity:1}}
+.mx-rig{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+.mx-rig.idle{animation:mx-idle 7s ease-in-out infinite}
+@keyframes mx-idle{0%,100%{transform:translateZ(0) rotateZ(0deg)}50%{transform:translateZ(18px) rotateZ(-1.2deg)}}
+.mx-cap.ghost{background-color:#e4e7ec;background-image:none;box-shadow:0 6px 0 #c9cdd4,0 8px 10px rgba(0,0,0,.12);cursor:default}
+.mx-pad.ghost{background:linear-gradient(150deg,#45474e,#35363b);color:#6b6e75}
+.powering .mx-cap{animation:mx-power 1.5s cubic-bezier(.2,.8,.2,1) infinite;animation-delay:calc(var(--o,0) * .5s)}
+@keyframes mx-power{0%,100%{background-color:#e4e7ec;box-shadow:0 6px 0 #c9cdd4,0 8px 10px rgba(0,0,0,.12)}35%{background-color:#ffffff;box-shadow:0 6px 0 #b9bdc6,0 0 26px rgba(122,162,255,.9)}}
+.powered .mx-cap{animation:mx-poweron .9s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 14ms)}
+@keyframes mx-poweron{from{transform:translateZ(2px);box-shadow:0 6px 0 #b9bdc6,0 0 30px rgba(122,162,255,1)}to{transform:translateZ(10px)}}
+.mx-half{transition:opacity .6s ease,filter .6s ease,box-shadow .6s ease}
+.mx-knob,.mx-pad{transition:opacity .6s ease,filter .6s ease,transform .5s ease,box-shadow .3s ease,color .3s ease}
+.mx-half.fdim,.mx-cap.fdim,.mx-knob.fdim,.mx-pad.fdim{opacity:.32;filter:saturate(.4)}
+.mx-half.fsel{box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 0 0 3px rgba(122,162,255,.55),0 40px 60px rgba(14,14,16,.28)}
+.mx-cap.flashk{background-color:#dfe8ff;box-shadow:0 6px 0 #9fb3e6,0 0 22px rgba(122,162,255,.95);transform:translateZ(14px)}
+.reboot-a .mx-cap:not(.fdim){animation:mx-reboot-a 1s ease backwards;animation-delay:calc(var(--o,0) * .3s)}
+.reboot-b .mx-cap:not(.fdim){animation:mx-reboot-b 1s ease backwards;animation-delay:calc(var(--o,0) * .3s)}
+@keyframes mx-reboot-a{0%{box-shadow:0 6px 0 #9fb3e6,0 0 26px rgba(31,138,85,.9)}100%{box-shadow:0 6px 0 #b9bdc6,0 10px 12px rgba(0,0,0,.35)}}
+@keyframes mx-reboot-b{0%{box-shadow:0 6px 0 #9fb3e6,0 0 26px rgba(31,138,85,.9)}100%{box-shadow:0 6px 0 #b9bdc6,0 10px 12px rgba(0,0,0,.35)}}
+@keyframes mx-win2{from{opacity:0;transform:translateX(28px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes mx-sub-a{from{opacity:0;transform:translateX(-14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes mx-sub-b{from{opacity:0;transform:translateX(-14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes mx-pin-a{from{opacity:0;transform:translateY(10px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes mx-pin-b{from{opacity:0;transform:translateY(10px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes mx-chip-a{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes mx-chip-b{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes mx-win{from{opacity:0;transform:translateX(28px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes mx-win-out{from{opacity:1;transform:none}to{opacity:0;transform:translateX(24px) scale(.97)}}
+.mx-ptabs{display:inline-flex;gap:4px;padding:4px;border-radius:22px;background:rgba(14,14,16,.06);flex-wrap:wrap}
+.mx-ptabs button{height:34px;border:none;border-radius:17px;background:transparent;padding:0 16px;font-size:13px;font-weight:700;color:#4a4d54;cursor:pointer;transition:background-color .25s ease,color .25s ease,box-shadow .25s ease}
+.mx-ptabs button:hover{color:#0e0e10}
+.mx-ptabs button[aria-selected=true]{background:#ffffff;color:#0e0e10;box-shadow:0 2px 8px rgba(20,24,40,.1)}
+.mx-pane{animation:mx-in .45s cubic-bezier(.2,.8,.2,1)}
+.mx-grid{display:grid;gap:12px;align-items:start}
+@keyframes mx-in{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes mx-rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes mx-fade{from{opacity:0}to{opacity:1}}
+@keyframes mx-line{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes mx-pop-a{0%{transform:scale(.82)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes mx-pop-b{0%{transform:scale(.82)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes mx-swap-a{from{opacity:0;transform:translateY(10px) rotate(-6deg) scale(.88)}to{opacity:1;transform:none}}
+@keyframes mx-swap-b{from{opacity:0;transform:translateY(10px) rotate(-6deg) scale(.88)}to{opacity:1;transform:none}}
+@keyframes mx-layer-a{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes mx-layer-b{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes mx-menu{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes mx-dialog{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes mx-spin{to{transform:rotate(360deg)}}
+.mx-big a,.mx-big button{animation:mx-rise .7s cubic-bezier(.2,.8,.2,1) backwards}
+.mx-big>:nth-child(2){animation-delay:.06s}.mx-big>:nth-child(3){animation-delay:.12s}
+.mx-fade{animation:mx-fade .5s ease .18s backwards}
+.mx-stagger>*{animation:mx-in .6s cubic-bezier(.2,.8,.2,1) backwards}
+.mx-stagger>*:nth-child(1){animation-delay:.22s}.mx-stagger>*:nth-child(2){animation-delay:.29s}.mx-stagger>*:nth-child(3){animation-delay:.36s}.mx-stagger>*:nth-child(4){animation-delay:.43s}.mx-stagger>*:nth-child(5){animation-delay:.5s}.mx-stagger>*:nth-child(6){animation-delay:.57s}
+.mx-press{transition:transform .2s cubic-bezier(.3,.7,.4,1),box-shadow .2s ease,background-color .2s ease,color .2s ease,opacity .2s ease}
+.mx-press:hover:not(:disabled){transform:translateY(-1px)}
+.mx-press:active:not(:disabled){transform:scale(.94);transition-duration:.08s}
+.mx-lift{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+.mx-lift:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(20,24,40,.08)}
+.mx-key{transition:background-color .22s ease,color .22s ease,box-shadow .25s ease,transform .18s cubic-bezier(.3,.7,.4,1)}
+.mx-key:hover{transform:translateY(-2px)}
+.mx-key:active{transform:scale(.9);transition-duration:.06s}
+.mx-spin{animation:mx-spin .8s linear infinite;width:16px;height:16px;border-radius:8px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;box-sizing:border-box}
+@media (max-width: 1180px){.mx-hbtn .lbl{display:none}.mx-hbtn{padding:0 12px !important}}
+@media (max-width: 900px){.mx-chip.opt{display:none}.mx-float.opt{display:none}.mx-win{left:12px !important;right:12px !important;top:auto !important;width:auto !important;height:min(62%,520px)}.mx-win::before{display:none}}
+@media (max-height: 800px){
+.mx-big a,.mx-big button{font-size:clamp(22px,4.4vh,38px)}
+.mx-big{margin-top:6px}
+.mx-subnav{margin-top:4px}
+.mx-hbtn,.mx-ib{height:38px}.mx-ib{width:38px}.mx-hbtn .mx-dot32{width:28px;height:28px}
+.mx-main{margin-top:10px}
+.mx-card{padding:14px 16px;gap:10px;border-radius:22px}
+.mx-h1{font-size:16px}
+.mx-sub{line-height:1.45}
+.mx-help-t{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.mx-sub2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mx-steps{max-height:140px !important;min-height:100px !important}
+.mx-pick{max-height:46px !important}
+.mx-hide-short{display:none !important}
+.mx-win{gap:8px;padding:12px}
+.mx-rows{gap:10px 20px !important}
+.mx-swatch{width:28px !important;height:28px !important}
+.mx-primary{height:42px}
+.mx-row{padding:9px 12px}
+}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div class="mx-root">
+<div class="mx-panel" onMouseMove="{{onMove}}" onMouseLeave="{{onLeave}}">
+<div aria-hidden="true" style="{{glowStyle}}"></div>
+<div aria-hidden="true" style="{{glowStyle2}}"></div>
+<div aria-hidden="true" style="{{glowStyle3}}"></div>
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><button class="mx-close" aria-label="メニューを閉じる" onClick="{{closeAll}}"></button></sc-if>
+
+<div class="mx-top mx-fade {{hdrCls}}">
+<header class="mx-hdr">
+<div class="mx-hgrp">
+<sc-if value="{{connected}}" hint-placeholder-val="{{false}}">
+<div style="position: relative">
+<button class="mx-hbtn mx-press" aria-haspopup="menu" aria-expanded="{{kbdOpen}}" onClick="{{toggleKbd}}"><span class="mx-dot32"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"></path></svg></span>Matrix Split 42<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+<sc-if value="{{kbdOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-menu l" role="menu" style="min-width: 290px">
+<div class="mx-row" style="background: #f5f6f8"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 14px">Matrix Split 42</b><span class="mx-sub" style="font-size: 12px">FEED:0000 · 接続中・左右とも</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f8a55" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></div>
+<a class="mx-mi" role="menuitem" href="Connect.dc.html" style="margin-top: 4px">＋ Keyboard</a>
+<a class="mx-mi danger" role="menuitem" href="Connect.dc.html">Disconnect</a>
+</div>
+</sc-if>
+</div>
+<span class="mx-chip opt" style="animation: mx-chip-a 0.4s ease"><span style="width: 8px; height: 8px; border-radius: 4px; background: #1f8a55"></span>Connected · both halves</span>
+</sc-if>
+<sc-if value="{{notConnected}}" hint-placeholder-val="{{true}}"><span class="mx-chip"><span style="{{connDot}}"></span>{{connText}}</span></sc-if>
+</div>
+<div class="mx-hgrp">
+<div style="position: relative">
+<button class="mx-hbtn mx-press" aria-label="表示言語" aria-haspopup="menu" aria-expanded="{{langOpen}}" onClick="{{toggleLang}}" style="padding: 0 14px 0 18px">{{langLabel}}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+<sc-if value="{{langOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-menu r" role="menu" style="min-width: 180px">
+<sc-for list="{{langs}}" as="l" hint-placeholder-count="2"><button class="mx-mi" role="menuitemradio" aria-checked="{{l.on}}" onClick="{{l.pick}}" style="{{l.style}}">{{l.label}}</button></sc-for>
+</div>
+</sc-if>
+</div>
+<div style="position: relative">
+<button class="mx-ib mx-press" aria-label="アカウント" aria-haspopup="menu" aria-expanded="{{acctOpen}}" onClick="{{toggleAcct}}" style="{{acctBtn}}"><sc-if value="{{signedIn}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; font-weight: 700; color: #ffffff">W</span></sc-if><sc-if value="{{signedOut}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0e0e10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></sc-if></button>
+<sc-if value="{{acctOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-menu r" role="menu" style="width: 280px; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+<sc-if value="{{signedOut}}" hint-placeholder-val="{{true}}"><b style="font-size: 15px">Sign in</b><span class="mx-sub">ログインすると、キーマップの共有や保存したキーマップの呼び出しが使えます。キーの変更だけならログインは不要です。</span><button class="mx-btn dark mx-press" onClick="{{signIn}}">Sign in</button></sc-if>
+<sc-if value="{{signedIn}}" hint-placeholder-val="{{false}}"><span class="mx-sub">ログイン中</span><button class="mx-mi" onClick="{{signOut}}" style="background: #f5f6f8">Sign out</button></sc-if>
+</div>
+</sc-if>
+</div>
+
+</div>
+</header>
+<nav class="mx-big" aria-label="セクション"><sc-for list="{{bigTabs}}" as="b" hint-placeholder-count="3"><button class="{{b.cls}}" aria-current="{{b.ac}}" onClick="{{b.pick}}">{{b.label}}</button></sc-for></nav>
+<nav class="mx-subnav" aria-label="{{subLabel}}" style="{{subAnim}}"><sc-for list="{{subTabs}}" as="t" hint-placeholder-count="4"><sc-if value="{{t.isLink}}" hint-placeholder-val="{{false}}"><a href="{{t.href}}">{{t.label}}</a></sc-if><sc-if value="{{t.isBtn}}" hint-placeholder-val="{{true}}"><button class="{{t.cls}}" aria-current="{{t.ac}}" onClick="{{t.pick}}">{{t.label}}</button></sc-if></sc-for></nav>
+<div class="mx-rule" style="margin-top: 0"></div>
+</div>
+
+<main class="mx-main" style="margin-left: 0; display: flex; flex-direction: column; overflow: hidden; -webkit-mask-image: none; mask-image: none; padding-bottom: clamp(8px, 1.4vh, 14px)">
+<section class="mx-card" aria-label="キーボード" style="flex: 1 1 auto; min-height: 0; display: flex; padding: clamp(6px, 1.2vh, 12px); animation: mx-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s backwards">
+<div class="mx-stage {{stageCls}}" role="group" aria-label="3D キーボード" ref="{{stageRef}}" style="flex: 1; height: auto; min-height: 0; border-radius: clamp(14px, 2vh, 20px)">
+<button class="mx-stagebg" aria-label="設定ウィンドウを閉じる" tabindex="-1" onClick="{{closeWin}}"></button>
+<div class="mx-cam" style="{{camStyle}}">
+<div class="mx-rig {{rigCls}}">
+<button class="mx-half {{halfLCls}}" aria-label="Left half" onClick="{{pickLeft}}" style="{{halfLStyle}}"></button>
+<button class="mx-half {{halfRCls}}" aria-label="Right half" onClick="{{pickRight}}" style="{{halfRStyle}}"></button>
+<div class="mx-pad {{padCls}}" style="{{padStyle}}"><span class="mx-padlbl">TOUCHPAD</span></div>
+<sc-for list="{{knobs3d}}" as="k" hint-placeholder-count="2"><span class="mx-knob {{k.cls}}" style="{{k.style}}"></span></sc-for>
+<sc-for list="{{caps}}" as="k" hint-placeholder-count="42"><button class="mx-cap {{k.cls}}" aria-label="{{k.label}}" tabindex="-1" onClick="{{k.pick}}" style="{{k.style}}">{{k.label}}</button></sc-for>
+</div>
+</div>
+
+<div class="mx-float" style="left: 16px; top: 16px"><span class="mx-chip mx-glass" style="{{chipStyle}}"><span style="{{chipDot}}"></span>{{chipTitle}}<span style="font-weight: 500; color: #6b6e75">· {{chipSub}}</span></span></div>
+<sc-if value="{{flashChip}}" hint-placeholder-val="{{false}}">
+<div class="mx-float" style="left: 50%; top: 16px; transform: translateX(-50%); animation: mx-chip-a 0.4s ease"><span class="mx-chip mx-glass" style="height: 34px; gap: 10px; font-size: 13px; font-weight: 600; color: #0e0e10"><span class="mx-spin" style="border-color: rgba(14, 14, 16, 0.15); border-top-color: #0e0e10"></span>{{flashPct}}</span></div>
+</sc-if>
+<div class="mx-float opt" style="left: 16px; bottom: 16px; max-width: 46%"><span class="mx-chip mx-glass" style="{{hintStyle}}">{{hintText}}</span></div>
+<sc-if value="{{reopenOn}}" hint-placeholder-val="{{false}}">
+<div class="mx-float" style="right: 16px; bottom: 16px; animation: mx-chip-a 0.4s ease"><button class="mx-btn dark mx-press" onClick="{{reopen}}" style="height: 40px">{{reopenLabel}}</button></div>
+</sc-if>
+
+<sc-if value="{{winOpen}}" hint-placeholder-val="{{true}}">
+<div class="mx-win wide {{winCls}}" role="dialog" aria-label="{{winTitle}}" style="{{winStyle}}">
+<div style="display: flex; align-items: center; gap: 12px; flex: none">
+<span style="{{winIcon}}"></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1"><b style="font-size: 16px">{{winTitle}}</b><span class="mx-sub mx-help-t mx-whsub" title="{{winSub}}" style="font-size: 12px">{{winSub}}</span></div>
+<button class="mx-ib mx-press" aria-label="閉じる" onClick="{{closeWin}}" style="width: 36px; height: 36px; flex: none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<div class="mx-wpane" style="{{paneAnim}}">
+
+<sc-if value="{{paneConnect}}" hint-placeholder-val="{{true}}">
+<sc-if value="{{phaseIdle}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 20px; background: #0e0e10; color: #ffffff; flex: none">
+<b style="font-size: 18px">Connect a keyboard</b>
+<span style="font-size: 13px; line-height: 1.6; color: #c5c8ce">USB でつないでから押し、表示される一覧から選びます。分割キーボードは片方をつなげば使えます。</span>
+<button class="mx-btn mx-press" onClick="{{openPicker}}" style="align-self: flex-start; border: none; display: flex; align-items: center; gap: 8px">Connect keyboard<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><span class="mx-grph">RECENT</span>
+<a class="mx-row mx-press" href="Main.dc.html" style="text-decoration: none; color: #0e0e10; background: rgba(255, 255, 255, 0.8)"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 14px">Matrix Split 42</b><span class="mx-sub" style="font-size: 12px">このブラウザで前回使用・すぐ開けます</span></span><span style="font-size: 16px">→</span></a></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; flex: none">
+<label class="mx-row mx-press" style="position: relative; flex-direction: column; align-items: flex-start; gap: 4px; cursor: pointer; background: rgba(255, 255, 255, 0.8)"><b style="font-size: 13px">Keyboard definition</b><span class="mx-sub mx-help-t" style="font-size: 12px" title="カタログにないキーボードで、最初の1回だけ必要です。">{{defText}}</span><input type="file" accept=".json" aria-label="キーボード定義を読み込む" onChange="{{onDef}}" style="position: absolute; width: 1px; height: 1px; opacity: 0"></label>
+<button class="mx-row mx-press" onClick="{{toFirmware}}" style="flex-direction: column; align-items: flex-start; gap: 4px; border: none; cursor: pointer; background: rgba(255, 255, 255, 0.8); text-align: left; font: inherit"><b style="font-size: 13px">Flash firmware</b><span class="mx-sub mx-help-t" style="font-size: 12px">.uf2 を左右に書き込む</span></button>
+</div>
+<span class="mx-sub mx-hide-short" style="font-size: 12px; flex: none">Chrome / Edge のバージョン 89 以降で動作します（WebHID）。</span>
+</sc-if>
+<sc-if value="{{phasePick}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px; flex: none">Choose a keyboard</b>
+<span class="mx-sub" style="font-size: 12px; flex: none">USB でつながっているキーボードです。選んで Connect を押してください。</span>
+<div role="listbox" aria-label="キーボード" style="display: flex; flex-direction: column; gap: 6px; flex: none">
+<sc-for list="{{devices}}" as="d" hint-placeholder-count="1"><button class="mx-press" role="option" aria-selected="{{d.on}}" onClick="{{d.pick}}" style="{{d.style}}"><span style="display: flex; flex-direction: column; gap: 2px; text-align: left"><b style="font-size: 14px">{{d.name}}</b><span class="mx-sub" style="font-size: 12px">{{d.note}}</span></span><span style="{{d.radio}}"></span></button></sc-for>
+</div>
+<div style="flex: 1"></div>
+<div style="display: flex; justify-content: flex-end; gap: 8px; flex: none"><button class="mx-btn mx-press" onClick="{{cancelPick}}">Cancel</button><button class="mx-btn dark mx-press" disabled="{{noDevice}}" onClick="{{connect}}">Connect</button></div>
+</sc-if>
+<sc-if value="{{phaseBusy}}" hint-placeholder-val="{{false}}">
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center">
+<span class="mx-spin" style="width: 44px; height: 44px; border-radius: 22px; border: 3px solid #e1e3e8; border-top-color: #0e0e10"></span>
+<b style="font-size: 17px">Connecting…</b><span class="mx-sub">キーボードからキーマップを読み込んでいます。</span>
+</div>
+</sc-if>
+<sc-if value="{{phaseDone}}" hint-placeholder-val="{{false}}">
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center">
+<span style="width: 56px; height: 56px; border-radius: 28px; background: #1f8a55; display: flex; align-items: center; justify-content: center; animation: mx-pop-a 0.45s cubic-bezier(0.3, 0.7, 0.4, 1)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></span>
+<b style="font-size: 17px">Connected</b><span class="mx-sub">{{deviceName}} の準備ができました。左右とも認識しています。</span>
+<a class="mx-primary mx-press" href="Main.dc.html">Open Keys<span style="width: 32px; height: 32px; border-radius: 16px; background: #ffffff; color: #0e0e10; display: flex; align-items: center; justify-content: center">→</span></a>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{paneDefs}}" hint-placeholder-val="{{false}}">
+<span class="mx-sub" style="font-size: 12px; flex: none">キーボード定義（.json）はキーの配置やマトリクスを Remap に伝えるファイルです。このブラウザに保存され、次回から読み込みなしで開けます。カタログにあるキーボードでは不要です。</span>
+<sc-if value="{{noDefs}}" hint-placeholder-val="{{false}}"><span class="mx-sub">保存されている定義はありません。</span></sc-if>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow: auto">
+<sc-for list="{{defs}}" as="d" hint-placeholder-count="2"><div class="mx-row" style="background: rgba(255, 255, 255, 0.8); animation: mx-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) backwards"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 14px">{{d.name}}</b><span class="mx-sub" style="font-size: 12px; font-family: 'JetBrains Mono', monospace">{{d.meta}}</span></span><button class="mx-pill sm mx-press" onClick="{{d.remove}}" style="color: #a33a2c">Delete</button></div></sc-for>
+</div>
+<label class="mx-btn dark mx-press" style="position: relative; align-self: flex-start; display: flex; align-items: center; flex: none">Load definition file<input type="file" accept=".json" onChange="{{onDef}}" style="position: absolute; width: 1px; height: 1px; opacity: 0"></label>
+</sc-if>
+
+<sc-if value="{{paneFw}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">Side <span class="mx-sub" style="font-weight: 500">3D キーボードの左右の本体を押しても選べます</span></b>
+<div class="mx-seg" role="radiogroup" aria-label="Side"><sc-for list="{{sides}}" as="o" hint-placeholder-count="2"><button class="mx-pill sm mx-press {{o.cls}}" role="radio" aria-checked="{{o.on}}" disabled="{{o.off}}" onClick="{{o.pick}}">{{o.label}}</button></sc-for></div></div>
+<label style="{{fileBox}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{fileLabel}}</span><span class="mx-pill sm" style="display: flex; align-items: center">Choose file</span><input type="file" accept=".uf2" aria-label=".uf2 ファイルを選択" disabled="{{flashing}}" onChange="{{onFile}}" style="position: absolute; width: 1px; height: 1px; opacity: 0"></label>
+<sc-if value="{{flashing}}" hint-placeholder-val="{{false}}"><div style="height: 8px; border-radius: 4px; background: rgba(14, 14, 16, 0.08); overflow: hidden; flex: none"><div style="{{barStyle}}"></div></div></sc-if>
+<div class="mx-row" style="background: #fff4e0; color: #6a4a12; gap: 10px; flex: none"><span class="mx-sub2" style="font-size: 12px; line-height: 1.6" title="新しいファームウェアを書き込むと、キーボードに保存されたキーマップはファームウェアの初期状態に戻ります。先に Export keymap で保存し、書き込み後に Import で戻してください。">書き込むとキーマップは初期状態に戻ります。先に Export で保存してください。左右両方に書き込みます。</span><button class="mx-pill sm mx-press" onClick="{{exportKeymap}}" style="flex: none">Export keymap</button></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; flex: none">
+<sc-for list="{{versions}}" as="r" hint-placeholder-count="3"><div class="mx-row" style="flex-direction: column; align-items: flex-start; gap: 2px; background: rgba(255, 255, 255, 0.8); padding: 8px 12px"><span class="mx-sub" style="font-size: 11px">{{r.k}}</span><b style="{{r.style}}">{{r.v}}</b></div></sc-for>
+</div>
+<sc-if value="{{fwNote}}" hint-placeholder-val="{{false}}"><span class="mx-sub" title="{{fwNoteText}}" style="{{fwNoteStyle}}">{{fwNoteText}}</span></sc-if>
+</sc-if>
+
+</div>
+</div>
+</sc-if>
+</div>
+</section>
+</main>
+
+<footer class="mx-foot">
+<div class="mx-hgrp" style="position: relative; z-index: 30">
+<button class="mx-ib mx-press" aria-label="ヘルプ" aria-expanded="{{helpOpen}}" onClick="{{toggleHelp}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg></button>
+<sc-if value="{{helpOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-help" role="dialog" aria-label="使い方">
+<sc-if value="{{isConnect}}" hint-placeholder-val="{{true}}">
+<b style="font-size: 15px">If it doesn’t connect</b>
+<span>・一覧にキーボードが出ない時は、ケーブルを挿し直してください。</span>
+<span>・データ通信に対応した USB ケーブルか確認してください。</span>
+<span>・ほかのアプリがキーボードを使っていると接続できないことがあります。</span>
+</sc-if>
+<sc-if value="{{isFirmware}}" hint-placeholder-val="{{false}}">
+<b style="font-size: 15px">Write firmware</b>
+<span>3D キーボードの本体か Side で書き込む側を選び、.uf2 ファイルを選んで右下の Flash を押します。</span>
+<span>書き込み前にキーマップをバックアップしておくと、書き込み後にすぐ元に戻せます。</span>
+</sc-if>
+</div>
+</sc-if>
+<span class="mx-status" role="status"><span style="{{statusDot}}"></span>{{statusText}}</span>
+</div>
+<sc-if value="{{isConnect}}" hint-placeholder-val="{{true}}">
+<sc-if value="{{connected}}" hint-placeholder-val="{{false}}"><a class="mx-primary mx-press" href="Main.dc.html" style="animation: mx-chip-a 0.4s ease">Open Keys<span style="min-width: 32px; height: 32px; border-radius: 16px; background: #ffffff; color: #0e0e10; display: flex; align-items: center; justify-content: center">→</span></a></sc-if>
+<sc-if value="{{notConnected}}" hint-placeholder-val="{{true}}"><button class="mx-primary mx-press {{connCls}}" onClick="{{openPicker}}" disabled="{{connOff}}">Connect keyboard<span style="min-width: 32px; height: 32px; border-radius: 16px; background: #ffffff; color: #0e0e10; display: flex; align-items: center; justify-content: center">→</span></button></sc-if>
+</sc-if>
+<sc-if value="{{isFirmware}}" hint-placeholder-val="{{false}}"><button class="mx-primary mx-press {{pCls}}" onClick="{{flash}}" disabled="{{pOff}}" style="animation: mx-chip-a 0.4s ease"><sc-if value="{{flashing}}" hint-placeholder-val="{{false}}"><span class="mx-spin"></span></sc-if>{{pLabel}}<span style="min-width: 32px; height: 32px; border-radius: 16px; background: #ffffff; color: #0e0e10; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg></span></button></sc-if>
+</footer>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+<div class="mx-toast" role="status" style="{{toastAnim}}"><i><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></i>{{toast}}</div>
+</sc-if>
+
+<sc-if value="{{dialogOpen}}" hint-placeholder-val="{{false}}">
+<div class="mx-scrimwrap">
+<button class="mx-scrim" aria-label="閉じる" onClick="{{closeAll}}"></button>
+<div class="mx-dlg" role="dialog" aria-modal="true">
+
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+componentDidMount() {
+this._onScroll = (e) => {
+const t = e.target;
+if (!t || !t.classList || !t.classList.contains('mx-main')) return;
+const s = t.scrollTop > 8;
+if (s !== !!(this.state && this.state.scrolled)) this.setState({ scrolled: s });
+};
+document.addEventListener('scroll', this._onScroll, true);
+}
+componentWillUnmount() {
+document.removeEventListener('scroll', this._onScroll, true);
+if (this._ro) this._ro.disconnect();
+(this._timers || []).forEach((t) => clearTimeout(t));
+clearTimeout(this._tt); clearTimeout(this._ts);
+if (this._raf) cancelAnimationFrame(this._raf);
+}
+later(fn, ms) {
+this._timers = this._timers || [];
+const t = setTimeout(fn, ms);
+this._timers.push(t);
+return t;
+}
+showToast(msg) {
+clearTimeout(this._tt);
+this.setState({ toast: msg, toastN: ((this.state && this.state.toastN) || 0) + 1 });
+this._tt = setTimeout(() => this.setState({ toast: null }), 3200);
+}
+renderVals() {
+const st = this.state || {};
+const ptr = st.ptr || null;
+const gx = ptr ? ptr.x : 690;
+const gy = ptr ? ptr.y : 40;
+const glowBase = 'position: absolute; top: 0; left: 0; border-radius: 50%; pointer-events: none; will-change: transform; ';
+const at = (w, h, dx, dy) => 'translate(' + Math.round(gx - w / 2 + dx) + 'px, ' + Math.round(gy - h / 2 + dy) + 'px)';
+const open = st.open || null;
+const toggle = (name) => () => this.setState({ open: open === name ? null : name });
+const closeAll = () => this.setState({ open: null });
+const dlg = !!open && open.indexOf('dlg-') === 0;
+const sw = (on) => 'position: relative; width: 56px; height: 32px; border: none; border-radius: 16px; cursor: pointer; padding: 0; flex: none; transition: background-color 0.3s ease, transform 0.2s ease; background: ' + (on ? '#0e0e10' : '#d5d8de');
+const knob = (on) => 'position: absolute; top: 4px; left: ' + (on ? '28px' : '4px') + '; width: 24px; height: 24px; border-radius: 12px; background: #ffffff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18); transition: left 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)';
+const pillCls = (on) => (on ? 'on' : '');
+const autosave = (patch) => {
+this.setState(Object.assign({ saving: true }, patch));
+clearTimeout(this._ts);
+this._ts = setTimeout(() => this.setState({ saving: false }), 700);
+};
+const R = {
+slider: (label, value, min, max, step, text, help, onSet, off) => ({ isSlider: true, label, value, min, max, step, valueText: text, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', track: 'width: 100%; accent-color: #0e0e10', onChange: (e) => onSet(Number(e.target.value)) }),
+sw: (label, on, help, onSet, off) => ({ isSwitch: true, label, on: !!on, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', swStyle: sw(!!on), knobStyle: knob(!!on), toggle: () => onSet(!on) }),
+seg: (label, options, cur, help, onSet, off) => ({ isSeg: true, label, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', opts: options.map((o) => { const v = Array.isArray(o) ? o[0] : o; const l = Array.isArray(o) ? o[1] : o; return { label: l, on: v === cur, cls: v === cur ? 'on' : '', off: !!off, style: '', pick: () => onSet(v) }; }) }),
+select: (label, groups, cur, help, onSet, off) => ({ isSelect: true, label, value: cur, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', groups: groups.map(([g, opts]) => ({ label: g, opts })), onChange: (e) => onSet(e.target.value) }),
+swatches: (label, options, cur, help, onSet, off) => ({ isSwatches: true, label, help: help || '', off: !!off, dim: off ? 'opacity: 0.45; transition: opacity 0.3s ease' : 'transition: opacity 0.3s ease', valueText: (options.find((o) => o[0] === cur) || [0, ''])[1], opts: options.map(([v, l, color]) => ({ label: l, on: v === cur, off: !!off, pick: () => onSet(v), style: 'width: 34px; height: 34px; border-radius: 17px; cursor: pointer; padding: 0; transition: transform 0.2s ease; ' + (color ? 'background: ' + color : 'background: conic-gradient(#e5484d, #f5d90a, #30a46c, #05a2c2, #3e63dd, #d6409f, #e5484d)') + '; border: ' + (v === cur ? '3px solid #0e0e10' : '2px solid #ffffff') + '; box-shadow: 0 0 0 1px #d5d8de' })) }),
+note: (text) => ({ isNote: true, help: text, dim: '' }),
+button: (label, onClick) => ({ isButton: true, label, onClick, dim: '' })
+};
+const card = (title, sub, rows, extra) => Object.assign({ title, sub: sub || '', rows, hasBadge: false, badge: '', style: '', rowsStyle: 'display: flex; flex-direction: column; gap: 16px' }, extra || {});
+const rowsGrid = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px 28px';
+const ptabs = (key, list, def) => { const cur = st[key] || def; return { cur, tabs: list.map(([id, label]) => ({ label, on: cur === id, pick: () => this.setState({ [key]: id }) })) }; };
+const C = {
+glowStyle: glowBase + 'width: 1300px; height: 900px; background: radial-gradient(closest-side, rgba(70, 112, 210, 0.42), rgba(70, 112, 210, 0.16) 55%, rgba(70, 112, 210, 0) 100%); filter: blur(80px); transition: transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1); transform: ' + at(1300, 900, 0, -120),
+glowStyle2: glowBase + 'width: 760px; height: 560px; background: radial-gradient(closest-side, rgba(130, 168, 245, 0.5), rgba(130, 168, 245, 0) 100%); filter: blur(64px); transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); transform: ' + at(760, 560, 0, 0),
+glowStyle3: glowBase + 'width: 900px; height: 640px; background: radial-gradient(closest-side, rgba(160, 140, 235, 0.28), rgba(160, 140, 235, 0) 100%); filter: blur(90px); transition: transform 2.4s cubic-bezier(0.2, 0.7, 0.2, 1); transform: ' + at(900, 640, ptr ? (690 - gx) * 0.6 + 220 : 380, ptr ? (300 - gy) * 0.4 + 120 : 260),
+onMove: (e) => {
+if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+const el = e.currentTarget;
+const r = el.getBoundingClientRect();
+const k = el.offsetWidth ? r.width / el.offsetWidth : 1;
+this._ptr = { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k };
+if (!this._raf) this._raf = requestAnimationFrame(() => { this._raf = 0; this.setState({ ptr: this._ptr }); });
+},
+onLeave: () => this.setState({ ptr: null }),
+closeAll, menuOpen: !!open && !dlg, dialogOpen: dlg,
+hdrCls: st.scrolled ? 'scrolled' : '', miniCls: st.scrolled ? 'show' : '',
+kbdOpen: open === 'kbd', toggleKbd: toggle('kbd'),
+gearOpen: open === 'gear', toggleGear: toggle('gear'),
+helpOpen: open === 'help', toggleHelp: toggle('help'),
+onImport: (e) => { const f = e.target.files && e.target.files[0]; this.setState({ open: null }); if (f) this.showToast('Imported: ' + f.name); },
+exportKeymap: () => { this.setState({ open: null }); this.showToast('matrix-split42.matrix-keymap.json を書き出しました'); },
+hasToast: !!st.toast, toast: st.toast || '',
+toastAnim: 'animation: ' + ((st.toastN || 0) % 2 ? 'mx-pop-a' : 'mx-pop-b') + ' 0.4s cubic-bezier(0.3, 0.7, 0.4, 1)',
+saving: !!st.saving,
+autoStatusText: st.saving ? 'キーボードに保存中…' : 'キーボードに保存済み（自動保存）',
+autoStatusDot: 'width: 8px; height: 8px; border-radius: 4px; transition: background-color 0.3s ease; background: ' + (st.saving ? '#c08a1e' : '#1f8a55')
+};
+
+const DEF_SECTION = 'firmware'; const DEF_SUB = 'write';
+const section = st.section || DEF_SECTION;
+const isConnect = section === 'connect', isFirmware = section === 'firmware';
+const csub = st.csub || (DEF_SECTION === 'connect' && DEF_SUB) || 'kbd';
+const secN = st.secN || 0, paneN = st.paneN || 0;
+const winHide = !!st.winHide;
+const go = (sec) => { if (sec === section) return; this.setState({ section: sec, secN: secN + 1, paneN: paneN + 1, winHide: false, winClosing: false, open: null }); };
+const closeWin = () => { if (winHide || st.winClosing || st.flashing || st.phase === 'busy') return; this.setState({ winClosing: true }); this.later(() => this.setState({ winHide: true, winClosing: false }), 230); };
+
+// connection: Connect starts unplugged; Firmware is reached from a connected session
+const phase = st.phase || (st.connected ?? DEF_SECTION === 'firmware' ? 'done' : 'idle');
+const connected = phase === 'done';
+const DEVICES = [{ id: 'ms42', name: 'Matrix Split 42', note: 'USB でつながっています（左右とも検出）' }];
+const dev = st.dev || null;
+const deviceName = (DEVICES.find((d) => d.id === dev) || DEVICES[0]).name;
+const connect = () => {
+if (!dev) return;
+this.setState({ phase: 'busy', powerN: (st.powerN || 0) + 1 });
+this.later(() => { this.setState({ phase: 'done' }); this.showToast(deviceName + ' に接続しました'); }, 1700);
+};
+
+// firmware
+const LATEST = 21;
+const side = st.side || 'Left';
+const file = st.file || null;
+const flashing = !!st.flashing;
+const prog = st.prog || 0;
+const rev = st.rev || { Left: 19, Right: 19 };
+const pickSide = (id) => () => { if (!isFirmware || flashing) return; this.setState({ side: id }); };
+const flash = () => {
+if (!file || flashing) return;
+this.setState({ flashing: true, prog: 0 });
+for (let i = 1; i <= 20; i++) this.later(() => this.setState({ prog: i / 20 }), i * 120);
+this.later(() => { this.setState({ flashing: false, file: null, prog: 0, rebootN: (st.rebootN || 0) + 1, rev: Object.assign({}, rev, { [side]: LATEST }) }); this.showToast((side === 'Left' ? '左手側' : '右手側') + 'にファームウェアを書き込みました'); }, 2600);
+};
+
+// 3D keyboard geometry (same board as the Keys stage)
+const P = [];
+const stagL = [16, 16, 6, 0, 6, 10], stagR = [10, 6, 0, 6, 16, 16];
+[['Tab', 'Ctrl', 'Shift'], ['Q', 'A', 'Z'], ['W', 'S', 'X'], ['E', 'D', 'C'], ['R', 'F', 'V'], ['T', 'G', 'B']].forEach((ks, c) => ks.forEach((id, r) => P.push({ id, side: 'Left', x: -370 + c * 60, y: -60 + r * 60 + stagL[c], w: 54 })));
+[['Y', 'H', 'N'], ['U', 'J', 'M'], ['I', 'K', ','], ['O', 'L', '.'], ['P', ';', '/'], ['Bksp', "'", 'Esc']].forEach((ks, c) => ks.forEach((id, r) => P.push({ id, side: 'Right', x: 70 + c * 60, y: -60 + r * 60 + stagR[c], w: 54 })));
+[['Alt', -190, 54], ['Lower', -130, 54], ['Space', -56, 84]].forEach(([id, x, w]) => P.push({ id, side: 'Left', x, y: 142, w }));
+[['Enter', 56, 84], ['Raise', 130, 54], ['GUI', 190, 54]].forEach(([id, x, w]) => P.push({ id, side: 'Right', x, y: 142, w }));
+const PAD = { x: 250, y: -215, w: 180, h: 118 };
+const stW = st.sw || 1200, stH = st.sh || 560;
+const narrow = stW < 820;
+const fit = Math.max(0.42, Math.min(stW * 0.9 / 840, stH * 0.82 / 370));
+const winOn = !winHide && !st.winClosing;
+const wideW = Math.min(520, stW * 0.46, stW - 32);
+const sideW = Math.max(240, stW - wideW - 48);
+const sideLeft = narrow ? 50 : (stW - wideW - 32) / 2 / stW * 100;
+const sideFit = narrow ? Math.min(stW * 0.9 / 840, stH * 0.34 / 370) : Math.max(0.36, Math.min(sideW * 0.94 / 840, stH * 0.8 / 370));
+const s0 = winOn ? sideFit : fit * 0.9, left0 = winOn ? sideLeft : 50, top0 = winOn && narrow ? 20 : 52;
+let cam = { s: s0 * (connected ? 1 : 0.94), a: connected ? 40 : 52, x: 0, y: -40, left: left0, top: top0 };
+if (isFirmware) cam = { s: s0 * 1.18, a: 42, x: side === 'Left' ? -170 : 170, y: -40, left: left0, top: top0 };
+
+const order = (k) => (k.side === 'Left' ? (k.x + 400) : (k.x - 40)) / 380;
+const caps = P.map((k, i) => {
+const mine = isFirmware && k.side === side;
+const lit = mine && flashing && order(k) <= prog;
+const cls = (connected ? '' : 'ghost') + (isFirmware && !mine ? ' fdim' : '') + (lit ? ' flashk' : '');
+return {
+label: connected ? k.id : '',
+cls,
+style: 'left: ' + (k.x - k.w / 2) + 'px; top: ' + (k.y - 27) + 'px; width: ' + k.w + 'px; font-size: ' + (k.id.length > 4 ? 10 : 12) + 'px; --i: ' + i + '; --o: ' + order(k).toFixed(2),
+pick: k.side === 'Left' ? pickSide('Left') : pickSide('Right')
+};
+});
+const sidesOut = (id) => (isFirmware && side !== id ? 'fdim' : '') + (isFirmware && side === id ? ' fsel' : '');
+const pct = Math.round(prog * 100);
+
+return Object.assign(C, {
+isConnect, isFirmware, connected, notConnected: !connected,
+bigTabs: [['connect', 'Connect'], ['firmware', 'Firmware']].map(([id, label]) => ({ label, cls: section === id ? 'cur' : '', ac: section === id ? 'page' : 'false', pick: () => go(id) })),
+subTabs: isConnect ? [['kbd', 'Keyboards'], ['defs', 'Saved definitions']].map(([id, label]) => ({ label, isLink: false, isBtn: true, href: '', cls: csub === id ? 'cur' : '', ac: csub === id ? 'page' : 'false', pick: () => { if (csub !== id) this.setState({ csub: id, paneN: paneN + 1, winHide: false }); } })) : [{ label: 'Write firmware', isLink: false, isBtn: true, href: '', cls: 'cur', ac: 'page', pick: () => this.setState({ winHide: false }) }],
+subLabel: (isConnect ? 'Connect' : 'Firmware') + ' のページ',
+subAnim: 'animation: ' + (secN % 2 ? 'mx-sub-a' : 'mx-sub-b') + ' 0.55s cubic-bezier(0.2, 0.8, 0.2, 1)',
+connDot: 'width: 8px; height: 8px; border-radius: 4px; background: ' + (phase === 'busy' ? '#c08a1e' : '#8f9197'), connText: phase === 'busy' ? 'Connecting…' : 'Not connected',
+langOpen: open === 'lang', toggleLang: toggle('lang'), langLabel: (st.lang || 'ja') === 'ja' ? '日本語' : 'English',
+langs: [['ja', '日本語'], ['en', 'English']].map(([id, label]) => ({ label, on: (st.lang || 'ja') === id, style: 'font-weight: ' + ((st.lang || 'ja') === id ? 700 : 500), pick: () => this.setState({ lang: id, open: null }) })),
+acctOpen: open === 'acct', toggleAcct: toggle('acct'), signedIn: !!st.signedIn, signedOut: !st.signedIn,
+acctBtn: st.signedIn ? 'background: #3d6fd6' : '',
+signIn: () => { this.setState({ signedIn: true, open: null }); this.showToast('ログインしました'); },
+signOut: () => { this.setState({ signedIn: false, open: null }); this.showToast('ログアウトしました'); },
+
+stageCls: (phase === 'busy' ? 'powering ' : '') + (connected && st.powerN ? 'powered' : ''),
+camStyle: 'left: ' + cam.left.toFixed(2) + '%; top: ' + cam.top + '%; transform: scale(' + cam.s.toFixed(3) + ') rotateX(' + cam.a + 'deg) translate(' + (-cam.x) + 'px, ' + (-cam.y) + 'px)',
+rigCls: (connected ? '' : 'idle') + ((st.rebootN || 0) ? ' reboot-' + ((st.rebootN || 0) % 2 ? 'a' : 'b') : ''),
+halfLCls: sidesOut('Left'), halfRCls: sidesOut('Right'), halfLStyle: 'left: -416px; top: -114px; width: 410px; height: 304px; border: none; padding: 0; cursor: ' + (isFirmware && !flashing ? 'pointer' : 'default'),
+halfRStyle: 'left: 6px; top: -300px; width: 410px; height: 490px; border: none; padding: 0; cursor: ' + (isFirmware && !flashing ? 'pointer' : 'default'),
+pickLeft: pickSide('Left'), pickRight: pickSide('Right'),
+padCls: (connected ? '' : 'ghost') + (isFirmware && side !== 'Right' ? ' fdim' : ''),
+padStyle: 'left: ' + (PAD.x - PAD.w / 2) + 'px; top: ' + (PAD.y - PAD.h / 2) + 'px; width: ' + PAD.w + 'px; height: ' + PAD.h + 'px; cursor: default',
+knobs3d: [['Left', -362], ['Right', 362]].map(([sd, x]) => ({ cls: isFirmware && side !== sd ? 'fdim' : '', style: 'left: ' + (x - 26) + 'px; top: 124px; transform: translateZ(14px)' })),
+caps,
+stageRef: (el) => {
+if (!el || this._ro) return;
+this._ro = new ResizeObserver((entries) => {
+const r = entries[0].contentRect;
+const cur = this.state || {};
+if (Math.abs((cur.sw || 0) - r.width) > 4 || Math.abs((cur.sh || 0) - r.height) > 4) this.setState({ sw: Math.round(r.width), sh: Math.round(r.height) });
+});
+this._ro.observe(el);
+},
+chipStyle: 'height: 34px; border-radius: 17px; gap: 8px; font-size: 13px; font-weight: 600; color: #0e0e10; animation: ' + (secN % 2 ? 'mx-chip-a' : 'mx-chip-b') + ' 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+chipDot: 'width: 10px; height: 10px; border-radius: 5px; flex: none; transition: background-color 0.4s ease; background: ' + (connected ? '#1f8a55' : (phase === 'busy' ? '#c08a1e' : '#b5b8be')),
+chipTitle: isFirmware ? (side === 'Left' ? 'Left half' : 'Right half') : (connected ? deviceName : 'No keyboard'),
+chipSub: isFirmware ? 'r' + rev[side] + (rev[side] < LATEST ? ' → r' + LATEST + ' に更新できます' : ' · 最新') : (connected ? '接続済み・左右とも' : (phase === 'busy' ? '接続中…' : 'USB でつないでください')),
+flashChip: flashing, flashPct: (side === 'Left' ? '左手側' : '右手側') + 'に書き込み中 ' + pct + '%',
+hintText: isFirmware ? (flashing ? '書き込み中はケーブルを抜かないでください' : '本体を押すと、書き込む側を選べます') : (connected ? 'キーボードの準備ができました' : 'つなぐとキーボードが点灯します'),
+hintStyle: 'height: 32px; animation: ' + (secN % 2 ? 'mx-chip-a' : 'mx-chip-b') + ' 0.5s ease',
+reopenOn: winHide && !st.winClosing, reopenLabel: isFirmware ? 'Firmware settings' : 'Connect', reopen: () => this.setState({ winHide: false }),
+
+closeWin, winOpen: !winHide, winCls: st.winClosing ? 'out' : '',
+winStyle: st.winClosing ? '' : 'animation-name: ' + (secN % 2 ? 'mx-win' : 'mx-win2'),
+winTitle: isFirmware ? 'Write firmware' : (csub === 'defs' ? 'Saved definitions' : 'Keyboards'),
+winSub: isFirmware ? '.uf2 ファイルを左右それぞれに書き込みます。書き込み中はケーブルを抜かないでください。' : (csub === 'defs' ? 'このブラウザに保存されたキーボード定義です。' : 'Remap は WebHID でキーボードと直接通信します。'),
+winIcon: 'width: 44px; height: 44px; border-radius: 14px; flex: none; background: linear-gradient(150deg, #2f3137, #1b1c20); transition: box-shadow 0.5s ease; box-shadow: inset 0 0 0 2px ' + (connected ? '#1f8a55' : '#8f9197') + (flashing ? ', 0 0 18px rgba(122, 162, 255, 0.6)' : ''),
+paneAnim: 'animation: ' + (paneN % 2 ? 'mx-pin-a' : 'mx-pin-b') + ' 0.45s cubic-bezier(0.2, 0.8, 0.2, 1)',
+paneConnect: isConnect && csub === 'kbd', paneDefs: isConnect && csub === 'defs', paneFw: isFirmware,
+phaseIdle: phase === 'idle', phasePick: phase === 'pick', phaseBusy: phase === 'busy', phaseDone: phase === 'done',
+openPicker: () => this.setState({ phase: 'pick', dev: null, section: 'connect', csub: 'kbd', winHide: false, open: null, paneN: paneN + 1, secN: isConnect ? secN : secN + 1 }),
+cancelPick: () => this.setState({ phase: 'idle', paneN: paneN + 1 }),
+devices: DEVICES.map((d) => ({
+name: d.name, note: d.note, on: dev === d.id, pick: () => this.setState({ dev: d.id }),
+style: 'display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 14px 16px; border-radius: 16px; cursor: pointer; background: ' + (dev === d.id ? '#ffffff' : 'rgba(255, 255, 255, 0.6)') + '; border: ' + (dev === d.id ? '1.5px solid #0e0e10' : '1px solid #e1e3e8'),
+radio: 'width: 18px; height: 18px; border-radius: 9px; box-sizing: border-box; flex: none; transition: border-width 0.2s ease; border: ' + (dev === d.id ? '6px solid #0e0e10' : '1.5px solid #b5b8be')
+})),
+noDevice: !dev, connect, deviceName,
+connOff: phase === 'busy', connCls: phase === 'busy' ? 'idle' : '',
+toFirmware: () => go('firmware'),
+defText: st.def ? st.def + ' を読み込み済み' : 'Import .json',
+noDefs: !(st.defs || [1]).length,
+defs: (st.defs || [{ name: 'Matrix Split 42', meta: 'FEED:0000 · matrix-split42.json' }]).map((d, i, arr) => ({ name: d.name, meta: d.meta, remove: () => { this.setState({ defs: arr.filter((x, j) => j !== i) }); this.showToast(d.name + ' の定義を削除しました'); } })),
+onDef: (e) => { const f = e.target.files && e.target.files[0]; if (f) { this.setState({ def: f.name, defs: (st.defs || [{ name: 'Matrix Split 42', meta: 'FEED:0000 · matrix-split42.json' }]).concat([{ name: f.name.replace(/\.json$/, ''), meta: f.name }]) }); this.showToast(f.name + ' を読み込みました'); } },
+
+sides: [['Left', 'Left half'], ['Right', 'Right half']].map(([id, label]) => ({ label, on: side === id, cls: side === id ? 'on' : '', off: flashing, pick: pickSide(id) })),
+fileLabel: file || '.uf2 ファイルを選択',
+fileBox: 'position: relative; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 8px 0 16px; border-radius: 16px; font-size: 14px; cursor: pointer; flex: none; transition: background-color 0.3s ease; ' + (file ? 'background: #ffffff; border: 1px solid #e1e3e8; color: #0e0e10' : 'background: rgba(255, 255, 255, 0.6); border: 1.5px dashed #c5c8ce; color: #4a4d54'),
+onFile: (e) => { const f = e.target.files && e.target.files[0]; if (f) this.setState({ file: f.name }); },
+flashing,
+barStyle: 'height: 100%; border-radius: 4px; background: #0e0e10; transition: width 0.12s linear; width: ' + pct + '%',
+versions: [{ k: 'Left half', v: 'r' + rev.Left, style: 'font-size: 15px; color: ' + (rev.Left < LATEST ? '#9a5310' : '#1f8a55') }, { k: 'Right half', v: 'r' + rev.Right, style: 'font-size: 15px; color: ' + (rev.Right < LATEST ? '#9a5310' : '#1f8a55') }, { k: 'Latest', v: 'r' + LATEST, style: 'font-size: 15px' }],
+fwNote: rev.Left < LATEST || rev.Right < LATEST || rev.Left !== rev.Right,
+fwNoteText: rev.Left !== rev.Right ? '左右のファームウェアが一致していません。もう片方にも同じファームウェアを書き込んでください。' : '最新の Matrix 対応版より古いため、一部の設定が反映されない可能性があります。',
+fwNoteStyle: 'font-size: 12px; padding: 8px 12px; border-radius: 12px; flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; ' + (rev.Left !== rev.Right ? 'background: #fbeae7; color: #8a2f24' : 'background: #fff4e0; color: #6a4a12'),
+flash, pOff: !file || flashing, pCls: !file && !flashing ? 'idle' : '',
+pLabel: flashing ? 'Flashing…' : 'Flash',
+statusText: isFirmware ? (flashing ? (side === 'Left' ? '左手側' : '右手側') + 'に書き込み中… ' + pct + '%' : (file ? file + ' を選択中' : '.uf2 ファイルを選んでください')) : (connected ? deviceName + ' に接続済み' : (phase === 'busy' ? '接続中…' : 'キーボード未接続')),
+statusDot: 'width: 8px; height: 8px; border-radius: 4px; transition: background-color 0.3s ease; background: ' + (isFirmware ? (flashing ? '#c08a1e' : (file ? '#3d6fd6' : '#8f9197')) : (connected ? '#1f8a55' : (phase === 'busy' ? '#c08a1e' : '#8f9197')))
+});
+}
+}
+</script>
+</body>
+</html>
