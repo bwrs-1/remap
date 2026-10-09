@@ -37,36 +37,28 @@ $space-s: 4px;
 $space-xs: 2px;
 
 // Configure (editor) screen design tokens.
-// Values follow the reference editor (Conductor Studio 2.0): a light,
-// near-monochrome neutral palette (shadcn-style oklch tokens converted to hex),
-// Inter for UI text and JetBrains Mono for codes/numbers, 12px card radius.
-// Scoped to the Configure domain only so other domains (Catalog, Workbench,
-// Top, etc.) keep their existing indigo theme.
-$cfg-font:
-  'Inter',
-  -apple-system,
-  BlinkMacSystemFont,
-  system-ui,
-  sans-serif;
-$cfg-font-mono: 'JetBrains Mono', ui-monospace, monospace;
-$cfg-canvas-bg: #f7f7f8; // --background: oklch(97.5% .002 260)
-$cfg-sidebar-bg: #f2f2f3; // --sidebar: oklch(96% .002 260)
-$cfg-header-bg: #ffffff;
-$cfg-header-bg-raised: #ececee; // --muted: oklch(94% .003 260)
-$cfg-header-text: #121214; // --foreground: oklch(15% .005 260)
-$cfg-header-text-dim: #6b6c70; // --muted-foreground: oklch(52% .005 260)
-$cfg-header-border: #e2e2e4; // --border: oklch(90% .003 260)
-$cfg-accent: #333438; // --primary: oklch(30% .005 260)
-$cfg-accent-dark: #121214;
-$cfg-accent-text: #ffffff; // --primary-foreground
-$cfg-muted: #ececee;
-$cfg-panel-bg: #ffffff;
-$cfg-panel-border: #e2e2e4;
-$cfg-text: #121214;
-$cfg-text-dim: #6b6c70;
-$cfg-radius-s: 6px;
-$cfg-radius-m: 8px;
-$cfg-radius-l: 12px; // --radius: .75rem
+// The values live in src/theme/tokens.ts and reach the page as --mx-* custom
+// properties; these variables only point to them. Do not write colors here.
+$cfg-font: var(--mx-font);
+$cfg-font-mono: var(--mx-font-mono);
+$cfg-canvas-bg: var(--mx-surface);
+$cfg-sidebar-bg: var(--mx-panel);
+$cfg-header-bg: var(--mx-header);
+$cfg-header-bg-raised: var(--mx-field);
+$cfg-header-text: var(--mx-text);
+$cfg-header-text-dim: var(--mx-text-2);
+$cfg-header-border: var(--mx-border);
+$cfg-accent: var(--mx-ink);
+$cfg-accent-dark: var(--mx-ink-strong);
+$cfg-accent-text: var(--mx-on-ink);
+$cfg-muted: var(--mx-field);
+$cfg-panel-bg: var(--mx-card);
+$cfg-panel-border: var(--mx-border);
+$cfg-text: var(--mx-text);
+$cfg-text-dim: var(--mx-text-2);
+$cfg-radius-s: var(--mx-radius-s);
+$cfg-radius-m: var(--mx-radius-m);
+$cfg-radius-l: var(--mx-radius-l);
 
 // media query
 $breakpoints: (
