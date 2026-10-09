@@ -855,5 +855,11 @@
   "The keymap differs from the one saved before writing firmware ({{date}}) in {{count}} keys. Writing the firmware may have reset it.": "The keymap differs from the one saved before writing firmware ({{date}}) in {{count}} keys. Writing the firmware may have reset it.",
   "Load the keymap from before": "Load the keymap from before",
   "Keep the current keymap": "Keep the current keymap",
-  "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves.": "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves."
+  "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves.": "The current keymap has been saved in this browser. Matrix firmware r21 and later keep the keymap when it is updated; with older firmware the keymap is reset, and Matrix offers to load the saved one after the keyboard reconnects. For a split keyboard, write both halves.",
+  "Screens": "Screens",
+  "Back to the classic layout": "Back to the classic layout",
+  "Keyboard information": "Keyboard information",
+  "Writing...": "Writing...",
+  "Write to keyboard": "Write to keyboard",
+  "Try the new layout": "Try the new layout"
 }
