@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { t } from 'i18next';
 import { PointingSettingsMode } from '../pointing/PointingSettings';
 
@@ -20,6 +20,30 @@ export const EDITOR_VIEWS: ConfigureView[] = [
   'knobs',
   'leds',
 ];
+
+// The screen shown, shared by both layouts so that any part of the editor
+// can open one (the LED chip of a layer, the touchpad on the keyboard).
+let currentView: ConfigureView = 'keymap';
+const viewListeners = new Set<() => void>();
+
+export function getEditorView(): ConfigureView {
+  return currentView;
+}
+
+export function openEditorView(view: ConfigureView): void {
+  if (!EDITOR_VIEWS.includes(view)) return;
+  currentView = view;
+  viewListeners.forEach((l) => l());
+}
+
+export function subscribeEditorView(listener: () => void): () => void {
+  viewListeners.add(listener);
+  return () => viewListeners.delete(listener);
+}
+
+export function useEditorView(): ConfigureView {
+  return useSyncExternalStore(subscribeEditorView, getEditorView);
+}
 
 export function editorViewLabel(view: ConfigureView): string {
   const labels: Record<ConfigureView, string> = {

@@ -1,30 +1,14 @@
 /* eslint-disable no-undef */
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { t } from 'i18next';
 import { Menu, MenuItem } from '@mui/material';
 import './EditorShell.scss';
 import './KeyConfigTheme.scss';
 import './SettingsTheme.scss';
-import { RootState } from '../../../store/state';
-import {
-  AppActionsThunk,
-  HeaderActions as HeaderStateActions,
-  KeymapActions,
-} from '../../../actions/actions';
-import { hidActionsThunk } from '../../../actions/hid.action';
 import { IKeyboard } from '../../../services/hid/Hid';
 import { hexadecimal } from '../../../utils/StringUtils';
 import { APPLICATION_NAME } from '../../../utils/Brand';
 import { setUiLayout } from '../../../services/ui/UiLayout';
-import {
-  layerColor,
-  layerName,
-  useLayerMeta,
-} from '../../../services/layers/LayerMeta';
-import { OPEN_TOUCHPAD_SETTINGS_EVENT } from '../../../services/pointing/TouchpadLayout';
-import { OPEN_EDITOR_VIEW_EVENT } from '../../../services/matrix/MatrixDeviceData';
-import { SafetyIssue } from '../../../services/keymap/KeymapSafety';
 import {
   ConfigureView,
   EDITOR_VIEWS,
@@ -32,8 +16,15 @@ import {
   editorViewLabel,
   KEYBOARD_SCALES,
   loadKeyboardScale,
+  openEditorView,
   saveKeyboardScale,
+  useEditorView,
 } from '../remap/EditorViews';
+import { useAccount } from '../hooks/useAccount';
+import { useKeyConfigDisplay } from '../hooks/useKeyConfigDisplay';
+import { useKeyboardConnection } from '../hooks/useKeyboardConnection';
+import { useLayerSelection } from '../hooks/useLayerSelection';
+import { useWriteToKeyboard } from '../hooks/useWriteToKeyboard';
 import { Desc, EditMode, KnobTab, SplitBanner } from '../remap/Remap';
 import EditorSidebar from '../sidebar/EditorSidebar.container';
 import KeyInspector from '../inspector/KeyInspector.container';
@@ -42,10 +33,7 @@ import Combos from '../combos/Combos';
 import PointingSettings from '../pointing/PointingSettings.container';
 import HeaderActions from '../header/HeaderActions';
 import InfoDialog from '../info/InfoDialog.container';
-import KeymapSafetyDialog, {
-  checkKeymapBeforeFlash,
-  hasBlockingIssues,
-} from '../safety/KeymapSafetyDialog';
+import KeymapSafetyDialog from '../safety/KeymapSafetyDialog';
 import { FlashBackupBanner } from '../firmware/FlashBackupBanner';
 import { firmwareFlasherStore } from '../firmware/firmwareFlasherStore';
 import { SplitFirmwareLine } from '../split/SplitFirmwareStatus';
@@ -56,36 +44,23 @@ import LicenseLink from '../../common/license/LicenseLink';
 // side panel with the keyboard and its layers, and the selected screen.
 // Shown instead of the header and Remap when the new layout is chosen.
 export default function EditorShell() {
-  const [view, setView] = useState<ConfigureView>('keymap');
-  const dispatch = useDispatch();
-  const hoverKey = useSelector(
-    (s: RootState) => s.configure.keycodeKey.hoverKey
-  );
+  // Any part of the editor may open a screen (see openEditorView).
+  const view = useEditorView();
+  const layers = useLayerSelection();
+  const { hoverKey } = useKeyConfigDisplay();
 
-  // Other parts of the editor open a screen with a window event.
-  useEffect(() => {
-    const openTouchpad = () => setView('touchpad');
-    const openView = (e: Event) => {
-      const next = (e as CustomEvent).detail as ConfigureView;
-      if (EDITOR_VIEWS.includes(next)) setView(next);
-    };
-    window.addEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, openTouchpad);
-    window.addEventListener(OPEN_EDITOR_VIEW_EVENT, openView);
-    return () => {
-      window.removeEventListener(OPEN_TOUCHPAD_SETTINGS_EVENT, openTouchpad);
-      window.removeEventListener(OPEN_EDITOR_VIEW_EVENT, openView);
-    };
-  }, []);
+  // An opened keyboard starts on Key Config.
+  useEffect(() => openEditorView('keymap'), []);
 
-  // Mouse Layer's "edit this layer" (same as the classic layout).
+  // Mouse Layer's "edit this layer".
   const editLayer = (layer: number) => {
-    dispatch(KeymapActions.updateSelectedLayer(layer));
-    setView('keymap');
+    layers.select(layer);
+    openEditorView('keymap');
   };
 
   return (
     <div className="mx-shell">
-      <ShellRail view={view} onView={setView} />
+      <ShellRail view={view} onView={openEditorView} />
       <ShellSidePanel />
       <main className="mx-shell-main">
         <ShellTopBar view={view} />
@@ -115,7 +90,7 @@ function ShellRail(props: {
   // eslint-disable-next-line no-unused-vars
   onView: (view: ConfigureView) => void;
 }) {
-  const keyboard = useSelector((s: RootState) => s.entities.keyboard);
+  const { keyboard } = useKeyboardConnection();
   return (
     <div className="mx-shell-rail-case">
       <nav className="mx-shell-rail" aria-label={t('Screens')}>
@@ -153,7 +128,7 @@ function ShellRail(props: {
 }
 
 function ShellSidePanel() {
-  const keyboard = useSelector((s: RootState) => s.entities.keyboard);
+  const { keyboard } = useKeyboardConnection();
   return (
     <aside className="mx-shell-side" aria-label={t('Keyboard')}>
       <DeviceSwitcher />
@@ -179,22 +154,20 @@ function ShellSidePanel() {
 
 // Name of the open keyboard; opens the menu to switch to another one.
 function DeviceSwitcher() {
-  const dispatch = useDispatch<any>();
-  const keyboard = useSelector((s: RootState) => s.entities.keyboard);
-  const keyboards = useSelector((s: RootState) => s.entities.keyboards);
+  const connection = useKeyboardConnection();
+  const { keyboard, keyboards, info } = connection;
   const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
-  if (!keyboard) return null;
-  const info = keyboard.getInformation();
+  if (!keyboard || !info) return null;
 
   const choose = (kbd: IKeyboard) => {
     setOpen(false);
-    dispatch(hidActionsThunk.connectKeyboard(kbd));
+    connection.open(kbd);
   };
   const another = () => {
     setOpen(false);
-    dispatch(hidActionsThunk.connectAnotherKeyboard());
+    connection.openAnother();
   };
 
   return (
@@ -247,13 +220,8 @@ function DeviceSwitcher() {
 }
 
 function ShellTopBar(props: { view: ConfigureView }) {
-  const dispatch = useDispatch<any>();
-  const keyboard = useSelector((s: RootState) => s.entities.keyboard);
-  const selectedLayer = useSelector(
-    (s: RootState) => s.configure.keymap.selectedLayer
-  );
-  const auth = useSelector((s: RootState) => s.auth.instance);
-  const meta = useLayerMeta(keyboard?.getInformation());
+  const layer = useLayerSelection();
+  const account = useAccount();
   return (
     <header className="mx-shell-topbar">
       <div className="mx-shell-title">
@@ -262,18 +230,16 @@ function ShellTopBar(props: { view: ConfigureView }) {
           <span className="mx-shell-layer-pill">
             <span
               className="mx-shell-layer-dot"
-              style={{ backgroundColor: layerColor(meta, selectedLayer) }}
+              style={{ backgroundColor: layer.color }}
               aria-hidden="true"
             />
-            {layerName(meta, selectedLayer)} · L{selectedLayer}
+            {layer.name} · L{layer.selected}
           </span>
         )}
       </div>
       <div className="mx-shell-topbar-actions">
         <HeaderActions />
-        {auth && (
-          <ProfileIcon logout={() => dispatch(AppActionsThunk.logout())} />
-        )}
+        {account.available && <ProfileIcon logout={account.logout} />}
         <ApplyButton />
       </div>
     </header>
@@ -283,46 +249,18 @@ function ShellTopBar(props: { view: ConfigureView }) {
 // Writes the pending changes to the keyboard ("Flash" in the classic
 // layout), after the same keymap check.
 function ApplyButton() {
-  const dispatch = useDispatch<any>();
-  const keyboard = useSelector((s: RootState) => s.entities.keyboard);
-  const keymaps = useSelector((s: RootState) => s.entities.device.keymaps);
-  const remaps = useSelector((s: RootState) => s.app.remaps);
-  const encoderRemaps = useSelector((s: RootState) => s.app.encodersRemaps);
-  const flashing = useSelector((s: RootState) => s.configure.header.flashing);
-  const [issues, setIssues] = useState<SafetyIssue[] | null>(null);
-
-  const pending =
-    remaps.reduce((n, r) => n + Object.keys(r || {}).length, 0) +
-    encoderRemaps.reduce((n, r) => n + Object.keys(r || {}).length, 0);
-
-  const flash = () => {
-    dispatch(HeaderStateActions.updateFlashing(true));
-    dispatch(hidActionsThunk.flash());
-  };
-  const onClick = async () => {
-    if (pending === 0 || flashing) return;
-    let found: SafetyIssue[] = [];
-    try {
-      found = await checkKeymapBeforeFlash(keymaps, remaps, keyboard || null);
-    } catch (e) {
-      console.warn('Keymap check failed; writing anyway.', e);
-    }
-    if (hasBlockingIssues(found)) {
-      setIssues(found);
-      return;
-    }
-    flash();
-  };
+  const { pending, writing, issues, write, writeAnyway, dismissIssues } =
+    useWriteToKeyboard();
 
   return (
     <React.Fragment>
       <button
         type="button"
         className="mx-shell-apply"
-        disabled={pending === 0 || flashing}
-        onClick={onClick}
+        disabled={pending === 0 || writing}
+        onClick={write}
       >
-        <span>{flashing ? t('Writing...') : t('Write to keyboard')}</span>
+        <span>{writing ? t('Writing...') : t('Write to keyboard')}</span>
         {pending > 0 && (
           <span
             className="mx-shell-apply-count"
@@ -335,19 +273,15 @@ function ApplyButton() {
       <KeymapSafetyDialog
         open={issues !== null}
         issues={issues || []}
-        onCancel={() => setIssues(null)}
-        onProceed={() => {
-          setIssues(null);
-          flash();
-        }}
+        onCancel={dismissIssues}
+        onProceed={writeAnyway}
       />
     </React.Fragment>
   );
 }
 
 function KeyConfigView() {
-  const keyboardWidth = useSelector((s: RootState) => s.app.keyboardWidth);
-  const macroKey = useSelector((s: RootState) => s.configure.macroEditor.key);
+  const { keyboardWidth, macroKey } = useKeyConfigDisplay();
   const [scale, setScale] = useState(loadKeyboardScale);
   const areaRef = useRef<HTMLDivElement>(null);
   const zoom = useKeyboardZoom(areaRef, keyboardWidth, scale);
