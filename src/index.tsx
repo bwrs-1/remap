@@ -9,15 +9,16 @@ import reducers from './store/reducers';
 import reportWebVitals from './reportWebVitals';
 import OGP from './components/common/ogp/OGP.container';
 import { HelmetProvider } from 'react-helmet-async';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import { createRoot } from 'react-dom/client';
+import { muiTheme } from './theme/muiTheme';
+import MxTokenStyles from './theme/MxTokenStyles';
 
 const store = createStore(
   reducers,
   composeWithDevTools(applyMiddleware(thunk))
 );
 
-const theme = createTheme({});
 const container = document.getElementById('root');
 const root = createRoot(container!);
 
@@ -26,7 +27,8 @@ root.render(
     <React.StrictMode>
       <HelmetProvider>
         <OGP />
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={muiTheme}>
+          <MxTokenStyles />
           <App />
         </ThemeProvider>
       </HelmetProvider>

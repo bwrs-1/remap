@@ -20,9 +20,9 @@ import KeyEventCapture from '../keyeventcapture/KeyEventCapture.container';
 import { ModsComposition } from '../../../services/hid/compositions/ModsComposition';
 import { IKeySwitchOperation } from '../../../store/state';
 import { KEYBOARD_LAYOUT_PADDING, KeyboardView } from './KeyboardView';
-import { Layer } from './Layer';
 import { LabelLang } from './LabelLang';
 import { t } from 'i18next';
+import { keyboardHasTouchpad } from '../../../services/pointing/TouchpadLayout';
 
 export type LayoutOption = {
   option: number;
@@ -258,8 +258,8 @@ export default class Keymap extends React.Component<
     const selectedLayer = this.props.selectedLayer!;
     const deviceKeymaps = this.props.keymaps![selectedLayer];
     const deviceEncodersKeymaps = this.props.encodersKeymaps![selectedLayer];
-    const remaps = this.props.remaps![selectedLayer];
-    const encodersRemap = this.props.encodersRemaps![selectedLayer];
+    const remaps = this.props.remaps![selectedLayer] || {};
+    const encodersRemap = this.props.encodersRemaps![selectedLayer] || {};
     const keyboardViewContent = this.state.keyboardModel.getKeymap(
       this.props.selectedKeyboardOptions!
     );
@@ -312,14 +312,6 @@ export default class Keymap extends React.Component<
         </div>
         <div className="keyboards-wrapper">
           <div className="spacer"></div>
-          <Layer
-            layerCount={this.props.layerCount!}
-            selectedLayer={this.props.selectedLayer!}
-            remaps={this.props.remaps!}
-            onClickLayer={(layer) => {
-              this.props.onClickLayerNumber!(layer);
-            }}
-          />
 
           <KeyEventCapture
             onKeyDown={this.props.onKeyDown!}
@@ -348,6 +340,12 @@ export default class Keymap extends React.Component<
                 this.props.setKeyboardSize!(width, height);
               }}
               isCustomKeyOpen={Boolean(this.state.selectedPos)}
+              touchpad={keyboardHasTouchpad(this.props.keyboardDefinition)}
+              baseLayerKeymaps={{
+                ...(this.props.keymaps![0] || {}),
+                ...(this.props.remaps![0] || {}),
+              }}
+              labelLang={this.props.labelLang!}
               onClickKeycap={(pos, key, keySwitchEventType, encoderId, ref) => {
                 if (this.props.testMatrix) {
                   this.onClickKeycapForTestMatrix(pos);

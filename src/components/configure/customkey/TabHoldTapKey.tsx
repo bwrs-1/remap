@@ -12,6 +12,7 @@ import { LayerTapComposition } from '../../../services/hid/compositions/LayerTap
 import { SwapHandsComposition } from '../../../services/hid/compositions/SwapHandsComposition';
 import { ModTapComposition } from '../../../services/hid/compositions/ModTapComposition';
 import { t } from 'i18next';
+import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
 
 type OwnProps = {
   holdKey: IKeymap | null;
@@ -135,7 +136,9 @@ export default class TabHoldTapKey extends React.Component<OwnProps, OwnState> {
             this.onChangeHoldKey(opt);
           }}
         />
-        <div className="holdkey-desc">{this.props.holdKey?.desc || ''}</div>
+        <div className="holdkey-desc">
+          {localizedKeycodeDesc(this.props.holdKey?.desc || '')}
+        </div>
 
         <AutocompleteKeys
           disabled={this.props.holdKey === null}

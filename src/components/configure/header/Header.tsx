@@ -7,7 +7,8 @@ import { ArrowDropDown, Link } from '@mui/icons-material';
 import ConnectionModal from '../modals/connection/ConnectionModal';
 import { HeaderActionsType, HeaderStateType } from './Header.container';
 import { IKeyboard, IKeymap } from '../../../services/hid/Hid';
-import { Logo } from '../../common/logo/Logo';
+import { APPLICATION_NAME } from '../../../utils/Brand';
+import HeaderActions from './HeaderActions';
 import InfoDialog from '../info/InfoDialog.container';
 import { InfoIcon } from '../../common/icons/InfoIcon';
 import {
@@ -16,11 +17,17 @@ import {
 } from '../../../services/storage/Storage';
 import ProfileIcon from '../../common/auth/ProfileIcon.container';
 import { t } from 'i18next';
+import KeymapSafetyDialog, {
+  checkKeymapBeforeFlash,
+  hasBlockingIssues,
+} from '../safety/KeymapSafetyDialog';
+import { SafetyIssue } from '../../../services/keymap/KeymapSafety';
 
 type HeaderState = {
   connectionStateEl: any;
-  logoAnimation: boolean;
   openInfoDialog: boolean;
+  // Keymap check shown before writing (problems or warnings found).
+  safetyIssues: SafetyIssue[] | null;
 };
 
 type OwnProps = {};
@@ -37,8 +44,8 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
     super(props);
     this.state = {
       connectionStateEl: null,
-      logoAnimation: false,
       openInfoDialog: false,
+      safetyIssues: null,
     };
     this.flashButtonRef = React.createRef<HTMLButtonElement>();
     this.deviceMenuRef = React.createRef<HTMLDivElement>();
@@ -76,10 +83,23 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
     this.props.onClickAnotherKeyboard!();
   }
 
-  private onClickFlash() {
-    if (this.hasKeysToFlash) {
-      this.props.onClickFlashButton!();
+  private async onClickFlash() {
+    if (!this.hasKeysToFlash) return;
+    let issues: SafetyIssue[] = [];
+    try {
+      issues = await checkKeymapBeforeFlash(
+        this.props.keymaps!,
+        this.props.remaps!,
+        this.props.keyboard || null
+      );
+    } catch (e) {
+      console.warn('Keymap check failed; writing anyway.', e);
     }
+    if (hasBlockingIssues(issues)) {
+      this.setState({ safetyIssues: issues });
+      return;
+    }
+    this.props.onClickFlashButton!();
   }
 
   private onClickKeyboardMenuItem(kbd: IKeyboard) {
@@ -93,14 +113,6 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
 
   private onCloseInfoDialog() {
     this.setState({ openInfoDialog: false });
-  }
-
-  private endLogoAnim() {
-    this.setState({ logoAnimation: false });
-  }
-
-  private startLogoAnim() {
-    this.setState({ logoAnimation: true });
   }
 
   render() {
@@ -134,6 +146,15 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
     return (
       <React.Fragment>
         <header className="header">
+          <div className="header-logo">
+            <a href="/">
+              <span className="brand-mark" aria-hidden="true">
+                M
+              </span>
+              <span className="brand-name">{APPLICATION_NAME}</span>
+            </a>
+          </div>
+
           <div
             ref={this.deviceMenuRef}
             className={[
@@ -216,23 +237,16 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
               keyboardDefinitionDocument={this.props.keyboardDefinitionDocument}
               onClick={this.onClickShowInfoDialog.bind(this)}
             />
-          </div>
-
-          <div className="header-logo">
-            <a
-              href="/"
-              onMouseEnter={this.startLogoAnim.bind(this)}
-              onMouseLeave={this.endLogoAnim.bind(this)}
-            >
-              <Logo
-                width={100}
-                color="#f5f5f6"
-                animation={this.state.logoAnimation}
-              />
-            </a>
+            {this.props.keyboard && (
+              <span className="connection-pill">
+                <span className="connection-dot" aria-hidden="true"></span>
+                {t('Connected')}
+              </span>
+            )}
           </div>
 
           <div className="header-right">
+            <HeaderActions />
             <div
               className={['buttons', this.props.keyboard ? '' : 'hidden'].join(
                 ' '
@@ -242,17 +256,29 @@ export default class Header extends React.Component<HeaderProps, HeaderState> {
                 ref={this.flashButtonRef}
                 disabled={flashBtnState == 'disable'}
                 onClick={this.onClickFlash.bind(this)}
-                className={['flash-button', flashBtnState].join(' ')}
+                className={['header-flash-button', flashBtnState].join(' ')}
               >
                 {t('Flash')}
               </button>
             </div>
-            <ProfileIcon logout={() => this.props.logout!()} />
+            {/* Sign-in needs Firebase, which this build may not have. */}
+            {this.props.auth && (
+              <ProfileIcon logout={() => this.props.logout!()} />
+            )}
           </div>
           {(this.props.draggingKey || this.props.testMatrix) && (
             <div className="dragMask header-height"></div>
           )}
           <ConnectionModal open={false} onClose={() => {}} />
+          <KeymapSafetyDialog
+            open={this.state.safetyIssues !== null}
+            issues={this.state.safetyIssues || []}
+            onCancel={() => this.setState({ safetyIssues: null })}
+            onProceed={() => {
+              this.setState({ safetyIssues: null });
+              this.props.onClickFlashButton!();
+            }}
+          />
         </header>
         <InfoDialog
           open={this.state.openInfoDialog}
@@ -279,7 +305,7 @@ function InfoDialogButton(props: IInfoDialogButton) {
       : 'secondary'
     : 'primary';
   return (
-    <IconButton onClick={props.onClick}>
+    <IconButton className="header-info-button" onClick={props.onClick}>
       <InfoIcon color={color} />
     </IconButton>
   );

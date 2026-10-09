@@ -1,0 +1,3118 @@
+From b195997dab411d6ef57599bc19b8262c80551c8a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 7 Oct 2026 14:40:51 +0000
+Subject: [PATCH] Add Matrix editor support and fix the build on the multitouch
+ QMK fork
+
+- matrix_pointing.c/.h: answer the Matrix editor on the VIA custom
+  channel, keep the settings in the user EEPROM datablock and apply them
+  (CPI, tap-to-click, tap term, rotation / inversion, acceleration,
+  scroll, auto mouse layer) and reboot into BOOTSEL on request.
+- config.h: DYNAMIC_KEYMAP_LAYER_COUNT 5 so the _MOUSE layer (layer 4) is
+  part of the VIA keymap (the fork refuses to build with the default 4);
+  wire DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT to the Matrix tap term.
+- Build fixes for george-norton/qmk_firmware multitouch_experiment:
+  use the fork's maxtouch driver (DIGITIZER_DRIVER = maxtouch) instead of
+  the stale local copy, no comment after POINTING_DEVICE_DRIVER (the fork
+  compares it without stripping whitespace), non-empty "url" in
+  keyboard.json, current RGB / mouse keycode names.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ keyboards/corne_procyon36/config.h            |   86 +-
+ keyboards/corne_procyon36/digitizer_user.c    |   99 +-
+ keyboards/corne_procyon36/keyboard.json       |    2 +-
+ .../corne_procyon36/keymaps/default/keymap.c  |   26 +-
+ keyboards/corne_procyon36/matrix_pointing.c   | 2644 +++++++++++++++++
+ keyboards/corne_procyon36/matrix_pointing.h   |   94 +
+ keyboards/corne_procyon36/rules.mk            |   11 +-
+ 7 files changed, 2862 insertions(+), 100 deletions(-)
+ create mode 100644 keyboards/corne_procyon36/matrix_pointing.c
+ create mode 100644 keyboards/corne_procyon36/matrix_pointing.h
+
+diff --git a/keyboards/corne_procyon36/config.h b/keyboards/corne_procyon36/config.h
+index e074887..26c1f5f 100644
+--- a/keyboards/corne_procyon36/config.h
++++ b/keyboards/corne_procyon36/config.h
+@@ -69,7 +69,27 @@
+ /* トラックパッド（デジタイザー）の設定 */
+ #define DIGITIZER_MOTION_PIN GP11             // デジタイザーの動作検出ピン
+ #define DIGITIZER_MOTION_PIN_ACTIVE_LOW yes   // 動作検出ピンはアクティブロー
+-#define PROCYON_42_50                         // Procyon 42x50mm トラックパッド用設定
++/* Procyon 42x50mm トラックパッド。フォーク版の drivers/sensors/procyon.h（PROCYON_42_50）と同じ値を
++ * ここで定義する（procyon.h は上書きできない書き方のため）。違いは移動のヒステリシスだけ：
++ * 16（約 0.16mm ごとにしか位置が更新されず、ゆっくり動かすとカーソルが数ピクセルずつ飛ぶ）→ 6 */
++#define MXT_GAIN 10
++#define MXT_TOUCH_THRESHOLD 20
++#define MXT_TOUCH_HYST 10
++#define MXT_INTERNAL_TOUCH_THRESHOLD 10
++#define MXT_INTERNAL_TOUCH_HYST 5
++#define MXT_T56_SHIELDLESS_ENABLE
++#define MXT_RETRANSMISSION_COMPENSATION_ENABLE 0
++#define MXT_X_PITCH 38
++#define MXT_Y_PITCH 38
++#define MXT_ACTIVE_ACQUISITION_INTERVAL 255   // 動作中は連続読み取り（procyon.h と同じ。約 300Hz）
++#define MXT_CONFTHR 5
++#define MXT_MOVE_HYSTERESIS_NEXT 6
++#define MXT_T100_AMPL_COEFF 16
++#define MXT_SENSOR_WIDTH_MM 42
++#define MXT_SENSOR_HEIGHT_MM 50
++#define MXT_MATRIX_X_SIZE 10
++#define MXT_MATRIX_Y_SIZE 12
++#define MXT_MESALLOW 3
+ 
+ /* ============================================================================
+  * その他の設定
+@@ -81,3 +101,67 @@
+  * Auto Mouse Layer 設定
+  * ============================================================================ */
+ #define POINTING_DEVICE_AUTO_MOUSE_ENABLE
++#define AUTO_MOUSE_DELAY 0                    // キー入力後の待機は Matrix の設定値で制御
++
++/* ============================================================================
++ * VIA / Matrix 設定
++ * ============================================================================ */
++/* VIA の動的キーマップのレイヤー数。既定の 4 だと _MOUSE（レイヤー4）のキーがすべて KC_NO になり、
++ * オートマウス中に全キーが効かなくなるため 5 以上が必要。Matrix からレイヤーを追加できるよう 8 にする
++ * （6〜8 番目は透過キーで初期化）。レイヤーの LED 色とコンボのレイヤー指定も 8 レイヤーまで。 */
++#define DYNAMIC_KEYMAP_LAYER_COUNT 8
++
++/* Matrix エディタからのタッチパッド/マウスレイヤー設定（matrix_pointing.c） */
++#define EECONFIG_USER_DATA_SIZE 384              // 設定の保存領域（設定 64 + コンボ 16 個 × 16 + 拡張 64）
++#define EECONFIG_USER_DATA_VERSION 320           // 領域を広げても保存済みの設定・コンボを消さない（旧サイズのまま）
++#define MATRIX_POINTING_EXT_EEPROM_OFFSET 320    // 拡張（タッチパッドの縁スライダー・ノブの押し回し）の保存位置
++#define MATRIX_POINTING_EDGE_ZONES               // タッチパッドの縁スライダー・四隅タップ
++#define MATRIX_POINTING_KNOB_KEYS { {3, 2}, {7, 3} } // ノブの押し込みスイッチ {行, 列}（左 e0 / 右 e1）
++#define MATRIX_POINTING_DEFAULT_AM_LAYER 4       // オートマウスの初期レイヤー = _MOUSE
++#define MATRIX_POINTING_DEFAULT_ACCELERATION 0   // 既存の操作感を保つため加速は初期オフ
++
++/* マルチタッチ版 QMK（george-norton/qmk_firmware multitouch_experiment）の digitizer ドライバ向け */
++/* カーソル速度はソフトウェアで調整する（ドライバの CPI を変えるとスワイプ・タップの判定距離も変わるため固定）。
++ * センサーは 100 カウント/mm = 2540 CPI（ドライバ 1200 = 等倍）。 */
++#define MATRIX_POINTING_NATIVE_CPI 2540
++#define MATRIX_POINTING_DRIVER_CPI 1200
++#define MATRIX_POINTING_CPI_MIN 100
++#define MATRIX_POINTING_CPI_MAX 3000
++#define MATRIX_POINTING_DEFAULT_CPI 600
++/* 2 本指スクロール：フォークは指 1mm（100 カウント）でホイール約 10 回分を送るため、Matrix の
++ * 「スクロール速度」全体を 1/30 にする（標準設定 8 で約 3mm ごとに 1 回分） */
++#define MATRIX_POINTING_SCROLL_SCALE 30
++
++/* 高解像度スクロール（1/120 目盛り）。フォーク本体のままだとパソコンからの有効化要求（Resolution
++ * Multiplier の Feature レポート）を受け付けず、細かい単位をそのまま 1 目盛りとして扱われて約 120 倍
++ * 速くなる（r12 で発生）。Matrix のフォーク用パッチ（firmware/qmk/fork/）で要求を受け付け、パソコンが
++ * 有効にしたときだけ細かい単位で送る（matrix_pointing.c が usb_hires_scroll_enabled() で確認）。 */
++#define POINTING_DEVICE_HIRES_SCROLL_ENABLE
++#define MATRIX_POINTING_DEFAULT_TAP_TERM 150      // ドライバ既定のタップ判定時間と同じ
++#ifndef __ASSEMBLER__
++#    include <stdint.h>
++uint16_t matrix_pointing_tap_term(void);
++#endif
++#define DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT matrix_pointing_tap_term()  // タップ判定時間を Matrix から変更
++
++/* タップ/ホールドキー（LT・MT）の判定時間とモードを Matrix から変更 */
++#define TAPPING_TERM_PER_KEY
++#define PERMISSIVE_HOLD_PER_KEY
++#define HOLD_ON_OTHER_KEY_PRESS_PER_KEY
++
++/* 3 本指スワイプで送るキーを Matrix から変更（フォークの digitizer マウス処理） */
++#define MATRIX_POINTING_SWIPE_KC(dir) ({ extern uint8_t matrix_pointing_swipe(uint8_t); matrix_pointing_swipe(dir); })
++#define DIGITIZER_SWIPE_LEFT_KC MATRIX_POINTING_SWIPE_KC(0)
++#define DIGITIZER_SWIPE_RIGHT_KC MATRIX_POINTING_SWIPE_KC(1)
++#define DIGITIZER_SWIPE_UP_KC MATRIX_POINTING_SWIPE_KC(2)
++#define DIGITIZER_SWIPE_DOWN_KC MATRIX_POINTING_SWIPE_KC(3)
++
++/* 左右どちらに USB を挿しても、Matrix で変えたタッチパッド設定を右手側（タッチパッド側）へ送る */
++#define MATRIX_POINTING_SPLIT_SYNC
++#define SPLIT_TRANSACTION_IDS_USER MP_SYNC_CONFIG, MP_SYNC_SWIPE
++#define RPC_M2S_BUFFER_SIZE 64
++
++/* Matrix で設定するコンボ（キー位置はレイヤー 0 のキーで判定） */
++#define COMBO_ONLY_FROM_LAYER 0
++#define COMBO_TERM_PER_COMBO
++#define COMBO_SHOULD_TRIGGER
+diff --git a/keyboards/corne_procyon36/digitizer_user.c b/keyboards/corne_procyon36/digitizer_user.c
+index d827269..453760b 100644
+--- a/keyboards/corne_procyon36/digitizer_user.c
++++ b/keyboards/corne_procyon36/digitizer_user.c
+@@ -5,111 +5,36 @@
+  * カスタム処理を提供します。
+  * 
+  * 主な機能：
+- * ・CPI を 1600 に設定（デフォルト 400 の 4倍、かくつき対策で最適化）
+- * ・digitizerの移動量に適切なゲインを掛け、指数移動平均フィルタで
+- *   カクツキを緩和します（応答性と安定性のバランスを改善）
++ * ・ドライバの CPI は固定（スワイプ・タップの判定距離を一定に保つため）
++ * ・カーソル速度・回転・加速などは Matrix の設定（matrix_pointing.c）で処理します
+  * ・QMKの標準的なポインティングデバイス処理とは独立して動作
+  * ============================================================================ */
+ 
+ #include "digitizer.h"
+ #include "pointing_device.h"
+-#include <limits.h>
+-
+-/* ============================================================================
+- * 設定パラメータ（カーソルかくつき対策で最適化済み）
+- * ============================================================================ */
+-#define CUSTOM_CPI         1600             // カスタムCPI設定（デフォルト400の4倍）
+-#define MOVEMENT_GAIN      2                // 移動量のゲイン倍率（ノイズ削減のため削減）
+-#define SMOOTHING_SHIFT    1                // 平滑化係数（α = 1/2 = 1/2^1、応答性向上）
+-#define STOP_THRESHOLD     8                // 停止判定の閾値（尾引き防止強化）
+-#define INPUT_DEADZONE     5                // 入力デッドゾーン（ノイズ除去強化）
+-
+-/* ============================================================================
+- * ユーティリティ関数
+- * ============================================================================ */
+-/**
+- * 32ビット整数の絶対値を計算
+- * @param v 入力値
+- * @return 絶対値
+- */
+-static inline int32_t iabs32(int32_t v) {
+-    return (v < 0) ? -v : v;
+-}
+-
+-/**
+- * 32ビット整数を16ビット範囲にクランプ（オーバーフロー防止）
+- * @param v 入力値
+- * @return クランプされた16ビット値
+- */
+-static inline int16_t clamp16(int32_t v) {
+-    if (v > INT16_MAX) return INT16_MAX;
+-    if (v < INT16_MIN) return INT16_MIN;
+-    return (int16_t)v;
+-}
++#include "matrix_pointing.h"
+ 
+ /* ============================================================================
+  * デジタイザー設定関数
+  * ============================================================================ */
+ /**
+- * カスタムCPI値を取得
+- * QMKの標準的なCPI設定をオーバーライドします
+- * @return カスタムCPI値（1600、かくつき対策で最適化済み）
++ * ドライバの CPI を返す（固定値。カーソル速度は Matrix の設定で調整）
+  */
+ uint16_t digitizer_get_cpi_user(void) {
+-    return CUSTOM_CPI;
++    // ドライバの CPI は固定（速度は Matrix の設定で matrix_pointing_task() が調整）
++    return matrix_pointing_driver_cpi();
+ }
+ 
+ /* ============================================================================
+  * ポインティングデバイス処理関数
+  * ============================================================================ */
+ /**
+- * ポインティングデバイスのタスク処理
+- * トラックパッドの入力に対して以下の処理を適用します：
+- * 1. 移動量ゲイン適用（ノイズ削減のため削減）
+- * 2. 入力デッドゾーン処理（強化）
+- * 3. 指数移動平均フィルタ（IIR、応答性向上）
+- * 4. 尾引き防止処理（強化）
+- * 5. 出力値のクランプ
+- * 
+- * @param mouse_report 入力マウスレポート
+- * @return 処理済みマウスレポート
++ * ポインティングデバイスのタスク処理（Matrix の設定を適用）
+  */
+ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+-    // フィルタ状態を保持する静的変数
+-    static int32_t filt_x = 0;
+-    static int32_t filt_y = 0;
+-
+-    // 移動量にゲインを適用（32ビットで計算してオーバーフローを防止）
+-    int32_t raw_x = (int32_t)mouse_report.x * MOVEMENT_GAIN;
+-    int32_t raw_y = (int32_t)mouse_report.y * MOVEMENT_GAIN;
+-
+-    // 入力デッドゾーン処理（微小なノイズをゼロとして扱う）
+-    if (iabs32(raw_x) < INPUT_DEADZONE) raw_x = 0;
+-    if (iabs32(raw_y) < INPUT_DEADZONE) raw_y = 0;
+-
+-    // 指数移動平均フィルタ（IIR: Infinite Impulse Response）
+-    // 負数の丸めの差異を避けるため、演算は除算で行う（0方向に丸め）
+-    const int32_t smoothing_denom = (1 << SMOOTHING_SHIFT);
+-    filt_x += (raw_x - filt_x) / smoothing_denom;
+-    filt_y += (raw_y - filt_y) / smoothing_denom;
+-
+-    // 出力はフィルタ値をそのまま使用（重ねがけのシフトはしない）
+-    int32_t out_x = filt_x;
+-    int32_t out_y = filt_y;
+-
+-    // 尾引き防止処理：入力がゼロ付近なら強制的にゼロにリセット
+-    if (iabs32(raw_x) <= INPUT_DEADZONE && (out_x > -STOP_THRESHOLD && out_x < STOP_THRESHOLD)) {
+-        out_x = 0;
+-        filt_x = 0;  // フィルタ状態もリセット
+-    }
+-    if (iabs32(raw_y) <= INPUT_DEADZONE && (out_y > -STOP_THRESHOLD && out_y < STOP_THRESHOLD)) {
+-        out_y = 0;
+-        filt_y = 0;  // フィルタ状態もリセット
+-    }
+-
+-    // 16ビット範囲にクランプして出力
+-    mouse_report.x = clamp16(out_x);
+-    mouse_report.y = clamp16(out_y);
+-
+-    return mouse_report;
++    // 以前はここで移動量 ×2・デッドゾーン・指数移動平均・停止判定をかけていたが、
++    // センサーの読み取りの合間に来る「移動 0」の報告で平滑化が崩れ、ゆっくり動かすと
++    // 動きが途切れたり飛んだりしていた（Windows がタッチパッドとして扱う間は使われていなかった）。
++    // 速度の調整と端数の持ち越しは Matrix の設定で matrix_pointing_task() が行う。
++    return matrix_pointing_task(mouse_report);
+ }
+diff --git a/keyboards/corne_procyon36/keyboard.json b/keyboards/corne_procyon36/keyboard.json
+index bcedbf5..ff8fd37 100644
+--- a/keyboards/corne_procyon36/keyboard.json
++++ b/keyboards/corne_procyon36/keyboard.json
+@@ -170,7 +170,7 @@
+             }
+         }
+     },
+-    "url": "",
++    "url": "https://github.com/bwrs-1/qmk_firmware_corne_procyon",
+     "usb": {
+         "device_version": "0.0.1",
+         "pid": "0xBFC6",
+diff --git a/keyboards/corne_procyon36/keymaps/default/keymap.c b/keyboards/corne_procyon36/keymaps/default/keymap.c
+index 2784405..a661c11 100644
+--- a/keyboards/corne_procyon36/keymaps/default/keymap.c
++++ b/keyboards/corne_procyon36/keymaps/default/keymap.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include QMK_KEYBOARD_H
++#include "matrix_pointing.h"
+ 
+ enum layer_namKC {
+     _BASE,
+@@ -65,7 +66,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+         KC_LCTL, XXXXXXX, KC_AMPR, KC_PIPE, KC_BSLS, XXXXXXX,                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_TILD,  KC_GRV,
+     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+-        KC_LSFT, XXXXXXX, XXXXXXX, XXXXXXX, KC_PERC, XXXXXXX,                      RGB_TOG, RGB_MOD, RGB_HUI, RGB_SAI, RGB_VAI, KC_RSFT,
++        KC_LSFT, XXXXXXX, XXXXXXX, XXXXXXX, KC_PERC, XXXXXXX,                      RM_TOGG, RM_NEXT, RM_HUEU, RM_SATU, RM_VALU, KC_RSFT,
+     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
+                           _______, KC_LGUI, _______,  KC_SPC,     KC_ENT, _______,  KC_LALT, _______
+                                  //`---------------------------------'  `-----------------------------------'
+@@ -73,7 +74,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+ 	[_MOUSE] =	LAYOUT(
+         _______, _______, _______, _______, _______, _______,                      _______, _______, _______, _______, _______, _______,
+     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+-        _______, _______, KC_MS_BTN2, KC_MS_BTN1, _______, _______,                _______, _______, _______, _______, _______, _______,
++        _______, _______, MS_BTN2, MS_BTN1, _______, _______,                _______, _______, _______, _______, _______, _______,
+     //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+         _______, _______, _______, _______, _______, _______,                      _______, _______, _______, _______, _______, _______,
+     //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
+@@ -85,7 +86,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+ 
+ #if defined(ENCODER_MAP_ENABLE)
+ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+-    [_BASE] = { ENCODER_CCW_CW(KC_MS_WH_DOWN, KC_MS_WH_UP), ENCODER_CCW_CW(KC_AUDIO_VOL_UP, KC_AUDIO_VOL_DOWN) },
++    [_BASE] = { ENCODER_CCW_CW(MS_WHLD, MS_WHLU), ENCODER_CCW_CW(KC_AUDIO_VOL_UP, KC_AUDIO_VOL_DOWN) },
+     [_LOWER] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+     [_RAISE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+     [_ADJUST] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+@@ -93,9 +94,20 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+ };
+ #endif
+ 
+-void keyboard_post_init_user(void) {
+-#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+-    set_auto_mouse_layer(_MOUSE);
+-    set_auto_mouse_enable(true);
++#ifdef COMBO_ENABLE
++// コンボは Matrix から設定し EEPROM に保存（matrix_pointing.c の combo_count / combo_get）。
++// QMK のビルドに key_combos が必要なため、空の定義だけ置いておく。
++const uint16_t PROGMEM matrix_unused_combo[] = {COMBO_END};
++combo_t                key_combos[]          = {COMBO(matrix_unused_combo, KC_NO)};
+ #endif
++
++void keyboard_post_init_user(void) {
++    // オートマウス（対象レイヤー・有効/無効など）とタッチパッドの設定を EEPROM から読み込んで適用。
++    // 初期値の対象レイヤーは config.h の MATRIX_POINTING_DEFAULT_AM_LAYER（_MOUSE）。
++    matrix_pointing_init();
++}
++
++bool process_record_user(uint16_t keycode, keyrecord_t *record) {
++    // ノブを押しながら回す操作などは Matrix 側で処理する（false = ここで処理済み）。
++    return matrix_pointing_process_record(keycode, record);
+ }
+diff --git a/keyboards/corne_procyon36/matrix_pointing.c b/keyboards/corne_procyon36/matrix_pointing.c
+new file mode 100644
+index 0000000..b605aa2
+--- /dev/null
++++ b/keyboards/corne_procyon36/matrix_pointing.c
+@@ -0,0 +1,2644 @@
++// Matrix pointing settings for QMK (touchpad + auto mouse layer).
++// See matrix_pointing.h and README.md next to this file.
++//
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include "matrix_pointing.h"
++
++#include <stddef.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include "eeconfig.h"
++#include "via.h"
++
++// Provided by the Matrix patches to the multitouch QMK fork
++// (firmware/qmk/fork/); without them these stay NULL and the features are off.
++__attribute__((weak)) void maxtouch_tune(uint8_t touch_threshold, uint16_t move_hysteresis_initial, uint16_t move_hysteresis_next);
++__attribute__((weak)) bool usb_hires_scroll_enabled(void);
++
++#if defined(POINTING_DEVICE_DRIVER_cirque_pinnacle_i2c) || defined(POINTING_DEVICE_DRIVER_cirque_pinnacle_spi)
++#    include "drivers/sensors/cirque_pinnacle_gestures.h"
++#    define MP_CIRQUE
++#endif
++
++#if (EECONFIG_USER_DATA_SIZE) < (MATRIX_POINTING_EEPROM_OFFSET + MATRIX_POINTING_EEPROM_SIZE)
++#    error "Set EECONFIG_USER_DATA_SIZE to at least MATRIX_POINTING_EEPROM_SIZE in config.h"
++#endif
++
++// QMK changed the user datablock API: newer versions take (data, offset,
++// length) and define eeconfig_read_user_datablock_field; older ones read and
++// write the whole block with (data) only.
++#ifdef eeconfig_read_user_datablock_field
++#    define MP_EEPROM_READ(cfg) eeconfig_read_user_datablock(&(cfg), MATRIX_POINTING_EEPROM_OFFSET, sizeof(cfg))
++#    define MP_EEPROM_WRITE(cfg) eeconfig_update_user_datablock(&(cfg), MATRIX_POINTING_EEPROM_OFFSET, sizeof(cfg))
++#else
++#    if MATRIX_POINTING_EEPROM_OFFSET != 0
++#        error "MATRIX_POINTING_EEPROM_OFFSET needs the newer QMK datablock API"
++#    endif
++// The legacy API always copies the whole EECONFIG_USER_DATA_SIZE block, so go
++// through a buffer of that size (mp_config_t may be smaller).
++#    define MP_EEPROM_READ(cfg)                                 \
++        do {                                                    \
++            uint8_t mp_buf[EECONFIG_USER_DATA_SIZE];            \
++            eeconfig_read_user_datablock(mp_buf);               \
++            memcpy(&(cfg), mp_buf, sizeof(cfg));                \
++        } while (0)
++#    define MP_EEPROM_WRITE(cfg)                                \
++        do {                                                    \
++            uint8_t mp_buf[EECONFIG_USER_DATA_SIZE];            \
++            eeconfig_read_user_datablock(mp_buf);               \
++            memcpy(mp_buf, &(cfg), sizeof(cfg));                \
++            eeconfig_update_user_datablock(mp_buf);             \
++        } while (0)
++#endif
++
++#define MP_MAGIC 0x4D58 // 'MX'
++// Read-only value 0x7C: revision of this module, so the editor can tell that
++// the keyboard runs an older build. Bump it with every behaviour change.
++#define MP_REVISION_VALUE_ID 0x7C
++#define MP_REVISION 21
++// Read-only value 0x7D: the other half of a split keyboard —
++// [state, its revision (2), this build's ID (2), its build ID (2)];
++// state 0 = not known yet, 1 = known, 2 = it runs firmware without this
++// report (revision 10 or older), 3 = it is not connected.
++#define MP_SPLIT_INFO_VALUE_ID 0x7D
++// Read-only value 0x7B: RGB_MATRIX_EFFECT_MAX of this build, so the editor
++// can check that its effect list (VIA effect numbers = this build's enabled
++// effects, in QMK's order) matches.
++#define MP_RGB_EFFECTS_VALUE_ID 0x7B
++
++// 16-bit ID of this build, from QMK_BUILDDATE (the same date VIA uses for
++// its EEPROM magic): both halves flashed with the same file share it.
++#include "version.h"
++static uint16_t mp_build_id(void) {
++    static uint16_t id = 0;
++    if (id == 0) {
++        uint32_t h = 2166136261UL; // FNV-1a
++        for (const char *p = QMK_BUILDDATE; *p; p++) {
++            h = (h ^ (uint8_t)*p) * 16777619UL;
++        }
++        id = (uint16_t)(h ^ (h >> 16));
++        if (id == 0) id = 1;
++    }
++    return id;
++}
++#define MP_VERSION 4
++// Bytes of mp_config_t that earlier versions stored (index = version).
++static const uint8_t mp_version_size[] = {0, 28, 39, 47};
++
++// Layout of the persisted settings. Append new fields at the end and bump
++// MP_VERSION; never reorder (values stored in EEPROM would be misread).
++typedef struct __attribute__((packed)) {
++    uint8_t  version;
++    // Touchpad
++    uint16_t cpi;
++    uint8_t  acceleration;
++    uint8_t  glide;
++    uint8_t  rotation; // 0: 0deg, 1: 90deg, 2: 180deg, 3: 270deg
++    uint8_t  invert_x;
++    uint8_t  invert_y;
++    uint8_t  tap_to_click;
++    uint8_t  two_finger_tap;
++    uint8_t  tap_drag;
++    uint16_t tap_term;
++    uint8_t  scroll_mode; // 0: two finger, 1: circular, 2: edge
++    uint8_t  scroll_divisor;
++    uint8_t  natural_scroll;
++    uint8_t  horizontal_scroll;
++    uint8_t  sensitivity; // 0..3 = 1x..4x
++    // Auto mouse layer
++    uint8_t  am_enabled;
++    uint8_t  am_layer;
++    uint8_t  am_threshold;
++    uint16_t am_timeout;
++    uint16_t am_activation_delay;
++    uint8_t  am_debounce;
++    uint8_t  am_exit_on_other_key;
++    uint8_t  am_hold_with_modifiers;
++    // --- version 2 ---
++    // Tap-hold keys (LT / MT)
++    uint16_t tapping_term;
++    uint8_t  hold_mode; // 0: hold preferred, 1: balanced, 2: tap preferred
++    // 3-finger swipe keycodes: left, right, up, down
++    uint16_t swipe_kc[4];
++    // --- version 3 ---
++    // LED color per layer (RGB Matrix): 0 = keep the effect, 1 = off,
++    // 2.. = red, green, yellow, blue, magenta, cyan, white
++    uint8_t led_layer_color[8];
++    // --- version 4 ---
++    // Multitouch fork: 1 = act as a Windows precision touchpad when the
++    // host asks for it (native gestures, but the host then gets digitizer
++    // reports, so the auto mouse layer and the report transforms do not
++    // apply). 0 = always send mouse reports.
++    uint8_t precision_touchpad;
++} mp_config_t;
++
++_Static_assert(offsetof(mp_config_t, tapping_term) == 28, "version 1 layout changed");
++_Static_assert(offsetof(mp_config_t, led_layer_color) == 39, "version 2 layout changed");
++_Static_assert(offsetof(mp_config_t, precision_touchpad) == 47, "version 3 layout changed");
++
++_Static_assert(sizeof(mp_config_t) <= MATRIX_POINTING_EEPROM_SIZE, "mp_config_t does not fit MATRIX_POINTING_EEPROM_SIZE");
++
++// CPI range and default (some drivers clamp to their own range, e.g. the
++// digitizer driver of the multitouch QMK fork: 50..1200).
++#ifndef MATRIX_POINTING_CPI_MIN
++#    define MATRIX_POINTING_CPI_MIN 400
++#endif
++#ifndef MATRIX_POINTING_CPI_MAX
++#    define MATRIX_POINTING_CPI_MAX 3200
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_CPI
++#    define MATRIX_POINTING_DEFAULT_CPI 1600
++#endif
++#ifndef MATRIX_POINTING_SCROLL_SCALE
++#    define MATRIX_POINTING_SCROLL_SCALE 1
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_TAP_TERM
++#    define MATRIX_POINTING_DEFAULT_TAP_TERM 200
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_ACCELERATION
++#    define MATRIX_POINTING_DEFAULT_ACCELERATION 1
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_AM_LAYER
++#    define MATRIX_POINTING_DEFAULT_AM_LAYER 3
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_TAPPING_TERM
++#    ifdef TAPPING_TERM
++#        define MATRIX_POINTING_DEFAULT_TAPPING_TERM TAPPING_TERM
++#    else
++#        define MATRIX_POINTING_DEFAULT_TAPPING_TERM 200
++#    endif
++#endif
++#define MP_HOLD_PREFERRED 0
++#define MP_HOLD_BALANCED 1
++#define MP_HOLD_TAP_PREFERRED 2
++#ifndef MATRIX_POINTING_DEFAULT_HOLD_MODE
++#    define MATRIX_POINTING_DEFAULT_HOLD_MODE MP_HOLD_TAP_PREFERRED // QMK's default
++#endif
++// Same defaults as the multitouch fork's DIGITIZER_SWIPE_*_KC.
++#ifndef MATRIX_POINTING_DEFAULT_SWIPE_LEFT
++#    define MATRIX_POINTING_DEFAULT_SWIPE_LEFT QK_MOUSE_BUTTON_3
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_SWIPE_RIGHT
++#    define MATRIX_POINTING_DEFAULT_SWIPE_RIGHT QK_MOUSE_BUTTON_4
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_SWIPE_UP
++#    define MATRIX_POINTING_DEFAULT_SWIPE_UP KC_LEFT_GUI
++#endif
++#ifndef MATRIX_POINTING_DEFAULT_SWIPE_DOWN
++#    define MATRIX_POINTING_DEFAULT_SWIPE_DOWN KC_ESC
++#endif
++
++// Defaults match the Matrix editor's defaults (the auto mouse layer can be
++// set per keyboard with MATRIX_POINTING_DEFAULT_AM_LAYER).
++static const mp_config_t mp_defaults = {
++    .version                = MP_VERSION,
++    .cpi                    = MATRIX_POINTING_DEFAULT_CPI,
++    .acceleration           = MATRIX_POINTING_DEFAULT_ACCELERATION,
++    .glide                  = 0,
++    .rotation               = 0,
++    .invert_x               = 0,
++    .invert_y               = 0,
++    .tap_to_click           = 1,
++    .two_finger_tap         = 1,
++    .tap_drag               = 0,
++    .tap_term               = MATRIX_POINTING_DEFAULT_TAP_TERM,
++    .scroll_mode            = 0,
++    .scroll_divisor         = 8,
++    .natural_scroll         = 0,
++    .horizontal_scroll      = 1,
++    .sensitivity            = 1,
++    .am_enabled             = 1,
++    .am_layer               = MATRIX_POINTING_DEFAULT_AM_LAYER,
++    .am_threshold           = 10,
++    .am_timeout             = 650,
++    .am_activation_delay    = 200,
++    .am_debounce            = 25,
++    .am_exit_on_other_key   = 1,
++    .am_hold_with_modifiers = 1,
++    .tapping_term           = MATRIX_POINTING_DEFAULT_TAPPING_TERM,
++    .hold_mode              = MATRIX_POINTING_DEFAULT_HOLD_MODE,
++    .swipe_kc               = {MATRIX_POINTING_DEFAULT_SWIPE_LEFT, MATRIX_POINTING_DEFAULT_SWIPE_RIGHT, MATRIX_POINTING_DEFAULT_SWIPE_UP, MATRIX_POINTING_DEFAULT_SWIPE_DOWN},
++    .led_layer_color        = {0},
++    .precision_touchpad     = 0,
++};
++
++static mp_config_t mp_config;
++static bool        mp_loaded = false;
++
++// ---------------------------------------------------------------------------
++// Extension block (revision 12): touchpad edge sliders / corner taps and
++// knob press-and-turn. It has its own block after the combos
++// (MATRIX_POINTING_EXT_EEPROM_OFFSET), so the older layout stays put.
++//
++// config.h:
++//   #define MATRIX_POINTING_EXT_EEPROM_OFFSET 320   // after settings + combos
++//   #define EECONFIG_USER_DATA_SIZE 384             // + 64
++//   #define EECONFIG_USER_DATA_VERSION 320          // keep the stored block valid
++//   #define MATRIX_POINTING_EDGE_ZONES              // digitizer touchpads
++//   #define MATRIX_POINTING_KNOB_KEYS { {3, 2}, {7, 3} } // {row, col} of each
++//                                                // encoder's push switch
++#if defined(MATRIX_POINTING_EDGE_ZONES) && defined(POINTING_DEVICE_DRIVER_digitizer) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
++#    define MP_EDGES
++#endif
++#if defined(MATRIX_POINTING_KNOB_KEYS) && defined(ENCODER_MAP_ENABLE) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
++#    define MP_KNOBS
++#endif
++
++#define MP_EDGE_COUNT 4   // left, right, top, bottom (as the user sees the pad)
++#define MP_CORNER_COUNT 4 // top-left, top-right, bottom-left, bottom-right
++#define MP_KNOB_COUNT 2
++#define MP_EXT_MAGIC 0x4D5A // 'MZ'
++// What the keymap storage looks like: if any of these change, a saved keymap
++// cannot be kept over a firmware update (see via_init_kb()).
++#ifndef DYNAMIC_KEYMAP_LAYER_COUNT
++#    define MP_SIG_LAYERS 4
++#else
++#    define MP_SIG_LAYERS DYNAMIC_KEYMAP_LAYER_COUNT
++#endif
++#ifndef DYNAMIC_KEYMAP_MACRO_COUNT
++#    define MP_SIG_MACROS 16
++#else
++#    define MP_SIG_MACROS DYNAMIC_KEYMAP_MACRO_COUNT
++#endif
++#ifdef NUM_ENCODERS
++#    define MP_SIG_ENCODERS NUM_ENCODERS
++#else
++#    define MP_SIG_ENCODERS 0
++#endif
++#ifdef MATRIX_ROWS
++#    define MP_SIG_MATRIX ((MATRIX_ROWS << 6) ^ MATRIX_COLS)
++#else
++#    define MP_SIG_MATRIX 0
++#endif
++#define MP_LAYOUT_SIG ((uint16_t)(0x4C00 ^ (MP_SIG_LAYERS << 10) ^ MP_SIG_MATRIX ^ (MP_SIG_MACROS << 3) ^ (MP_SIG_ENCODERS << 13) ^ (EECONFIG_USER_DATA_SIZE >> 4)))
++#if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
++#    define MP_GUIDE // light only the assigned keys (revision 20)
++#endif
++#define MP_EXT_VERSION 7
++#define MP_EXT_V6_SIZE 53 // version 6 (up to `key_guide_dim`)
++#define MP_EXT_V5_SIZE 50 // version 5 (up to `touch_glow_fade`)
++#define MP_EXT_V4_SIZE 48 // version 4 (up to `touch_glow_color`)
++#define MP_EXT_V3_SIZE 46 // version 3 (up to `precision_scale`)
++#define MP_EXT_V1_SIZE 39 // bytes covered by version 1 (up to `smooth`)
++#define MP_EXT_V2_SIZE 45 // version 2 (up to `hyst_next`)
++#ifdef MXT_TOUCH_THRESHOLD
++#    define MP_DEFAULT_TOUCH_THRESHOLD MXT_TOUCH_THRESHOLD
++#else
++#    define MP_DEFAULT_TOUCH_THRESHOLD 20
++#endif
++#ifdef MXT_MOVE_HYSTERESIS_INITIAL
++#    define MP_DEFAULT_HYST_INITIAL MXT_MOVE_HYSTERESIS_INITIAL
++#else
++#    define MP_DEFAULT_HYST_INITIAL 10
++#endif
++#ifdef MXT_MOVE_HYSTERESIS_NEXT
++#    define MP_DEFAULT_HYST_NEXT MXT_MOVE_HYSTERESIS_NEXT
++#else
++#    define MP_DEFAULT_HYST_NEXT 4
++#endif
++
++typedef struct __attribute__((packed)) {
++    uint16_t magic;
++    uint8_t  version;
++    uint8_t  checksum;
++    uint8_t  edge_width;                // % of the pad from each side
++    uint8_t  edge_step;                 // % of the pad per keycode
++    uint16_t edge_kc[MP_EDGE_COUNT][2]; // [0] moving up / left, [1] down / right
++    uint16_t corner_kc[MP_CORNER_COUNT];
++    uint16_t knob_kc[MP_KNOB_COUNT][2]; // while pushed: [0] counter-clockwise, [1] clockwise
++    uint8_t  smooth;                    // spread each sensor report over the next frame
++    // version 2 (revision 14)
++    uint8_t accel_slow;      // gain for slow movement, x0.1
++    uint8_t accel_fast;      // gain for fast movement, x0.1
++    uint8_t momentum_tau;    // momentum scrolling time constant, x10 ms
++    uint8_t touch_threshold; // touch sensor: how hard a touch must be (lower = lighter)
++    uint8_t hyst_initial;    // touch sensor: movement before a touch starts moving
++    uint8_t hyst_next;       // touch sensor: movement between position updates
++    // version 3 (revision 17)
++    uint8_t precision_scale; // precision ("sniping") mode: % of the normal movement
++    // version 4 (revision 18)
++    uint8_t touch_glow;       // 1 = light the keys under the finger's position
++    uint8_t touch_glow_color; // 0 = the lighting color, 2.. = like the layer colors
++    // version 5 (revision 19)
++    uint8_t touch_glow_radius; // LED units (keys are about 13 apart)
++    uint8_t touch_glow_fade;   // fade-out after lifting, x10 ms
++    // version 6 (revision 20)
++    uint8_t key_guide;       // light only assigned keys: 0 off, 1 on layers above the base, 2 always
++    uint8_t key_guide_color; // 0 = keep the colors, 1 = color by the kind of key
++    uint8_t key_guide_dim;   // brightness of unassigned keys, % (0 = off)
++    // version 7 (revision 21)
++    uint16_t layout_sig; // MP_LAYOUT_SIG of the build that wrote the block
++} mp_ext_t;
++_Static_assert(sizeof(mp_ext_t) <= 64, "mp_ext_t must fit 64 bytes");
++_Static_assert(offsetof(mp_ext_t, accel_slow) == MP_EXT_V1_SIZE, "extension version 1 layout changed");
++_Static_assert(offsetof(mp_ext_t, precision_scale) == MP_EXT_V2_SIZE, "extension version 2 layout changed");
++_Static_assert(offsetof(mp_ext_t, touch_glow) == MP_EXT_V3_SIZE, "extension version 3 layout changed");
++_Static_assert(offsetof(mp_ext_t, touch_glow_radius) == MP_EXT_V4_SIZE, "extension version 4 layout changed");
++_Static_assert(offsetof(mp_ext_t, key_guide) == MP_EXT_V5_SIZE, "extension version 5 layout changed");
++_Static_assert(offsetof(mp_ext_t, layout_sig) == MP_EXT_V6_SIZE, "extension version 6 layout changed");
++
++// Touch sensor tuning: written to the sensor from the housekeeping task on
++// the half it is wired to (the slave half gets the values over the split
++// sync), only when they change.
++static uint8_t mp_sensor_wanted[3]  = {0};
++static uint8_t mp_sensor_applied[3] = {0xFF, 0xFF, 0xFF};
++static bool    mp_sensor_have       = false;
++
++static void mp_sensor_request(uint8_t threshold, uint8_t hyst_initial, uint8_t hyst_next) {
++    mp_sensor_wanted[0] = threshold;
++    mp_sensor_wanted[1] = hyst_initial;
++    mp_sensor_wanted[2] = hyst_next;
++    mp_sensor_have      = true;
++}
++
++static void mp_sensor_task(void) {
++    if (!mp_sensor_have || !maxtouch_tune) return;
++    if (memcmp(mp_sensor_wanted, mp_sensor_applied, sizeof(mp_sensor_applied)) == 0) return;
++    maxtouch_tune(mp_sensor_wanted[0], mp_sensor_wanted[1], mp_sensor_wanted[2]);
++    memcpy(mp_sensor_applied, mp_sensor_wanted, sizeof(mp_sensor_applied));
++}
++
++static const mp_ext_t mp_ext_defaults = {
++    .magic      = MP_EXT_MAGIC,
++    .version    = MP_EXT_VERSION,
++    .edge_width      = 12,
++    .edge_step       = 6,
++    .smooth          = 1,
++    .accel_slow      = 6,
++    .accel_fast      = 28,
++    .momentum_tau    = 20,
++    .touch_threshold = MP_DEFAULT_TOUCH_THRESHOLD,
++    .hyst_initial    = MP_DEFAULT_HYST_INITIAL,
++    .hyst_next       = MP_DEFAULT_HYST_NEXT,
++    .precision_scale = 33,
++    .touch_glow      = 1,
++    .touch_glow_radius = 28,
++    .touch_glow_fade   = 30,
++    .key_guide         = 1,
++    .layout_sig        = MP_LAYOUT_SIG,
++};
++static mp_ext_t mp_ext = {0};
++
++#ifdef MATRIX_POINTING_EXT_EEPROM_OFFSET
++#    if (EECONFIG_USER_DATA_SIZE) < (MATRIX_POINTING_EXT_EEPROM_OFFSET + 64)
++#        error "Set EECONFIG_USER_DATA_SIZE to MATRIX_POINTING_EXT_EEPROM_OFFSET + 64"
++#    endif
++static uint8_t mp_ext_checksum_n(const mp_ext_t *e, uint8_t size) {
++    const uint8_t *b   = (const uint8_t *)e;
++    uint8_t        sum = 0xA5;
++    for (uint8_t i = 4; i < size; i++) sum = (uint8_t)((sum << 1 | sum >> 7) ^ b[i]);
++    return sum;
++}
++static uint8_t mp_ext_checksum(const mp_ext_t *e) {
++    return mp_ext_checksum_n(e, sizeof(mp_ext_t));
++}
++
++static void mp_ext_save(void);
++static void mp_ext_load(void) {
++    eeconfig_read_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
++    // Older versions (1: revisions 12-13, 2: 14-16): keep their settings,
++    // new fields get defaults.
++    static const uint8_t old_sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE, MP_EXT_V4_SIZE, MP_EXT_V5_SIZE, MP_EXT_V6_SIZE};
++    if (mp_ext.magic == MP_EXT_MAGIC && mp_ext.version >= 1 && mp_ext.version < MP_EXT_VERSION) {
++        const uint8_t size = old_sizes[mp_ext.version];
++        if (mp_ext.checksum == mp_ext_checksum_n(&mp_ext, size)) {
++            mp_ext_t migrated = mp_ext_defaults;
++            memcpy((uint8_t *)&migrated + 4, (const uint8_t *)&mp_ext + 4, size - 4);
++            mp_ext = migrated;
++            mp_ext_save();
++            return;
++        }
++    }
++    // Fresh, or bytes left over from the dynamic keymap that used to be here.
++    if (mp_ext.magic != MP_EXT_MAGIC || mp_ext.version != MP_EXT_VERSION || mp_ext.checksum != mp_ext_checksum(&mp_ext)) {
++        mp_ext = mp_ext_defaults;
++#    ifdef MATRIX_POINTING_NATIVE_CPI
++        // First start with revision 12: turn on the smooth acceleration curve
++        // and momentum scrolling once (they were plain / unused before).
++        mp_config.acceleration = 1;
++        mp_config.glide        = 1;
++        MP_EEPROM_WRITE(mp_config);
++#    endif
++        mp_ext_save();
++    }
++}
++
++static void mp_ext_save(void) {
++    mp_ext.magic    = MP_EXT_MAGIC;
++    mp_ext.version  = MP_EXT_VERSION;
++    mp_ext.checksum = mp_ext_checksum(&mp_ext);
++    eeconfig_update_user_datablock(&mp_ext, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(mp_ext));
++}
++#else
++static void mp_ext_load(void) {
++    mp_ext = mp_ext_defaults;
++}
++static void mp_ext_save(void) {}
++#endif
++
++#if defined(VIA_ENABLE) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
++// Keep the keymap over firmware updates (revision 21). VIA accepts its saved
++// data only when the build date matches, so every new build reset the
++// keymaps and macros to the defaults. When the extension block shows that a
++// Matrix build with the same storage layout wrote this EEPROM, mark VIA's
++// data valid for this build before VIA checks it. Blocks of versions 1-6
++// (revisions 12-20) have no layout signature; those builds all used the
++// layout of this one (8 layers, the same matrix, 384 bytes of user data).
++bool matrix_pointing_keep_keymap(void) {
++    if (via_eeprom_is_valid()) return false;
++    mp_ext_t block;
++    eeconfig_read_user_datablock(&block, MATRIX_POINTING_EXT_EEPROM_OFFSET, sizeof(block));
++    static const uint8_t sizes[] = {0, MP_EXT_V1_SIZE, MP_EXT_V2_SIZE, MP_EXT_V3_SIZE, MP_EXT_V4_SIZE, MP_EXT_V5_SIZE, MP_EXT_V6_SIZE, sizeof(mp_ext_t)};
++    _Static_assert(ARRAY_SIZE(sizes) == MP_EXT_VERSION + 1, "add the size of the new extension version");
++    if (block.magic != MP_EXT_MAGIC || block.version < 1 || block.version > MP_EXT_VERSION) return false;
++    if (block.checksum != mp_ext_checksum_n(&block, sizes[block.version])) return false;
++    if (block.version >= 7 && block.layout_sig != MP_LAYOUT_SIG) return false;
++    via_eeprom_set_valid(true);
++    return true;
++}
++
++#    ifndef MATRIX_POINTING_NO_VIA_INIT_KB
++void via_init_kb(void) {
++    matrix_pointing_keep_keymap();
++}
++#    endif
++#endif
++
++// Writing any value to 0x7F reboots into the bootloader (RP2040: BOOTSEL),
++// so the editor can flash new firmware over WebUSB.
++#define MP_BOOTLOADER_VALUE_ID 0x7F
++#define MP_BOOTLOADER_DELAY_MS 100
++static bool     mp_bootloader_requested = false;
++static uint16_t mp_bootloader_time      = 0;
++
++// Value IDs on the VIA custom channel. Must match the editor
++// (src/services/pointing/PointingSettings.ts).
++typedef struct {
++    uint8_t  id;
++    uint8_t  size;
++    uint16_t min;
++    uint16_t max;
++    uint8_t  offset;
++} mp_field_t;
++
++#define MP_FIELD(_id, _field, _min, _max) \
++    { .id = (_id), .size = sizeof(((mp_config_t *)0)->_field), .min = (_min), .max = (_max), .offset = offsetof(mp_config_t, _field) }
++
++static const mp_field_t mp_fields[] = {
++    MP_FIELD(0x01, cpi, MATRIX_POINTING_CPI_MIN, MATRIX_POINTING_CPI_MAX),
++    MP_FIELD(0x02, acceleration, 0, 1),
++    MP_FIELD(0x03, glide, 0, 1),
++    MP_FIELD(0x04, rotation, 0, 3),
++    MP_FIELD(0x05, invert_x, 0, 1),
++    MP_FIELD(0x06, invert_y, 0, 1),
++    MP_FIELD(0x07, tap_to_click, 0, 1),
++    MP_FIELD(0x08, two_finger_tap, 0, 1),
++    MP_FIELD(0x09, tap_drag, 0, 1),
++    MP_FIELD(0x0A, tap_term, 100, 400),
++    MP_FIELD(0x0B, scroll_mode, 0, 2),
++    MP_FIELD(0x0C, scroll_divisor, 1, 32),
++    MP_FIELD(0x0D, natural_scroll, 0, 1),
++    MP_FIELD(0x0E, horizontal_scroll, 0, 1),
++    MP_FIELD(0x0F, sensitivity, 0, 3),
++    MP_FIELD(0x10, precision_touchpad, 0, 1),
++    MP_FIELD(0x20, am_enabled, 0, 1),
++    MP_FIELD(0x21, am_layer, 1, 31),
++    MP_FIELD(0x22, am_threshold, 1, 50),
++    MP_FIELD(0x23, am_timeout, 200, 3000),
++    MP_FIELD(0x24, am_activation_delay, 0, 1000),
++    MP_FIELD(0x25, am_debounce, 0, 100),
++    MP_FIELD(0x26, am_exit_on_other_key, 0, 1),
++    MP_FIELD(0x27, am_hold_with_modifiers, 0, 1),
++    MP_FIELD(0x30, tapping_term, 100, 400),
++    MP_FIELD(0x31, hold_mode, 0, 2),
++    MP_FIELD(0x40, swipe_kc[0], 0, 0xFFFF),
++    MP_FIELD(0x41, swipe_kc[1], 0, 0xFFFF),
++    MP_FIELD(0x42, swipe_kc[2], 0, 0xFFFF),
++    MP_FIELD(0x43, swipe_kc[3], 0, 0xFFFF),
++    MP_FIELD(0x50, led_layer_color[0], 0, 8),
++    MP_FIELD(0x51, led_layer_color[1], 0, 8),
++    MP_FIELD(0x52, led_layer_color[2], 0, 8),
++    MP_FIELD(0x53, led_layer_color[3], 0, 8),
++    MP_FIELD(0x54, led_layer_color[4], 0, 8),
++    MP_FIELD(0x55, led_layer_color[5], 0, 8),
++    MP_FIELD(0x56, led_layer_color[6], 0, 8),
++    MP_FIELD(0x57, led_layer_color[7], 0, 8),
++};
++
++// Read-only value 0x7E: which settings this build actually applies. Bit n
++// of the low word = value ID n + 1 (touchpad 0x01..0x0F); the high word:
++// bit 0 timing (0x30/0x31), bit 1 swipes (0x40..), bit 2 layer LEDs
++// (0x50..), bit 3 combos (0x60/0x61), bit 4 the precision touchpad
++// switch (0x10). Older firmware answers id_unhandled:
++// the editor then assumes everything is applied.
++#define MP_CAPABILITIES_VALUE_ID 0x7E
++#define MP_CAP(id) (1UL << ((id) - 1))
++static uint32_t mp_capabilities(void) {
++    uint32_t caps = 0;
++#ifdef POINTING_DEVICE_ENABLE
++    // Applied by this module's report transform / QMK's CPI setting.
++    caps |= MP_CAP(0x01) | MP_CAP(0x02) | MP_CAP(0x04) | MP_CAP(0x05) | MP_CAP(0x06) | MP_CAP(0x0C) | MP_CAP(0x0D) | MP_CAP(0x0E);
++#endif
++#ifdef POINTING_DEVICE_DRIVER_digitizer
++    caps |= MP_CAP(0x08) | MP_CAP(0x09); // filtered in matrix_pointing_task()
++#    ifdef DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT
++    caps |= MP_CAP(0x07) | MP_CAP(0x0A); // through matrix_pointing_tap_term()
++#    endif
++#endif
++#ifdef MP_CIRQUE
++#    ifdef POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE
++    caps |= MP_CAP(0x03);
++#    endif
++#    if defined(CIRQUE_PINNACLE_TAP_ENABLE) && CIRQUE_PINNACLE_POSITION_MODE
++    caps |= MP_CAP(0x07);
++#    endif
++#    ifdef CIRQUE_PINNACLE_CIRCULAR_SCROLL_ENABLE
++    caps |= MP_CAP(0x0B);
++#    endif
++#endif
++#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
++    caps |= 0x8000; // marks that the auto mouse layer exists (not a touchpad ID)
++#endif
++#if defined(TAPPING_TERM_PER_KEY) && !defined(MATRIX_POINTING_NO_TAPPING_HOOKS)
++    caps |= 1UL << 16;
++#endif
++#ifdef DIGITIZER_SWIPE_LEFT_KC
++    caps |= 1UL << 17;
++#endif
++#if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK)
++    caps |= 1UL << 18;
++#endif
++#if defined(COMBO_ENABLE) && !defined(MATRIX_POINTING_NO_COMBOS)
++    caps |= 1UL << 19;
++#endif
++#ifdef POINTING_DEVICE_DRIVER_digitizer
++    caps |= 1UL << 20; // precision touchpad switch (0x10)
++#endif
++#if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++    caps |= 1UL << 21; // other half's firmware (0x7D)
++#endif
++#ifdef RGB_MATRIX_ENABLE
++    caps |= 1UL << 22; // RGB Matrix effect count (0x7B)
++#endif
++#ifdef MP_EDGES
++    caps |= 1UL << 23; // touchpad edge sliders / corner taps (0x80..0x8D)
++#endif
++#ifdef MP_KNOBS
++    caps |= 1UL << 24; // knob press-and-turn (0x8E..0x91)
++#endif
++#if defined(MATRIX_POINTING_NATIVE_CPI) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
++    caps |= 1UL << 25; // smoothing (0x92)
++#endif
++#ifdef MP_EDGES
++    caps |= MP_CAP(0x03); // momentum scrolling (needs the finger count)
++#endif
++#if defined(MATRIX_POINTING_NATIVE_CPI) && defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
++    caps |= 1UL << 27; // acceleration curve / momentum tuning (0x93..0x95)
++#endif
++    if (maxtouch_tune) caps |= 1UL << 26; // touch sensor tuning (0x96..0x98)
++#ifdef MP_EDGES
++    caps |= 1UL << 28; // precision mode keys (QK_KB_0..5) and scale (0x99)
++#    if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK)
++    caps |= 1UL << 29; // touch glow on the keys (0x9A, 0x9B)
++    caps |= 1UL << 30; // touch glow size and fade-out (0x9C, 0x9D)
++#    endif
++#endif
++#ifdef MP_GUIDE
++    caps |= 1UL << 31; // light only the assigned keys (0x9E..0xA0)
++#endif
++    return caps;
++}
++
++// Values 0x80..0x91 (revision 12): the extension block, same encoding.
++#define MP_EXT_FIELD(_id, _field, _min, _max) \
++    { .id = (_id), .size = sizeof(((mp_ext_t *)0)->_field), .min = (_min), .max = (_max), .offset = offsetof(mp_ext_t, _field) }
++static const mp_field_t mp_ext_fields[] = {
++    MP_EXT_FIELD(0x80, edge_width, 5, 30),
++    MP_EXT_FIELD(0x81, edge_step, 2, 25),
++    MP_EXT_FIELD(0x82, edge_kc[0][0], 0, 0xFFFF),
++    MP_EXT_FIELD(0x83, edge_kc[0][1], 0, 0xFFFF),
++    MP_EXT_FIELD(0x84, edge_kc[1][0], 0, 0xFFFF),
++    MP_EXT_FIELD(0x85, edge_kc[1][1], 0, 0xFFFF),
++    MP_EXT_FIELD(0x86, edge_kc[2][0], 0, 0xFFFF),
++    MP_EXT_FIELD(0x87, edge_kc[2][1], 0, 0xFFFF),
++    MP_EXT_FIELD(0x88, edge_kc[3][0], 0, 0xFFFF),
++    MP_EXT_FIELD(0x89, edge_kc[3][1], 0, 0xFFFF),
++    MP_EXT_FIELD(0x8A, corner_kc[0], 0, 0xFFFF),
++    MP_EXT_FIELD(0x8B, corner_kc[1], 0, 0xFFFF),
++    MP_EXT_FIELD(0x8C, corner_kc[2], 0, 0xFFFF),
++    MP_EXT_FIELD(0x8D, corner_kc[3], 0, 0xFFFF),
++    MP_EXT_FIELD(0x8E, knob_kc[0][0], 0, 0xFFFF),
++    MP_EXT_FIELD(0x8F, knob_kc[0][1], 0, 0xFFFF),
++    MP_EXT_FIELD(0x90, knob_kc[1][0], 0, 0xFFFF),
++    MP_EXT_FIELD(0x91, knob_kc[1][1], 0, 0xFFFF),
++    MP_EXT_FIELD(0x92, smooth, 0, 1),
++    MP_EXT_FIELD(0x93, accel_slow, 3, 10),
++    MP_EXT_FIELD(0x94, accel_fast, 10, 50),
++    MP_EXT_FIELD(0x95, momentum_tau, 5, 60),
++    MP_EXT_FIELD(0x96, touch_threshold, 10, 80),
++    MP_EXT_FIELD(0x97, hyst_initial, 0, 40),
++    MP_EXT_FIELD(0x98, hyst_next, 0, 40),
++    MP_EXT_FIELD(0x99, precision_scale, 10, 90),
++    MP_EXT_FIELD(0x9A, touch_glow, 0, 1),
++    MP_EXT_FIELD(0x9B, touch_glow_color, 0, 8),
++    MP_EXT_FIELD(0x9C, touch_glow_radius, 10, 60),
++    MP_EXT_FIELD(0x9D, touch_glow_fade, 0, 200),
++    MP_EXT_FIELD(0x9E, key_guide, 0, 2),
++    MP_EXT_FIELD(0x9F, key_guide_color, 0, 1),
++    MP_EXT_FIELD(0xA0, key_guide_dim, 0, 50),
++};
++
++static const mp_field_t *mp_find_ext_field(uint8_t id) {
++#if defined(MATRIX_POINTING_EXT_EEPROM_OFFSET)
++    for (uint8_t i = 0; i < ARRAY_SIZE(mp_ext_fields); i++) {
++        if (mp_ext_fields[i].id == id) return &mp_ext_fields[i];
++    }
++#endif
++    return NULL;
++}
++
++static uint16_t mp_read_field_at(const void *block, const mp_field_t *field) {
++    const uint8_t *base = (const uint8_t *)block + field->offset;
++    if (field->size == 2) {
++        uint16_t value;
++        memcpy(&value, base, sizeof(value));
++        return value;
++    }
++    return *base;
++}
++
++static void mp_write_field_at(void *block, const mp_field_t *field, uint16_t value) {
++    if (value < field->min) value = field->min;
++    if (value > field->max) value = field->max;
++    uint8_t *base = (uint8_t *)block + field->offset;
++    if (field->size == 2) {
++        memcpy(base, &value, sizeof(value));
++    } else {
++        *base = (uint8_t)value;
++    }
++}
++
++static const mp_field_t *mp_find_field(uint8_t id) {
++    for (uint8_t i = 0; i < ARRAY_SIZE(mp_fields); i++) {
++        if (mp_fields[i].id == id) return &mp_fields[i];
++    }
++    return NULL;
++}
++
++static uint16_t mp_read_field(const mp_field_t *field) {
++    const uint8_t *base = (const uint8_t *)&mp_config + field->offset;
++    if (field->size == 2) {
++        uint16_t value;
++        memcpy(&value, base, sizeof(value));
++        return value;
++    }
++    return *base;
++}
++
++static void mp_write_field(const mp_field_t *field, uint16_t value) {
++    if (value < field->min) value = field->min;
++    if (value > field->max) value = field->max;
++    uint8_t *base = (uint8_t *)&mp_config + field->offset;
++    if (field->size == 2) {
++        memcpy(base, &value, sizeof(value));
++    } else {
++        *base = (uint8_t)value;
++    }
++}
++
++// Applies the settings that QMK can change at runtime. Settings without a
++// runtime API are stored and echoed back so the editor stays in sync.
++static void mp_apply(void) {
++    mp_sensor_request(mp_ext.touch_threshold, mp_ext.hyst_initial, mp_ext.hyst_next);
++#ifdef POINTING_DEVICE_ENABLE
++#    ifdef MATRIX_POINTING_NATIVE_CPI
++    // Software speed: the driver keeps its own resolution (gestures such as
++    // swipes and taps are measured in it) and the reports are scaled.
++    pointing_device_set_cpi(MATRIX_POINTING_DRIVER_CPI);
++#    else
++    pointing_device_set_cpi(mp_config.cpi);
++#    endif
++#endif
++#ifdef POINTING_DEVICE_DRIVER_digitizer
++    // Multitouch QMK fork (digitizer mouse fallback): taps as clicks.
++    // The tap timing is wired through DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT
++    // (see matrix_pointing_tap_term() / README).
++    extern bool digitizer_taps_as_clicks;
++    digitizer_taps_as_clicks = mp_config.tap_to_click;
++    // Windows switches a touchpad to digitizer reports; QMK's auto mouse
++    // layer and this module only see mouse reports, so keep sending those
++    // unless the precision touchpad mode is chosen.
++    extern bool force_digitizer_send_mouse_reports;
++    force_digitizer_send_mouse_reports = !mp_config.precision_touchpad;
++#endif
++#ifdef MP_CIRQUE
++#    ifdef POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE
++    cirque_pinnacle_enable_cursor_glide(mp_config.glide);
++#    endif
++#    if defined(CIRQUE_PINNACLE_TAP_ENABLE) && CIRQUE_PINNACLE_POSITION_MODE
++    cirque_pinnacle_enable_tap(mp_config.tap_to_click);
++#    endif
++#    ifdef CIRQUE_PINNACLE_CIRCULAR_SCROLL_ENABLE
++    cirque_pinnacle_enable_circular_scroll(mp_config.scroll_mode == 1);
++#    endif
++#endif
++#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
++    set_auto_mouse_layer(mp_config.am_layer);
++#    ifndef MATRIX_POINTING_LEGACY_AUTO_MOUSE
++    // Older QMK has no runtime setters for these (AUTO_MOUSE_TIME /
++    // AUTO_MOUSE_DEBOUNCE are compile-time there): define
++    // MATRIX_POINTING_LEGACY_AUTO_MOUSE if the build cannot find them.
++    set_auto_mouse_timeout(mp_config.am_timeout);
++    set_auto_mouse_debounce(mp_config.am_debounce);
++#    endif
++    set_auto_mouse_enable(mp_config.am_enabled);
++#endif
++}
++
++static void mp_combos_load(void);
++static void mp_combos_clear(void);
++static void mp_split_register(void);
++static void mp_config_changed(void);
++
++static void mp_load(void) {
++    mp_loaded = true;
++    MP_EEPROM_READ(mp_config);
++    if (mp_config.version >= 1 && mp_config.version < MP_VERSION) {
++        // Keep the settings of the older version; new fields get defaults.
++        mp_config_t migrated = mp_defaults;
++        memcpy(&migrated, &mp_config, mp_version_size[mp_config.version]);
++        migrated.version = MP_VERSION;
++        mp_config        = migrated;
++        MP_EEPROM_WRITE(mp_config);
++    } else if (mp_config.version != MP_VERSION) {
++        mp_config = mp_defaults;
++        MP_EEPROM_WRITE(mp_config);
++        mp_combos_clear();
++    }
++    mp_combos_load();
++    // Re-clamp everything in case the stored bytes are out of range.
++    for (uint8_t i = 0; i < ARRAY_SIZE(mp_fields); i++) {
++        mp_write_field(&mp_fields[i], mp_read_field(&mp_fields[i]));
++    }
++    mp_ext_load();
++    for (uint8_t i = 0; i < ARRAY_SIZE(mp_ext_fields); i++) {
++        mp_write_field_at(&mp_ext, &mp_ext_fields[i], mp_read_field_at(&mp_ext, &mp_ext_fields[i]));
++    }
++}
++
++// Drivers may ask for settings before keyboard_post_init_user() runs.
++static void mp_ensure_loaded(void) {
++    if (!mp_loaded) mp_load();
++}
++
++uint16_t matrix_pointing_tap_term(void) {
++    mp_ensure_loaded();
++    // With tap-to-click off no touch is short enough to count as a tap, so
++    // the digitizer fallback never sends tap clicks (or tap-and-drag).
++    return mp_config.tap_to_click ? mp_config.tap_term : 0;
++}
++
++uint16_t matrix_pointing_get_cpi(void) {
++    mp_ensure_loaded();
++    return mp_config.cpi;
++}
++
++uint16_t matrix_pointing_driver_cpi(void) {
++#ifdef MATRIX_POINTING_NATIVE_CPI
++    return MATRIX_POINTING_DRIVER_CPI;
++#else
++    return matrix_pointing_get_cpi();
++#endif
++}
++
++void matrix_pointing_init(void) {
++    mp_load();
++    mp_apply();
++    mp_split_register();
++}
++
++// ---------------------------------------------------------------------------
++// Tap-hold timing (LT / MT keys)
++
++uint16_t matrix_pointing_tapping_term(void) {
++    mp_ensure_loaded();
++    return mp_config.tapping_term;
++}
++
++uint8_t matrix_pointing_hold_mode(void) {
++    mp_ensure_loaded();
++    return mp_config.hold_mode;
++}
++
++#ifndef MATRIX_POINTING_NO_TAPPING_HOOKS
++#    ifdef TAPPING_TERM_PER_KEY
++uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
++    return matrix_pointing_tapping_term();
++}
++#    endif
++#    ifdef PERMISSIVE_HOLD_PER_KEY
++// "Balanced": a key pressed and released while the tap-hold key is held
++// makes it a hold.
++bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
++    return matrix_pointing_hold_mode() == MP_HOLD_BALANCED;
++}
++#    endif
++#    ifdef HOLD_ON_OTHER_KEY_PRESS_PER_KEY
++// "Hold preferred": any other key press makes it a hold right away.
++bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
++    return matrix_pointing_hold_mode() == MP_HOLD_PREFERRED;
++}
++#    endif
++#endif // MATRIX_POINTING_NO_TAPPING_HOOKS
++
++// ---------------------------------------------------------------------------
++// 3-finger swipes (multitouch fork): see MATRIX_POINTING_SWIPE_KC in the
++// header. Sends the configured keycode (basic keycode with modifiers) and
++// returns KC_NO, so the fork's own tap_code() does nothing.
++
++static void mp_send_swipe(uint8_t direction) {
++    if (direction >= ARRAY_SIZE(mp_config.swipe_kc)) return;
++    const uint16_t keycode = mp_config.swipe_kc[direction];
++    if (keycode != KC_NO && keycode <= QK_MODS_MAX) tap_code16(keycode);
++}
++
++#if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++static volatile uint8_t mp_pending_swipe = 0; // direction + 1, on the target half
++#endif
++
++uint8_t matrix_pointing_swipe(uint8_t direction) {
++    mp_ensure_loaded();
++#if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++    // Keys tapped on the half without USB never reach the host: hand the
++    // swipe to the master (polled in matrix_pointing_housekeeping()).
++    if (!is_keyboard_master()) {
++        if (direction < ARRAY_SIZE(mp_config.swipe_kc)) mp_pending_swipe = direction + 1;
++        return KC_NO;
++    }
++#endif
++    mp_send_swipe(direction);
++    return KC_NO;
++}
++
++// ---------------------------------------------------------------------------
++// Smooth movement and scrolling (revision 12, MATRIX_POINTING_NATIVE_CPI).
++// The sensor reports every few milliseconds while USB takes a report every
++// millisecond, so each sensor report is spread over the time until the next
++// one (with "smooth" on). Acceleration follows the finger speed per
++// millisecond. Touchpad scrolling and momentum after a two-finger flick go
++// through one scroll queue in wheel notches. With
++// POINTING_DEVICE_HIRES_SCROLL_ENABLE the units are 1/120 notches and wheel
++// keycodes (knobs, edge sliders, mouse keys) go through it too (QMK's mouse
++// keys would send 1/120 notch per step). QMK always sends the fine units
++// without checking that the host turned the multiplier on; a host that does
++// not scrolls 120 times too far, so it is off for the Corne Procyon36.
++#if defined(POINTING_DEVICE_ENABLE) && defined(MATRIX_POINTING_NATIVE_CPI)
++#    define MP_SMOOTH
++#endif
++#if defined(MP_SMOOTH) && defined(POINTING_DEVICE_HIRES_SCROLL_ENABLE)
++#    define MP_HIRES
++#endif
++
++#ifdef MP_SMOOTH
++// Scroll queue in wheel units (notches, or 1/120 notches with the
++// high-resolution wheel).
++static int32_t  mp_scroll_pend_h = 0, mp_scroll_pend_v = 0;
++static uint16_t mp_scroll_until  = 0;
++static int32_t  mp_momentum_h = 0, mp_momentum_v = 0; // units per ms x65536
++
++// Wheel units per notch: fine units only once the host has turned the
++// multiplier on (otherwise every unit would be a whole notch).
++static int32_t mp_notch(void) {
++#    ifdef MP_HIRES
++    if (usb_hires_scroll_enabled && usb_hires_scroll_enabled()) return pointing_device_get_hires_scroll_resolution();
++#    endif
++    return 1;
++}
++#endif
++
++#ifdef MP_HIRES
++static int8_t   mp_wheel_hold_h = 0, mp_wheel_hold_v = 0;
++static uint16_t mp_wheel_hold_since = 0;
++static int32_t  mp_wheel_hold_acc   = 0;
++
++static bool mp_is_wheel_keycode(uint16_t keycode) {
++    return keycode >= QK_MOUSE_WHEEL_UP && keycode <= QK_MOUSE_WHEEL_RIGHT;
++}
++
++#endif // MP_HIRES
++
++#ifdef MP_SMOOTH
++static void mp_scroll_queue(int32_t h, int32_t v, uint16_t spread_ms) {
++    const uint16_t now   = timer_read();
++    const uint16_t until = now + spread_ms;
++    // Extend the running spread, or start a new one (also when the old
++    // deadline is long past and the 16-bit timer may have wrapped).
++    const int16_t left = (int16_t)(mp_scroll_until - now);
++    if ((mp_scroll_pend_h == 0 && mp_scroll_pend_v == 0) || left <= 0 || left > 200 || (int16_t)(until - mp_scroll_until) > 0) {
++        mp_scroll_until = until;
++    }
++    mp_scroll_pend_h += h;
++    mp_scroll_pend_v += v;
++}
++#endif // MP_SMOOTH
++
++#ifdef MP_HIRES
++static void mp_wheel_direction(uint16_t keycode, int8_t *h, int8_t *v) {
++    *h = *v = 0;
++    switch (keycode) {
++        case QK_MOUSE_WHEEL_UP: *v = 1; break;
++        case QK_MOUSE_WHEEL_DOWN: *v = -1; break;
++        case QK_MOUSE_WHEEL_LEFT: *h = -1; break;
++        case QK_MOUSE_WHEEL_RIGHT: *h = 1; break;
++        default: break;
++    }
++}
++
++// One wheel notch, scrolled smoothly over 50 ms.
++static void mp_wheel_notch(uint16_t keycode) {
++    int8_t h, v;
++    mp_wheel_direction(keycode, &h, &v);
++    mp_momentum_h = mp_momentum_v = 0;
++    mp_scroll_queue(h * mp_notch(), v * mp_notch(), 50);
++}
++
++// Wheel keycode pressed / released (keys and encoder steps).
++static void mp_wheel_key(uint16_t keycode, bool pressed) {
++    int8_t h, v;
++    mp_wheel_direction(keycode, &h, &v);
++    if (pressed) {
++        mp_wheel_notch(keycode);
++        mp_wheel_hold_h     = h;
++        mp_wheel_hold_v     = v;
++        mp_wheel_hold_since = timer_read();
++        mp_wheel_hold_acc   = 0;
++    } else if (mp_wheel_hold_h == h && mp_wheel_hold_v == v) {
++        mp_wheel_hold_h = mp_wheel_hold_v = 0;
++    }
++}
++#endif // MP_HIRES
++
++#ifdef MP_SMOOTH
++// Wheel keycodes with modifiers (revision 15), e.g. Ctrl + wheel to zoom:
++// the modifiers are held while one whole notch goes out in a single report
++// (QMK's mouse keys would send 1/120 notch with the high-resolution wheel),
++// then released.
++static uint8_t  mp_modwheel_mods  = 0;
++static uint16_t mp_modwheel_until = 0;
++
++static bool mp_is_mod_wheel(uint16_t keycode) {
++    const uint8_t basic = keycode & 0xFF;
++    return keycode <= QK_MODS_MAX && (keycode >> 8) != 0 && basic >= QK_MOUSE_WHEEL_UP && basic <= QK_MOUSE_WHEEL_RIGHT;
++}
++
++static void mp_mod_wheel(uint16_t keycode) {
++    const uint8_t m    = (keycode >> 8) & 0x1F; // QK_MODS: Ctrl 1, Shift 2, Alt 4, GUI 8, right 0x10
++    const uint8_t mods = (m & 0x10) ? (uint8_t)((m & 0x0F) << 4) : (uint8_t)(m & 0x0F);
++    if (mp_modwheel_mods != mods) {
++        if (mp_modwheel_mods) unregister_mods(mp_modwheel_mods);
++        register_mods(mods);
++        mp_modwheel_mods = mods;
++    }
++    int32_t h = 0, v = 0;
++    switch (keycode & 0xFF) {
++        case QK_MOUSE_WHEEL_UP: v = 1; break;
++        case QK_MOUSE_WHEEL_DOWN: v = -1; break;
++        case QK_MOUSE_WHEEL_LEFT: h = -1; break;
++        case QK_MOUSE_WHEEL_RIGHT: h = 1; break;
++        default: break;
++    }
++    mp_momentum_h = mp_momentum_v = 0;
++    mp_scroll_queue(h * mp_notch(), v * mp_notch(), 0);
++    mp_modwheel_until = timer_read() + 40;
++}
++
++// Releases the modifiers once the notch is out (and 40 ms have passed).
++static void mp_mod_wheel_task(void) {
++    if (mp_modwheel_mods && mp_scroll_pend_h == 0 && mp_scroll_pend_v == 0 && (int16_t)(timer_read() - mp_modwheel_until) >= 0) {
++        unregister_mods(mp_modwheel_mods);
++        mp_modwheel_mods = 0;
++    }
++}
++#endif // MP_SMOOTH
++
++// ---------------------------------------------------------------------------
++// Touchpad edge sliders and corner taps (revision 12, digitizer touchpads).
++// A single finger that lands within edge_width % of a side whose keycodes
++// are set becomes a slider: every edge_step % it moves along the side taps
++// that side's keycode, and the finger is hidden from the mouse fallback (no
++// cursor movement, no tap click). A finger that lands in a corner with a
++// keycode taps it when lifted quickly without moving. Moving well into the
++// pad before the first step, or a second finger, gives the touch back to the
++// cursor. Edges are as the user sees the pad (after rotation / inversion).
++#ifdef MP_EDGES
++#    include "digitizer.h"
++
++#    define MP_EDGE_SCALE 1000            // positions in 1/1000 of the pad
++#    define MP_EDGE_RELEASE_DISTANCE 150 // into the pad before a step: cursor
++#    define MP_CORNER_MOVE 80            // a corner tap moves less than this
++#    define MP_CORNER_TAP_MS 300
++
++enum { MP_TOUCH_NONE = 0, MP_TOUCH_EDGE, MP_TOUCH_CORNER, MP_TOUCH_PASS };
++
++typedef struct {
++    uint8_t  mode;
++    uint8_t  zone; // edge or corner index
++    bool     stepped;
++    int16_t  start_a, start_p; // along / across the edge (corner: x / y)
++    int16_t  last_a;
++    int16_t  travel;
++    uint16_t time;
++} mp_touch_t;
++
++static mp_touch_t mp_touch[DIGITIZER_CONTACT_COUNT];
++static bool       mp_touch_down[DIGITIZER_CONTACT_COUNT];
++// Fingers on the pad (for momentum scrolling): this half's count, or the
++// touchpad half's count from the split reply. 0xFF = not known.
++static uint8_t mp_fingers_local  = 0;
++static uint8_t mp_fingers_remote = 0xFF;
++// Finger movement seen by the touchpad (sensor units), for the auto mouse
++// layer while Windows reads the touchpad as a precision touchpad (no mouse
++// movement reaches QMK then). Fingers used as edge sliders are not counted.
++static int32_t  mp_touch_motion = 0;
++static uint16_t mp_touch_last_x[DIGITIZER_CONTACT_COUNT];
++static uint16_t mp_touch_last_y[DIGITIZER_CONTACT_COUNT];
++static bool     mp_touch_tracked[DIGITIZER_CONTACT_COUNT];
++
++// Edge summary the slave half gets from the master (it has no editor).
++static uint8_t mp_edge_width_synced = 12, mp_edge_step_synced = 6, mp_edge_mask_synced = 0, mp_corner_mask_synced = 0;
++
++static uint8_t mp_edge_mask(void) {
++    uint8_t mask = 0;
++    for (uint8_t e = 0; e < MP_EDGE_COUNT; e++) {
++        for (uint8_t d = 0; d < 2; d++) {
++            if (mp_ext.edge_kc[e][d]) mask |= 1 << (e * 2 + d);
++        }
++    }
++    return mask;
++}
++
++static uint8_t mp_corner_mask(void) {
++    uint8_t mask = 0;
++    for (uint8_t c = 0; c < MP_CORNER_COUNT; c++) {
++        if (mp_ext.corner_kc[c]) mask |= 1 << c;
++    }
++    return mask;
++}
++
++static bool mp_edge_is_master(void) {
++#    ifdef SPLIT_KEYBOARD
++    return is_keyboard_master();
++#    else
++    return true;
++#    endif
++}
++
++static uint8_t mp_edge_width_now(void) {
++    return mp_edge_is_master() ? mp_ext.edge_width : mp_edge_width_synced;
++}
++static uint8_t mp_edge_step_now(void) {
++    return mp_edge_is_master() ? mp_ext.edge_step : mp_edge_step_synced;
++}
++static uint8_t mp_edge_mask_now(void) {
++    return mp_edge_is_master() ? mp_edge_mask() : mp_edge_mask_synced;
++}
++static uint8_t mp_corner_mask_now(void) {
++    return mp_edge_is_master() ? mp_corner_mask() : mp_corner_mask_synced;
++}
++
++#    if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++static volatile int8_t  mp_pending_edge[MP_EDGE_COUNT] = {0}; // on the slave half
++static volatile uint8_t mp_pending_corners             = 0;
++#    endif
++
++// Taps the keycode on the USB half; the other half queues it for the
++// master (collected with the swipes in mp_split_housekeeping()).
++static void mp_edge_emit(uint8_t edge, uint8_t forward) {
++#    if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++    if (!mp_edge_is_master()) {
++        int8_t n = mp_pending_edge[edge];
++        if (forward && n < 100) mp_pending_edge[edge] = n + 1;
++        if (!forward && n > -100) mp_pending_edge[edge] = n - 1;
++        return;
++    }
++#    endif
++    const uint16_t keycode = mp_ext.edge_kc[edge][forward ? 1 : 0];
++#    ifdef MP_SMOOTH
++    if (mp_is_mod_wheel(keycode)) {
++        mp_mod_wheel(keycode);
++        return;
++    }
++#    endif
++#    ifdef MP_HIRES
++    if (mp_is_wheel_keycode(keycode)) {
++        mp_wheel_notch(keycode);
++        return;
++    }
++#    endif
++    if (keycode != KC_NO && keycode <= QK_MODS_MAX) tap_code16(keycode);
++}
++
++static void mp_corner_emit(uint8_t corner) {
++#    if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++    if (!mp_edge_is_master()) {
++        mp_pending_corners |= 1 << corner;
++        return;
++    }
++#    endif
++    const uint16_t keycode = mp_ext.corner_kc[corner];
++    if (keycode != KC_NO && keycode <= QK_MODS_MAX) tap_code16(keycode);
++}
++
++static bool mp_edge_on_this_side(void) {
++#    if defined(SPLIT_KEYBOARD) && defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_LEFT)
++    return is_keyboard_left();
++#    elif defined(SPLIT_KEYBOARD) && defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_RIGHT)
++    return !is_keyboard_left();
++#    else
++    return true;
++#    endif
++}
++
++static uint8_t mp_fingers_now(void) {
++    return mp_edge_on_this_side() ? mp_fingers_local : mp_fingers_remote;
++}
++
++// Sensor position to the user's view of the pad (0..MP_EDGE_SCALE), with
++// the same rotation / inversion as the cursor.
++static void mp_edge_position(const digitizer_contact_t *c, int16_t *u, int16_t *v) {
++    int32_t x = (int32_t)c->x * MP_EDGE_SCALE / DIGITIZER_RESOLUTION_X - MP_EDGE_SCALE / 2;
++    int32_t y = (int32_t)c->y * MP_EDGE_SCALE / DIGITIZER_RESOLUTION_Y - MP_EDGE_SCALE / 2;
++    switch (mp_config.rotation) {
++        case 1: { int32_t t = x; x = y;  y = -t; break; }
++        case 2: { x = -x; y = -y; break; }
++        case 3: { int32_t t = x; x = -y; y = t;  break; }
++        default: break;
++    }
++    if (mp_config.invert_x) x = -x;
++    if (mp_config.invert_y) y = -y;
++    *u = (int16_t)(x + MP_EDGE_SCALE / 2);
++    *v = (int16_t)(y + MP_EDGE_SCALE / 2);
++}
++
++// Along / across coordinates of an edge (left 0, right 1, top 2, bottom 3).
++static void mp_edge_axes(uint8_t edge, int16_t u, int16_t v, int16_t *along, int16_t *across) {
++    if (edge < 2) {
++        *along  = v;
++        *across = u;
++    } else {
++        *along  = u;
++        *across = v;
++    }
++}
++
++static void mp_touch_start(uint8_t i, int16_t u, int16_t v, uint8_t fingers) {
++    mp_touch_t *t = &mp_touch[i];
++    memset(t, 0, sizeof(*t));
++    t->mode = MP_TOUCH_PASS;
++    if (fingers != 1) return;
++    const int16_t w      = (int16_t)mp_edge_width_now() * (MP_EDGE_SCALE / 100);
++    const bool    left   = u < w;
++    const bool    right  = u > MP_EDGE_SCALE - w;
++    const bool    top    = v < w;
++    const bool    bottom = v > MP_EDGE_SCALE - w;
++    if ((left || right) && (top || bottom)) {
++        const uint8_t corner = (bottom ? 2 : 0) + (right ? 1 : 0);
++        if (mp_corner_mask_now() & (1 << corner)) {
++            t->mode    = MP_TOUCH_CORNER;
++            t->zone    = corner;
++            t->start_a = u;
++            t->start_p = v;
++            t->time    = timer_read();
++            return;
++        }
++    }
++    const uint8_t mask     = mp_edge_mask_now();
++    const bool    inside[] = {left, right, top, bottom};
++    // Prefer the sides (left / right) over top / bottom where they meet.
++    static const uint8_t order[] = {1, 0, 3, 2};
++    for (uint8_t k = 0; k < MP_EDGE_COUNT; k++) {
++        const uint8_t e = order[k];
++        if (!inside[e] || !(mask & (3 << (e * 2)))) continue;
++        t->mode = MP_TOUCH_EDGE;
++        t->zone = e;
++        mp_edge_axes(e, u, v, &t->start_a, &t->start_p);
++        t->last_a = t->start_a;
++        return;
++    }
++}
++
++static void mp_glow_update(const digitizer_t *state);
++
++bool matrix_pointing_digitizer(digitizer_t *const state) {
++    if (!mp_edge_on_this_side()) return false;
++    mp_ensure_loaded();
++    uint8_t fingers = 0;
++    for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
++        if (state->contacts[i].type == FINGER && state->contacts[i].tip) fingers++;
++    }
++    mp_fingers_local = fingers;
++    mp_glow_update(state);
++    for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
++        digitizer_contact_t *c    = &state->contacts[i];
++        mp_touch_t          *t    = &mp_touch[i];
++        const bool           down = c->type == FINGER && c->tip;
++        if (!down) {
++            if (mp_touch_down[i] && t->mode == MP_TOUCH_CORNER && timer_elapsed(t->time) < MP_CORNER_TAP_MS) {
++                mp_corner_emit(t->zone);
++            }
++            mp_touch_down[i] = false;
++            t->mode          = MP_TOUCH_NONE;
++            continue;
++        }
++        int16_t u, v;
++        mp_edge_position(c, &u, &v);
++        if (!mp_touch_down[i]) {
++            mp_touch_down[i] = true;
++            mp_touch_start(i, u, v, fingers);
++        } else if (fingers > 1 && t->mode != MP_TOUCH_PASS) {
++            t->mode = MP_TOUCH_PASS; // two fingers: scrolling etc.
++        }
++        if (t->mode == MP_TOUCH_CORNER) {
++            if (abs(u - t->start_a) > MP_CORNER_MOVE || abs(v - t->start_p) > MP_CORNER_MOVE) {
++                t->mode = MP_TOUCH_PASS;
++            }
++        } else if (t->mode == MP_TOUCH_EDGE) {
++            int16_t a, p;
++            mp_edge_axes(t->zone, u, v, &a, &p);
++            if (!t->stepped && abs(p - t->start_p) > MP_EDGE_RELEASE_DISTANCE && abs(p - t->start_p) > abs(a - t->start_a)) {
++                t->mode = MP_TOUCH_PASS;
++            } else {
++                const int16_t step = (int16_t)mp_edge_step_now() * (MP_EDGE_SCALE / 100);
++                t->travel += a - t->last_a;
++                t->last_a = a;
++                while (t->travel >= step) {
++                    t->travel -= step;
++                    t->stepped = true;
++                    mp_edge_emit(t->zone, 1);
++                }
++                while (t->travel <= -step) {
++                    t->travel += step;
++                    t->stepped = true;
++                    mp_edge_emit(t->zone, 0);
++                }
++            }
++        }
++        if (t->mode == MP_TOUCH_EDGE || t->mode == MP_TOUCH_CORNER) {
++            c->tip = 0; // hidden from the cursor and tap detection
++        }
++    }
++    // Movement of the fingers the host sees.
++    for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
++        const digitizer_contact_t *c = &state->contacts[i];
++        if (c->type == FINGER && c->tip) {
++            if (mp_touch_tracked[i]) {
++                const int32_t moved = abs((int32_t)c->x - mp_touch_last_x[i]) + abs((int32_t)c->y - mp_touch_last_y[i]);
++                if (mp_touch_motion < INT32_MAX - moved) mp_touch_motion += moved;
++            }
++            mp_touch_last_x[i]  = c->x;
++            mp_touch_last_y[i]  = c->y;
++            mp_touch_tracked[i] = true;
++        } else {
++            mp_touch_tracked[i] = false;
++        }
++    }
++    return false;
++}
++
++// Finger movement since the last call (sensor units), then cleared.
++static int32_t mp_take_touch_motion(void) {
++    const int32_t moved = mp_touch_motion;
++    mp_touch_motion     = 0;
++    return moved;
++}
++
++// Precision ("sniping") mode (revision 17): the touchpad's coordinates are
++// scaled down with the fork's digitizer_set_scale(), which works for the
++// mouse and the precision touchpad modes alike (it keeps a finger that is
++// down where it is when the scale changes). On while Sniping Mode (QK_KB_4)
++// is held or after Sniping Toggle (QK_KB_5). The slave half gets the scale
++// from the master over the split sync.
++static bool    mp_precision_hold    = false;
++static bool    mp_precision_toggle  = false;
++static uint8_t mp_precision_remote  = 100;
++static uint8_t mp_precision_applied = 100;
++
++static uint8_t mp_precision_wanted(void) {
++    if (!mp_edge_is_master()) return mp_precision_remote;
++    return (mp_precision_hold || mp_precision_toggle) ? mp_ext.precision_scale : 100;
++}
++
++static void mp_precision_task(void) {
++    if (!mp_edge_on_this_side()) return;
++    const uint8_t want = mp_precision_wanted();
++    if (want != mp_precision_applied) {
++        digitizer_set_scale(want);
++        mp_precision_applied = want;
++    }
++}
++
++#ifdef MP_GUIDE
++// Key guide (revision 20): on the active layer, light only the keys that do
++// something there; transparent and empty keys go dark (or dim). The USB half
++// reads the keymap and sends the kind of each key to the other half, which
++// has no copy of the keymap.
++#    define MP_GUIDE_KEYS (MATRIX_ROWS * MATRIX_COLS)
++#    define MP_GUIDE_PACKET (3 + (MP_GUIDE_KEYS + 1) / 2) // marker, flags, dim, 4 bits per key
++#    define MP_GUIDE_MARKER 0xB7
++enum { MP_KIND_NONE, MP_KIND_KEY, MP_KIND_MOD, MP_KIND_LAYER, MP_KIND_MEDIA, MP_KIND_MOUSE, MP_KIND_OTHER };
++
++static uint8_t mp_guide_packet[MP_GUIDE_PACKET] = {0};
++static bool    mp_guide_have                    = false;
++
++static uint8_t mp_guide_kind_of(uint16_t kc) {
++    if (kc == KC_NO || kc == KC_TRANSPARENT) return MP_KIND_NONE;
++    if (IS_MODIFIER_KEYCODE(kc) || IS_QK_MOD_TAP(kc) || IS_QK_ONE_SHOT_MOD(kc)) return MP_KIND_MOD;
++    if (IS_QK_LAYER_TAP(kc) || IS_QK_LAYER_MOD(kc) || IS_QK_TO(kc) || IS_QK_MOMENTARY(kc) || IS_QK_DEF_LAYER(kc) || IS_QK_TOGGLE_LAYER(kc) || IS_QK_ONE_SHOT_LAYER(kc) || IS_QK_LAYER_TAP_TOGGLE(kc) || IS_QK_PERSISTENT_DEF_LAYER(kc)) return MP_KIND_LAYER;
++    if (IS_SYSTEM_KEYCODE(kc) || IS_CONSUMER_KEYCODE(kc)) return MP_KIND_MEDIA;
++    if (IS_MOUSE_KEYCODE(kc) || IS_QK_KB(kc)) return MP_KIND_MOUSE; // QK_KB_*: DPI / precision keys
++    if (IS_BASIC_KEYCODE(kc)) return MP_KIND_KEY;
++    return MP_KIND_OTHER; // shortcuts (mods + key), macros, system keys...
++}
++
++// USB half: what the active layer has at each key position.
++static void mp_guide_compute(void) {
++    const uint8_t layer  = get_highest_layer(layer_state | default_layer_state);
++    const uint8_t base   = get_highest_layer(default_layer_state);
++    const bool    active = mp_ext.key_guide == 2 || (mp_ext.key_guide == 1 && layer != base);
++    uint8_t      *p      = mp_guide_packet;
++    memset(p, 0, sizeof(mp_guide_packet));
++    p[0] = MP_GUIDE_MARKER;
++    p[1] = (active ? 1 : 0) | (mp_ext.key_guide_color ? 2 : 0);
++    p[2] = mp_ext.key_guide_dim > 50 ? 50 : mp_ext.key_guide_dim;
++    if (active) {
++        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
++            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
++                const uint16_t i    = row * MATRIX_COLS + col;
++                const uint8_t  kind = mp_guide_kind_of(keymap_key_to_keycode(layer, (keypos_t){.col = col, .row = row}));
++                p[3 + i / 2] |= (i & 1) ? (uint8_t)(kind << 4) : kind;
++            }
++        }
++    }
++    mp_guide_have = true;
++}
++
++// The other half: the packet from the USB half.
++static void mp_guide_unpack(const uint8_t *in) {
++    if (in[0] != MP_GUIDE_MARKER) return;
++    memcpy(mp_guide_packet, in, sizeof(mp_guide_packet));
++    mp_guide_have = true;
++}
++
++static uint8_t mp_guide_kind_at(uint8_t row, uint8_t col) {
++    const uint16_t i = row * MATRIX_COLS + col;
++    const uint8_t  b = mp_guide_packet[3 + i / 2];
++    return (i & 1) ? b >> 4 : b & 0x0F;
++}
++#endif
++
++// Touch glow (revision 18): where a finger is on the pad (0..MP_EDGE_SCALE,
++// as the user sees it), for lighting the keys at the same place on the
++// keyboard. Known on the touchpad half; the other half gets it with the
++// split poll (see mp_split_housekeeping()).
++typedef struct {
++    bool     active;
++    uint16_t u, v;
++    uint16_t since; // when it was last touched (fade out after lifting)
++} mp_glow_t;
++static mp_glow_t mp_glow_local  = {0};
++static mp_glow_t mp_glow_remote = {0};
++
++static void mp_glow_update(const digitizer_t *state) {
++    for (uint8_t i = 0; i < DIGITIZER_CONTACT_COUNT; i++) {
++        const digitizer_contact_t *c = &state->contacts[i];
++        if (c->type == FINGER && c->tip) {
++            int16_t u, v;
++            mp_edge_position(c, &u, &v);
++            mp_glow_local.active = true;
++            mp_glow_local.u      = u < 0 ? 0 : u > MP_EDGE_SCALE ? MP_EDGE_SCALE : u;
++            mp_glow_local.v      = v < 0 ? 0 : v > MP_EDGE_SCALE ? MP_EDGE_SCALE : v;
++            mp_glow_local.since  = timer_read();
++            return;
++        }
++    }
++    mp_glow_local.active = false;
++}
++
++static const mp_glow_t *mp_glow_now(void) {
++    return mp_edge_on_this_side() ? &mp_glow_local : &mp_glow_remote;
++}
++
++// [active, u (2), v (2)] for the split poll.
++// Touch glow settings of the USB half (on, color, radius, fade), sent over
++// the split sync: the other half lights its keys with them.
++static uint8_t mp_glow_synced[4]    = {0};
++static bool    mp_glow_have_synced __attribute__((unused)) = false;
++
++static void mp_glow_pack(const mp_glow_t *g, uint8_t *o) {
++    o[0] = g->active ? 1 : (timer_elapsed(g->since) < 1000 ? 2 : 0); // 2 = just lifted
++    o[1] = g->u >> 8;
++    o[2] = g->u & 0xFF;
++    o[3] = g->v >> 8;
++    o[4] = g->v & 0xFF;
++}
++
++static void mp_glow_unpack(const uint8_t *in) {
++    const bool was = mp_glow_remote.active;
++    if (in[0] == 0 && !was) return;
++    mp_glow_remote.u      = (in[1] << 8) | in[2];
++    mp_glow_remote.v      = (in[3] << 8) | in[4];
++    mp_glow_remote.active = in[0] == 1;
++    if (in[0] == 1 || was) mp_glow_remote.since = timer_read();
++}
++
++// Custom keycodes of the keyboard definition (QK_KB_0..5): DPI+/-,
++// Sniping+/-, Sniping Mode, Sniping Toggle.
++static bool mp_precision_process(uint16_t keycode, keyrecord_t *record) {
++    const bool pressed = record->event.pressed;
++    switch (keycode) {
++        case QK_KB_4: // Sniping Mode: while held
++            mp_precision_hold = pressed;
++            mp_config_changed();
++            return false;
++        case QK_KB_5: // Sniping Toggle
++            if (pressed) {
++                mp_precision_toggle = !mp_precision_toggle;
++                mp_config_changed();
++            }
++            return false;
++        case QK_KB_2: // Sniping+: less precise (faster)
++        case QK_KB_3: // Sniping-: more precise
++            if (pressed) {
++                int16_t scale = mp_ext.precision_scale + (keycode == QK_KB_2 ? 10 : -10);
++                if (scale < 10) scale = 10;
++                if (scale > 90) scale = 90;
++                mp_ext.precision_scale = (uint8_t)scale;
++                mp_ext_save();
++                mp_config_changed();
++            }
++            return false;
++        case QK_KB_0: // DPI+ (cursor speed in the mouse mode)
++        case QK_KB_1: // DPI-
++            if (pressed) {
++                const mp_field_t *cpi = mp_find_field(0x01);
++                if (cpi) {
++                    mp_write_field(cpi, mp_config.cpi + (keycode == QK_KB_0 ? 100 : -100));
++                    mp_apply();
++                    MP_EEPROM_WRITE(mp_config);
++                    mp_config_changed();
++                }
++            }
++            return false;
++        default:
++            return true;
++    }
++}
++
++#    ifndef MATRIX_POINTING_NO_DIGITIZER_HOOK
++bool digitizer_task_user(digitizer_t *const state) {
++    return matrix_pointing_digitizer(state);
++}
++#    endif
++#endif // MP_EDGES
++
++// ---------------------------------------------------------------------------
++// Knob press-and-turn (revision 12): while an encoder's push switch is held,
++// turning it sends knob_kc instead of the encoder map. A push switch whose
++// knob has such keycodes acts on release (and only when the knob was not
++// turned), so pushing to turn does not also fire it. Push keycodes that are
++// not plain keys (layer keys, mod-taps, ...) keep acting on press.
++#ifdef MP_KNOBS
++typedef struct {
++    uint8_t row, col;
++} mp_knob_key_t;
++static const mp_knob_key_t mp_knob_keys[] = MATRIX_POINTING_KNOB_KEYS;
++#    define MP_KNOBS_USED (ARRAY_SIZE(mp_knob_keys) < MP_KNOB_COUNT ? ARRAY_SIZE(mp_knob_keys) : MP_KNOB_COUNT)
++
++static bool     mp_knob_held[MP_KNOB_COUNT]     = {0};
++static bool     mp_knob_turned[MP_KNOB_COUNT]   = {0};
++static bool     mp_knob_deferred[MP_KNOB_COUNT] = {0};
++static uint16_t mp_knob_sent[MP_KNOB_COUNT][2]  = {{0}};
++
++static bool mp_knob_has_alt(uint8_t knob) {
++    return mp_ext.knob_kc[knob][0] || mp_ext.knob_kc[knob][1];
++}
++
++static bool mp_knob_process(uint16_t keycode, keyrecord_t *record) {
++    const keyevent_t *ev = &record->event;
++    if (IS_ENCODEREVENT(*ev)) {
++        const uint8_t knob = ev->key.col; // encoder index
++        if (knob >= MP_KNOBS_USED || !mp_knob_held[knob]) return true;
++        const uint8_t dir = ev->type == ENCODER_CW_EVENT ? 1 : 0;
++        if (ev->pressed) {
++            mp_knob_turned[knob] = true;
++            const uint16_t alt   = mp_ext.knob_kc[knob][dir];
++            if (alt == KC_NO) return true; // not set: the usual keycode
++#    ifdef MP_SMOOTH
++            if (mp_is_mod_wheel(alt)) {
++                mp_mod_wheel(alt);
++                return false;
++            }
++#    endif
++#    ifdef MP_HIRES
++            if (mp_is_wheel_keycode(alt)) {
++                mp_wheel_notch(alt);
++                return false;
++            }
++#    endif
++            mp_knob_sent[knob][dir] = alt;
++            register_code16(alt);
++            return false;
++        }
++        if (mp_knob_sent[knob][dir]) {
++            unregister_code16(mp_knob_sent[knob][dir]);
++            mp_knob_sent[knob][dir] = 0;
++            return false;
++        }
++        return true;
++    }
++    if (ev->type != KEY_EVENT) return true;
++    for (uint8_t k = 0; k < MP_KNOBS_USED; k++) {
++        if (ev->key.row != mp_knob_keys[k].row || ev->key.col != mp_knob_keys[k].col) continue;
++        if (ev->pressed) {
++            mp_knob_held[k]     = true;
++            mp_knob_turned[k]   = false;
++            mp_knob_deferred[k] = mp_knob_has_alt(k) && keycode <= QK_MODS_MAX;
++            return !mp_knob_deferred[k];
++        }
++        mp_knob_held[k] = false;
++        if (!mp_knob_deferred[k]) return true;
++        mp_knob_deferred[k] = false;
++        if (!mp_knob_turned[k] && keycode != KC_NO) tap_code16(keycode);
++        return false;
++    }
++    return true;
++}
++#endif // MP_KNOBS
++
++// ---------------------------------------------------------------------------
++// Split keyboards: the touchpad's gestures run on the half it is wired to.
++// When USB is on the other half, settings changed from the editor only reach
++// the master, so the master sends them over (and collects swipes).
++//
++// config.h:
++//   #define MATRIX_POINTING_SPLIT_SYNC
++//   #define SPLIT_TRANSACTION_IDS_USER MP_SYNC_CONFIG, MP_SYNC_SWIPE
++//   #define RPC_M2S_BUFFER_SIZE 64
++
++#if defined(SPLIT_KEYBOARD) && defined(MATRIX_POINTING_SPLIT_SYNC)
++#    include "transactions.h"
++#    include "split_util.h"
++_Static_assert(sizeof(mp_config_t) <= RPC_M2S_BUFFER_SIZE, "Set RPC_M2S_BUFFER_SIZE to at least 64 in config.h");
++
++static uint8_t  mp_generation        = 1;
++static uint8_t  mp_synced_generation = 0;
++static uint16_t mp_last_sync         = 0;
++
++static void mp_config_changed(void) {
++    mp_generation++;
++}
++
++// Payload: mp_config_t, then (revision 12) the edge summary: width, step,
++// edge keycode mask, corner mask; (revision 14) the touch sensor tuning:
++// threshold, initial / next movement hysteresis, 1 = valid; (revision 17)
++// the precision mode scale (100 = off); (revision 19) the touch glow:
++// on, color, radius, fade. Older slaves read only what they know.
++#    define MP_SYNC_SIZE_R17 (sizeof(mp_config_t) + 9)
++#    define MP_SYNC_SIZE (sizeof(mp_config_t) + 13)
++_Static_assert(MP_SYNC_SIZE <= RPC_M2S_BUFFER_SIZE, "Set RPC_M2S_BUFFER_SIZE to at least 64 in config.h");
++
++static void mp_sync_config_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
++    if (in_len < sizeof(mp_config_t)) return;
++    memcpy(&mp_config, in, sizeof(mp_config_t));
++    mp_loaded = true;
++#    ifdef MP_EDGES
++    if (in_len >= MP_SYNC_SIZE_R17) {
++        const uint8_t *extra  = (const uint8_t *)in + sizeof(mp_config_t);
++        mp_edge_width_synced  = extra[0];
++        mp_edge_step_synced   = extra[1];
++        mp_edge_mask_synced   = extra[2];
++        mp_corner_mask_synced = extra[3];
++    }
++#    endif
++    if (in_len >= MP_SYNC_SIZE_R17) {
++        const uint8_t *extra = (const uint8_t *)in + sizeof(mp_config_t);
++        if (extra[7] == 1) mp_sensor_request(extra[4], extra[5], extra[6]);
++#    ifdef MP_EDGES
++        if (extra[8] >= 10 && extra[8] <= 100) mp_precision_remote = extra[8];
++#    endif
++    }
++#    ifdef MP_EDGES
++    if (in_len >= MP_SYNC_SIZE) {
++        const uint8_t *extra = (const uint8_t *)in + sizeof(mp_config_t);
++        memcpy(mp_glow_synced, extra + 9, sizeof(mp_glow_synced));
++        mp_glow_have_synced = true;
++    }
++#    endif
++#    ifdef POINTING_DEVICE_DRIVER_digitizer
++    extern bool digitizer_taps_as_clicks;
++    digitizer_taps_as_clicks = mp_config.tap_to_click;
++    extern bool force_digitizer_send_mouse_reports;
++    force_digitizer_send_mouse_reports = !mp_config.precision_touchpad;
++#    endif
++}
++
++// Reply: [pending swipe + 1, marker, revision (2), build ID (2), edge steps
++// (4 x int8, + = down / right), corner taps (bit mask), fingers + 1]. Builds before
++// revision 11 only fill byte 0, so the master sees no marker (the rest of
++// the slave's RPC buffer is never written and stays 0); revision 11 fills 6.
++#    define MP_PEER_MARKER 0xA5
++#    define MP_PEER_REPLY_BASE 12 // up to the finger count (revisions 12-17)
++#    define MP_PEER_REPLY_SIZE 17 // + touch glow [active, u, v] (revision 18)
++// Request (revision 18): the master's touch glow [active, u, v] when the
++// touchpad is on the master half.
++static void mp_sync_swipe_slave(uint8_t in_len, const void *in, uint8_t out_len, void *out) {
++#    ifdef MP_EDGES
++    if (in_len >= 5 && !mp_edge_on_this_side()) mp_glow_unpack((const uint8_t *)in);
++#    endif
++#    ifdef MP_GUIDE
++    if (in_len >= 5 + MP_GUIDE_PACKET) mp_guide_unpack((const uint8_t *)in + 5);
++#    endif
++    if (out_len < 1) return;
++    uint8_t *o       = (uint8_t *)out;
++    o[0]             = mp_pending_swipe;
++    mp_pending_swipe = 0;
++    if (out_len >= MP_PEER_REPLY_BASE) {
++        const uint16_t build = mp_build_id();
++        o[1]                 = MP_PEER_MARKER;
++        o[2]                 = MP_REVISION >> 8;
++        o[3]                 = MP_REVISION & 0xFF;
++        o[4]                 = build >> 8;
++        o[5]                 = build & 0xFF;
++        for (uint8_t e = 0; e < 4; e++) {
++#    ifdef MP_EDGES
++            o[6 + e]           = (uint8_t)mp_pending_edge[e];
++            mp_pending_edge[e] = 0;
++#    else
++            o[6 + e] = 0;
++#    endif
++        }
++#    ifdef MP_EDGES
++        o[10]              = mp_pending_corners;
++        mp_pending_corners = 0;
++        o[11]              = mp_edge_on_this_side() ? mp_fingers_local + 1 : 0;
++#    else
++        o[10] = 0;
++        o[11] = 0;
++#    endif
++    }
++    if (out_len >= MP_PEER_REPLY_SIZE) {
++#    ifdef MP_EDGES
++        if (mp_edge_on_this_side()) {
++            mp_glow_pack(&mp_glow_local, o + 12);
++        } else {
++            memset(o + 12, 0, 5);
++        }
++#    else
++        memset(o + 12, 0, 5);
++#    endif
++    }
++}
++
++static uint8_t  mp_peer_state    = 0; // see MP_SPLIT_INFO_VALUE_ID
++static uint16_t mp_peer_revision = 0;
++static uint16_t mp_peer_build    = 0;
++
++static void mp_split_register(void) {
++    transaction_register_rpc(MP_SYNC_CONFIG, mp_sync_config_slave);
++    transaction_register_rpc(MP_SYNC_SWIPE, mp_sync_swipe_slave);
++}
++
++static void mp_split_housekeeping(void) {
++    if (!is_keyboard_master()) return;
++    mp_ensure_loaded();
++    // Send on change, and every 2 s in case the other half restarted.
++    if (mp_synced_generation != mp_generation || timer_elapsed(mp_last_sync) > 2000) {
++        mp_last_sync = timer_read();
++        uint8_t payload[MP_SYNC_SIZE];
++        memcpy(payload, &mp_config, sizeof(mp_config_t));
++#    ifdef MP_EDGES
++        payload[sizeof(mp_config_t) + 0] = mp_ext.edge_width;
++        payload[sizeof(mp_config_t) + 1] = mp_ext.edge_step;
++        payload[sizeof(mp_config_t) + 2] = mp_edge_mask();
++        payload[sizeof(mp_config_t) + 3] = mp_corner_mask();
++#    else
++        memset(payload + sizeof(mp_config_t), 0, 4);
++#    endif
++        payload[sizeof(mp_config_t) + 4] = mp_ext.touch_threshold;
++        payload[sizeof(mp_config_t) + 5] = mp_ext.hyst_initial;
++        payload[sizeof(mp_config_t) + 6] = mp_ext.hyst_next;
++        payload[sizeof(mp_config_t) + 7] = 1;
++#    ifdef MP_EDGES
++        payload[sizeof(mp_config_t) + 8]  = mp_precision_wanted();
++        payload[sizeof(mp_config_t) + 9]  = mp_ext.touch_glow;
++        payload[sizeof(mp_config_t) + 10] = mp_ext.touch_glow_color;
++        payload[sizeof(mp_config_t) + 11] = mp_ext.touch_glow_radius;
++        payload[sizeof(mp_config_t) + 12] = mp_ext.touch_glow_fade;
++#    else
++        payload[sizeof(mp_config_t) + 8] = 100;
++        memset(payload + sizeof(mp_config_t) + 9, 0, 4);
++#    endif
++        if (transaction_rpc_send(MP_SYNC_CONFIG, sizeof(payload), payload)) {
++            mp_synced_generation = mp_generation;
++        }
++    }
++    static uint16_t last_poll = 0;
++    if (timer_elapsed(last_poll) >= 20) {
++        last_poll         = timer_read();
++        uint8_t reply[MP_PEER_REPLY_SIZE] = {0};
++        // This half's touch glow (5 bytes), then (revision 20) the key guide.
++#    ifdef MP_GUIDE
++        _Static_assert(5 + MP_GUIDE_PACKET <= RPC_M2S_BUFFER_SIZE, "key guide does not fit the split request");
++        uint8_t glow[5 + MP_GUIDE_PACKET] = {0};
++        mp_guide_compute();
++        memcpy(glow + 5, mp_guide_packet, MP_GUIDE_PACKET);
++#    else
++        uint8_t glow[5] = {0};
++#    endif
++#    ifdef MP_EDGES
++        if (mp_edge_on_this_side()) mp_glow_pack(&mp_glow_local, glow);
++#    endif
++        if (!is_transport_connected()) {
++            mp_peer_state = 3;
++        } else if (transaction_rpc_exec(MP_SYNC_SWIPE, sizeof(glow), glow, sizeof(reply), reply)) {
++            if (reply[0]) mp_send_swipe(reply[0] - 1);
++            if (reply[1] == MP_PEER_MARKER) {
++                mp_peer_state    = 1;
++                mp_peer_revision = (reply[2] << 8) | reply[3];
++                mp_peer_build    = (reply[4] << 8) | reply[5];
++#    ifdef MP_EDGES
++                // Keycodes from the touchpad half (see mp_edge_emit()).
++                for (uint8_t e = 0; e < MP_EDGE_COUNT; e++) {
++                    int8_t n = (int8_t)reply[6 + e];
++                    for (; n > 0; n--) mp_edge_emit(e, 1);
++                    for (; n < 0; n++) mp_edge_emit(e, 0);
++                }
++                for (uint8_t c = 0; c < MP_CORNER_COUNT; c++) {
++                    if (reply[10] & (1 << c)) mp_corner_emit(c);
++                }
++                if (reply[11]) mp_fingers_remote = reply[11] - 1;
++                if (!mp_edge_on_this_side()) mp_glow_unpack(reply + 12);
++#    endif
++            } else {
++                mp_peer_state = 2;
++            }
++        }
++    }
++}
++
++static void mp_split_info(uint8_t *data) {
++    const uint16_t build = mp_build_id();
++    data[0]              = mp_peer_state;
++    data[1]              = mp_peer_revision >> 8;
++    data[2]              = mp_peer_revision & 0xFF;
++    data[3]              = build >> 8;
++    data[4]              = build & 0xFF;
++    data[5]              = mp_peer_build >> 8;
++    data[6]              = mp_peer_build & 0xFF;
++}
++#else
++static void mp_config_changed(void) {}
++static void mp_split_register(void) {}
++static void mp_split_housekeeping(void) {}
++static void mp_split_info(uint8_t *data) {
++    memset(data, 0, 7);
++}
++#endif
++
++// ---------------------------------------------------------------------------
++// Multitouch fork: the digitizer task runs on every main loop pass and, while
++// a finger is down, rewrites the fallback's mouse report each pass (to zero
++// when the sensor has no new data). The pointing task only runs once per
++// POINTING_DEVICE_TASK_THROTTLE_MS, so movement read in a pass where it is
++// throttled was overwritten before it was sent. Collect it at the end of
++// every pass instead and add it to the next report.
++#if defined(POINTING_DEVICE_DRIVER_digitizer) && defined(POINTING_DEVICE_ENABLE) && !defined(MATRIX_POINTING_NO_DRAIN)
++extern const pointing_device_driver_t digitizer_pointing_device_driver;
++static int32_t mp_drain_x = 0, mp_drain_y = 0, mp_drain_h = 0, mp_drain_v = 0;
++
++static bool mp_pointing_on_this_side(void) {
++#    if defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_LEFT)
++    return is_keyboard_left();
++#    elif defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_RIGHT)
++    return !is_keyboard_left();
++#    else
++    return true;
++#    endif
++}
++
++static void mp_drain(void) {
++    // Only on the USB half with the sensor; the other half's report goes
++    // through the split transport instead.
++    if (!is_keyboard_master() || !mp_pointing_on_this_side()) return;
++    report_mouse_t empty = {0};
++    report_mouse_t r     = digitizer_pointing_device_driver.get_report(empty);
++    mp_drain_x += r.x;
++    mp_drain_y += r.y;
++    mp_drain_h += r.h;
++    mp_drain_v += r.v;
++}
++
++static report_mouse_t mp_add_drained(report_mouse_t r) {
++    int32_t x = r.x + mp_drain_x, y = r.y + mp_drain_y;
++    int32_t h = r.h + mp_drain_h, v = r.v + mp_drain_v;
++    mp_drain_x = mp_drain_y = mp_drain_h = mp_drain_v = 0;
++    r.x = x < MOUSE_REPORT_XY_MIN ? MOUSE_REPORT_XY_MIN : x > MOUSE_REPORT_XY_MAX ? MOUSE_REPORT_XY_MAX : x;
++    r.y = y < MOUSE_REPORT_XY_MIN ? MOUSE_REPORT_XY_MIN : y > MOUSE_REPORT_XY_MAX ? MOUSE_REPORT_XY_MAX : y;
++    const int32_t hv_max = sizeof(mouse_hv_report_t) == 1 ? INT8_MAX : INT16_MAX;
++    r.h = h < -hv_max ? -hv_max : h > hv_max ? hv_max : h;
++    r.v = v < -hv_max ? -hv_max : v > hv_max ? hv_max : v;
++    return r;
++}
++#else
++static void                                  mp_drain(void) {}
++static __attribute__((unused)) report_mouse_t mp_add_drained(report_mouse_t r) {
++    return r;
++}
++#endif
++
++void matrix_pointing_housekeeping(void) {
++    mp_drain();
++#ifdef MP_GUIDE
++#    ifdef SPLIT_KEYBOARD
++    if (!is_transport_connected() && is_keyboard_master()) mp_guide_compute(); // else with the split poll
++#    else
++    mp_guide_compute();
++#    endif
++#endif
++    mp_split_housekeeping();
++    mp_sensor_task();
++#ifdef MP_EDGES
++    mp_precision_task();
++#endif
++}
++
++#ifndef MATRIX_POINTING_NO_HOUSEKEEPING
++void housekeeping_task_user(void) {
++    matrix_pointing_housekeeping();
++}
++#endif
++
++// ---------------------------------------------------------------------------
++// LED color per layer (RGB Matrix)
++
++#if defined(RGB_MATRIX_ENABLE) && !defined(MATRIX_POINTING_NO_LED_HOOK)
++// Index 2.. of led_layer_color: hue / saturation (QMK HSV).
++static const uint8_t mp_led_hs[][2] = {
++    {0, 255},   // red
++    {85, 255},  // green
++    {43, 255},  // yellow
++    {170, 255}, // blue
++    {213, 255}, // magenta
++    {128, 255}, // cyan
++    {0, 0},     // white
++};
++
++#ifdef MP_EDGES
++// Touch glow (revision 18): the pad is mapped onto the keyboard's whole LED
++// area and the keys around the finger's place light up, brighter closer to
++// it, fading out after the finger lifts.
++static void mp_glow_render(uint8_t led_min, uint8_t led_max) {
++    // The half without USB uses the settings of the USB half.
++#    ifdef SPLIT_KEYBOARD
++    const bool synced = !is_keyboard_master() && mp_glow_have_synced;
++#    else
++    const bool synced = false;
++#    endif
++    const uint8_t on      = synced ? mp_glow_synced[0] : mp_ext.touch_glow;
++    const uint8_t color   = synced ? mp_glow_synced[1] : mp_ext.touch_glow_color;
++    uint8_t       radius  = synced ? mp_glow_synced[2] : mp_ext.touch_glow_radius;
++    const uint8_t fade_cs = synced ? mp_glow_synced[3] : mp_ext.touch_glow_fade;
++    if (!on) return;
++    if (radius < 10) radius = 10;
++    if (radius > 60) radius = 60;
++    const uint16_t fade_ms = (uint16_t)(fade_cs > 200 ? 200 : fade_cs) * 10;
++    const mp_glow_t *g    = mp_glow_now();
++    int32_t          fade = 256;
++    if (!g->active) {
++        if (g->since == 0) return; // never touched
++        const uint16_t since = timer_elapsed(g->since);
++        if (since >= fade_ms) return;
++        fade = 256 - (int32_t)since * 256 / fade_ms;
++    }
++    static int16_t x0 = 0, x1 = 0, y0 = 0, y1 = 0;
++    static bool    bounds = false;
++    if (!bounds) {
++        x0 = y0 = INT16_MAX;
++        x1 = y1 = INT16_MIN;
++        for (uint8_t i = 0; i < RGB_MATRIX_LED_COUNT; i++) {
++            const led_point_t pt = g_led_config.point[i];
++            if (pt.x < x0) x0 = pt.x;
++            if (pt.x > x1) x1 = pt.x;
++            if (pt.y < y0) y0 = pt.y;
++            if (pt.y > y1) y1 = pt.y;
++        }
++        bounds = true;
++    }
++    const int32_t fx    = x0 + (int32_t)g->u * (x1 - x0) / MP_EDGE_SCALE;
++    const int32_t fy    = y0 + (int32_t)g->v * (y1 - y0) / MP_EDGE_SCALE;
++    uint8_t       hue = rgb_matrix_get_hue(), sat = rgb_matrix_get_sat();
++    if (color >= 2 && color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
++        hue = mp_led_hs[color - 2][0];
++        sat = mp_led_hs[color - 2][1];
++    }
++    const int32_t r2 = (int32_t)radius * radius;
++    for (uint8_t i = led_min; i < led_max; i++) {
++        const int32_t dx = g_led_config.point[i].x - fx;
++        const int32_t dy = g_led_config.point[i].y - fy;
++        const int32_t d2 = dx * dx + dy * dy;
++        if (d2 >= r2) continue;
++        const int32_t level = (r2 - d2) * 256 / r2 * fade / 256; // 0..256
++        hsv_t         hsv   = {hue, sat, (uint8_t)((int32_t)rgb_matrix_get_val() * level / 256)};
++        rgb_t         rgb   = hsv_to_rgb(hsv);
++        rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
++    }
++}
++#endif
++
++#ifdef MP_GUIDE
++static void mp_guide_render(uint8_t led_min, uint8_t led_max, uint8_t layer_color) {
++    if (!mp_guide_have || !(mp_guide_packet[1] & 1)) return;
++    static const uint8_t kind_hs[][2] = {
++        {0, 0},     // key: white
++        {170, 255}, // modifier: blue
++        {213, 255}, // layer: magenta
++        {85, 255},  // media / system: green
++        {43, 255},  // mouse: yellow
++        {128, 255}, // other (shortcuts, macros): cyan
++    };
++    const bool    by_kind = mp_guide_packet[1] & 2;
++    const uint8_t dim     = mp_guide_packet[2];
++    const uint8_t val     = rgb_matrix_get_val();
++    uint8_t       hue = rgb_matrix_get_hue(), sat = rgb_matrix_get_sat();
++    if (layer_color >= 2 && layer_color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
++        hue = mp_led_hs[layer_color - 2][0];
++        sat = mp_led_hs[layer_color - 2][1];
++    }
++    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
++        for (uint8_t col = 0; col < MATRIX_COLS; col++) {
++            const uint8_t led = g_led_config.matrix_co[row][col];
++            if (led == NO_LED || led < led_min || led >= led_max) continue;
++            const uint8_t kind = mp_guide_kind_at(row, col);
++            hsv_t         hsv  = {hue, sat, val};
++            if (kind == MP_KIND_NONE) {
++                if (matrix_is_on(row, col)) continue; // keep the held key (e.g. the layer key) lit
++                hsv.v = (uint8_t)((uint16_t)val * dim / 100);
++            } else if (by_kind && kind - 1 < (int)ARRAY_SIZE(kind_hs)) {
++                hsv.h = kind_hs[kind - 1][0];
++                hsv.s = kind_hs[kind - 1][1];
++            } else {
++                continue; // assigned: keep what the lighting drew
++            }
++            const rgb_t rgb = hsv_to_rgb(hsv);
++            rgb_matrix_set_color(led, rgb.r, rgb.g, rgb.b);
++        }
++    }
++}
++#endif
++
++bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max) {
++    mp_ensure_loaded();
++    bool          keep_going = true;
++    const uint8_t layer      = get_highest_layer(layer_state | default_layer_state);
++    const uint8_t color      = layer < ARRAY_SIZE(mp_config.led_layer_color) ? mp_config.led_layer_color[layer] : 0;
++    if (color != 0) { // 0: keep the running effect
++        rgb_t rgb = {0, 0, 0};
++        if (color >= 2 && color - 2 < (int)ARRAY_SIZE(mp_led_hs)) {
++            hsv_t hsv = {mp_led_hs[color - 2][0], mp_led_hs[color - 2][1], rgb_matrix_get_val()};
++            rgb       = hsv_to_rgb(hsv);
++        }
++        for (uint8_t i = led_min; i < led_max; i++) {
++            rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
++        }
++        keep_going = false;
++    }
++#ifdef MP_GUIDE
++    mp_guide_render(led_min, led_max, color);
++#endif
++#ifdef MP_EDGES
++    mp_glow_render(led_min, led_max);
++#endif
++    return keep_going;
++}
++
++bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
++    return matrix_pointing_rgb_indicators(led_min, led_max);
++}
++#endif
++
++// ---------------------------------------------------------------------------
++// Combos stored in EEPROM, after the settings. Combos match the keycodes of
++// layer 0 at the pressed positions (COMBO_ONLY_FROM_LAYER 0), so the editor
++// can define them by key position.
++//
++// Value 0x60 (read): number of combo slots.
++// Value 0x61: data[0] = slot; data[1..16] = keys[4], keycode, term (ms),
++// all 16-bit big endian, then the layer mask (bit n = layer n, 0 = all).
++
++#define MP_COMBO_KEYS 4
++typedef struct __attribute__((packed)) {
++    uint16_t keys[MP_COMBO_KEYS]; // KC_NO for unused
++    uint16_t keycode;
++    uint16_t term; // 0 = COMBO_TERM
++    uint8_t  layers;
++    uint8_t  reserved[3];
++} mp_combo_entry_t;
++_Static_assert(sizeof(mp_combo_entry_t) == 16, "combo entry size");
++
++#if defined(COMBO_ENABLE) && !defined(MATRIX_POINTING_NO_COMBOS)
++#    ifndef MATRIX_POINTING_COMBO_COUNT
++#        define MATRIX_POINTING_COMBO_COUNT 16
++#    endif
++#    define MP_COMBO_EEPROM_OFFSET (MATRIX_POINTING_EEPROM_OFFSET + MATRIX_POINTING_EEPROM_SIZE)
++#    if (EECONFIG_USER_DATA_SIZE) < (MATRIX_POINTING_EEPROM_OFFSET + MATRIX_POINTING_EEPROM_SIZE + MATRIX_POINTING_COMBO_COUNT * 16)
++#        error "Set EECONFIG_USER_DATA_SIZE to MATRIX_POINTING_EEPROM_SIZE + MATRIX_POINTING_COMBO_COUNT * 16 (default 64 + 256 = 320)"
++#    endif
++#    ifndef eeconfig_read_user_datablock_field
++#        error "Combos stored by matrix_pointing need the newer QMK datablock API"
++#    endif
++#    ifndef COMBO_ONLY_FROM_LAYER
++#        error "Define COMBO_ONLY_FROM_LAYER 0 in config.h (combos are set by key position on layer 0)"
++#    endif
++
++static mp_combo_entry_t mp_combo_entries[MATRIX_POINTING_COMBO_COUNT];
++static uint16_t         mp_combo_keys[MATRIX_POINTING_COMBO_COUNT][MP_COMBO_KEYS + 1];
++static combo_t          mp_combos[MATRIX_POINTING_COMBO_COUNT];
++static bool             mp_combos_dirty = false;
++
++static void mp_combo_build(uint8_t i) {
++    uint8_t n = 0;
++    for (uint8_t k = 0; k < MP_COMBO_KEYS; k++) {
++        if (mp_combo_entries[i].keys[k] != KC_NO) mp_combo_keys[i][n++] = mp_combo_entries[i].keys[k];
++    }
++    for (uint8_t k = n; k <= MP_COMBO_KEYS; k++) mp_combo_keys[i][k] = COMBO_END;
++    memset(&mp_combos[i], 0, sizeof(combo_t));
++    mp_combos[i].keys    = mp_combo_keys[i];
++    mp_combos[i].keycode = mp_combo_entries[i].keycode;
++    // A combo needs at least two keys and an output.
++    mp_combos[i].disabled = n < 2 || mp_combo_entries[i].keycode == KC_NO;
++}
++
++static void mp_combos_load(void) {
++    eeconfig_read_user_datablock(mp_combo_entries, MP_COMBO_EEPROM_OFFSET, sizeof(mp_combo_entries));
++    for (uint8_t i = 0; i < MATRIX_POINTING_COMBO_COUNT; i++) mp_combo_build(i);
++}
++
++static void mp_combos_clear(void) {
++    memset(mp_combo_entries, 0, sizeof(mp_combo_entries));
++    eeconfig_update_user_datablock(mp_combo_entries, MP_COMBO_EEPROM_OFFSET, sizeof(mp_combo_entries));
++}
++
++static void mp_combos_save(void) {
++    if (!mp_combos_dirty) return;
++    mp_combos_dirty = false;
++    eeconfig_update_user_datablock(mp_combo_entries, MP_COMBO_EEPROM_OFFSET, sizeof(mp_combo_entries));
++}
++
++static void mp_put16(uint8_t *p, uint16_t v) {
++    p[0] = v >> 8;
++    p[1] = v & 0xFF;
++}
++static uint16_t mp_get16(const uint8_t *p) {
++    return (uint16_t)((p[0] << 8) | p[1]);
++}
++
++static bool mp_combo_get_value(uint8_t value_id, uint8_t *data, uint8_t length) {
++    if (value_id == 0x60) {
++        data[0] = MATRIX_POINTING_COMBO_COUNT;
++        return true;
++    }
++    if (value_id != 0x61 || length < 17) return false;
++    const uint8_t i = data[0];
++    memset(data + 1, 0, 16);
++    if (i >= MATRIX_POINTING_COMBO_COUNT) return true;
++    const mp_combo_entry_t *e = &mp_combo_entries[i];
++    for (uint8_t k = 0; k < MP_COMBO_KEYS; k++) mp_put16(data + 1 + k * 2, e->keys[k]);
++    mp_put16(data + 9, e->keycode);
++    mp_put16(data + 11, e->term);
++    data[13] = e->layers;
++    return true;
++}
++
++static bool mp_combo_set_value(uint8_t value_id, const uint8_t *data, uint8_t length) {
++    if (value_id != 0x61) return false;
++    if (length < 14 || data[0] >= MATRIX_POINTING_COMBO_COUNT) return true;
++    const uint8_t     i = data[0];
++    mp_combo_entry_t *e = &mp_combo_entries[i];
++    memset(e, 0, sizeof(*e));
++    for (uint8_t k = 0; k < MP_COMBO_KEYS; k++) e->keys[k] = mp_get16(data + 1 + k * 2);
++    e->keycode = mp_get16(data + 9);
++    e->term    = mp_get16(data + 11);
++    if (e->term > 1000) e->term = 1000;
++    e->layers = data[13];
++    mp_combo_build(i);
++    mp_combos_dirty = true;
++    return true;
++}
++
++uint16_t combo_count(void) {
++    return MATRIX_POINTING_COMBO_COUNT;
++}
++
++combo_t *combo_get(uint16_t combo_idx) {
++    return combo_idx < MATRIX_POINTING_COMBO_COUNT ? &mp_combos[combo_idx] : NULL;
++}
++
++#    ifdef COMBO_TERM_PER_COMBO
++uint16_t get_combo_term(uint16_t combo_index, combo_t *combo) {
++    const uint16_t term = combo_index < MATRIX_POINTING_COMBO_COUNT ? mp_combo_entries[combo_index].term : 0;
++    return term ? term : COMBO_TERM;
++}
++#    endif
++
++#    ifdef COMBO_SHOULD_TRIGGER
++bool combo_should_trigger(uint16_t combo_index, combo_t *combo, uint16_t keycode, keyrecord_t *record) {
++    if (combo_index >= MATRIX_POINTING_COMBO_COUNT) return true;
++    const uint8_t mask = mp_combo_entries[combo_index].layers;
++    if (mask == 0) return true;
++    const uint8_t layer = get_highest_layer(layer_state | default_layer_state);
++    return layer < 8 && (mask & (1 << layer));
++}
++#    endif
++#else
++static void mp_combos_load(void) {}
++static void mp_combos_clear(void) {}
++static void mp_combos_save(void) {}
++static bool mp_combo_get_value(uint8_t value_id, uint8_t *data, uint8_t length) {
++    return false;
++}
++static bool mp_combo_set_value(uint8_t value_id, const uint8_t *data, uint8_t length) {
++    return false;
++}
++#endif
++
++// ---------------------------------------------------------------------------
++// VIA custom channel (channel 0)
++// data = [ command_id, channel_id, value_id, value_data... ]
++
++static bool mp_combo_get_value(uint8_t value_id, uint8_t *data, uint8_t length);
++static bool mp_combo_set_value(uint8_t value_id, const uint8_t *data, uint8_t length);
++static void mp_combos_save(void);
++
++#ifndef MATRIX_POINTING_NO_VIA_HOOK
++void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
++    uint8_t *command_id = &(data[0]);
++    uint8_t *channel_id = &(data[1]);
++    uint8_t *value_id   = &(data[2]);
++    uint8_t *value_data = &(data[3]);
++
++    if (*channel_id != id_custom_channel) {
++        *command_id = id_unhandled;
++        return;
++    }
++
++    switch (*command_id) {
++        case id_custom_get_value: {
++            if (*value_id == 0x00) {
++                value_data[0] = MP_MAGIC >> 8;
++                value_data[1] = MP_MAGIC & 0xFF;
++                return;
++            }
++            if (*value_id == MP_REVISION_VALUE_ID) {
++                value_data[0] = MP_REVISION >> 8;
++                value_data[1] = MP_REVISION & 0xFF;
++                return;
++            }
++            if (*value_id == MP_SPLIT_INFO_VALUE_ID) {
++                mp_split_info(value_data);
++                return;
++            }
++#ifdef RGB_MATRIX_ENABLE
++            if (*value_id == MP_RGB_EFFECTS_VALUE_ID) {
++                value_data[0] = RGB_MATRIX_EFFECT_MAX;
++                return;
++            }
++#endif
++            if (*value_id == MP_CAPABILITIES_VALUE_ID) {
++                const uint32_t caps = mp_capabilities();
++                value_data[0]       = caps >> 24;
++                value_data[1]       = caps >> 16;
++                value_data[2]       = caps >> 8;
++                value_data[3]       = caps & 0xFF;
++                return;
++            }
++            if (mp_combo_get_value(*value_id, value_data, length - 3)) return;
++            const mp_field_t *field = mp_find_field(*value_id);
++            const void       *block = &mp_config;
++            if (field == NULL) {
++                field = mp_find_ext_field(*value_id);
++                block = &mp_ext;
++            }
++            if (field == NULL) {
++                *command_id = id_unhandled;
++                return;
++            }
++            uint16_t value = mp_read_field_at(block, field);
++            if (field->size == 2) {
++                value_data[0] = value >> 8;
++                value_data[1] = value & 0xFF;
++            } else {
++                value_data[0] = value & 0xFF;
++            }
++            return;
++        }
++        case id_custom_set_value: {
++            if (mp_combo_set_value(*value_id, value_data, length - 3)) return;
++            if (*value_id == MP_BOOTLOADER_VALUE_ID) {
++                // Reply first; the reboot happens shortly after in
++                // matrix_pointing_task() so the editor gets the echo.
++                mp_bootloader_requested = true;
++                mp_bootloader_time      = timer_read();
++                return;
++            }
++            const mp_field_t *field = mp_find_field(*value_id);
++            void             *block = &mp_config;
++            if (field == NULL) {
++                field = mp_find_ext_field(*value_id);
++                block = &mp_ext;
++            }
++            if (field == NULL) {
++                *command_id = id_unhandled;
++                return;
++            }
++            uint16_t value = field->size == 2 ? (uint16_t)((value_data[0] << 8) | value_data[1]) : value_data[0];
++            mp_write_field_at(block, field, value);
++            mp_apply();
++            mp_config_changed();
++            return;
++        }
++        case id_custom_save:
++            MP_EEPROM_WRITE(mp_config);
++            mp_combos_save();
++            mp_ext_save();
++            return;
++        default:
++            *command_id = id_unhandled;
++            return;
++    }
++}
++#endif // MATRIX_POINTING_NO_VIA_HOOK
++
++// ---------------------------------------------------------------------------
++// Pointing report transform (rotation, inversion, acceleration, scroll)
++
++static void mp_bootloader_check(void) {
++    if (mp_bootloader_requested && timer_elapsed(mp_bootloader_time) > MP_BOOTLOADER_DELAY_MS) {
++        mp_bootloader_requested = false;
++        reset_keyboard(); // enters the bootloader (BOOTSEL on RP2040)
++    }
++}
++
++#ifdef POINTING_DEVICE_ENABLE
++static mouse_xy_report_t mp_clamp_xy(int32_t v) {
++    if (v < MOUSE_REPORT_XY_MIN) return MOUSE_REPORT_XY_MIN;
++    if (v > MOUSE_REPORT_XY_MAX) return MOUSE_REPORT_XY_MAX;
++    return (mouse_xy_report_t)v;
++}
++
++static __attribute__((unused)) mouse_hv_report_t mp_clamp_hv(int32_t v) {
++    // mouse_hv_report_t is int8_t or int16_t depending on the build.
++    const int32_t max = sizeof(mouse_hv_report_t) == 1 ? INT8_MAX : INT16_MAX;
++    if (v < -max) return (mouse_hv_report_t)-max;
++    if (v > max) return (mouse_hv_report_t)max;
++    return (mouse_hv_report_t)v;
++}
++
++// Digitizer fallback: taps arrive as short button pulses, tap-and-drag as a
++// held button 1. Filter what the editor turned off.
++#ifndef MP_DRAG_HOLD_MS
++#    define MP_DRAG_HOLD_MS 80
++#endif
++static uint8_t mp_filter_buttons(uint8_t buttons) {
++#ifdef POINTING_DEVICE_DRIVER_digitizer
++    static bool     held      = false;
++    static uint16_t held_time = 0;
++    if (!mp_config.two_finger_tap) buttons &= ~0x02;
++    if (buttons & 0x01) {
++        if (!held) {
++            held      = true;
++            held_time = timer_read();
++        }
++        if (!mp_config.tap_drag && timer_elapsed(held_time) > MP_DRAG_HOLD_MS) buttons &= ~0x01;
++    } else {
++        held = false;
++    }
++#endif
++    return buttons;
++}
++
++#ifdef MP_SMOOTH
++// Acceleration: gain (x256) for the finger speed (mm/s), interpolated:
++// slow movement is precise, fast movement goes far.
++static int32_t mp_accel_gain(int32_t mm_per_s) {
++    const int16_t slow    = (int16_t)mp_ext.accel_slow * 256 / 10;
++    const int16_t fast    = (int16_t)mp_ext.accel_fast * 256 / 10;
++    const int16_t curve[][2] = {{0, slow}, {10, slow}, {50, 256}, {150, (256 + fast) / 2}, {400, fast}};
++    if (mm_per_s >= curve[ARRAY_SIZE(curve) - 1][0]) return curve[ARRAY_SIZE(curve) - 1][1];
++    for (uint8_t i = 1; i < ARRAY_SIZE(curve); i++) {
++        if (mm_per_s <= curve[i][0]) {
++            const int32_t x0 = curve[i - 1][0], g0 = curve[i - 1][1];
++            const int32_t x1 = curve[i][0], g1 = curve[i][1];
++            return g0 + (g1 - g0) * (mm_per_s - x0) / (x1 - x0);
++        }
++    }
++    return 256;
++}
++
++// Part of `pending` to send now: all of it once `until` has passed,
++// otherwise in proportion to the time elapsed since the last call.
++static int32_t mp_spread(int32_t pending, uint16_t until, uint16_t now, uint16_t elapsed) {
++    const int16_t left = (int16_t)(until - now);
++    if (left <= 0 || left > 200) return pending; // past (or a stale deadline)
++    if (elapsed == 0) return 0;
++    return (int32_t)((int64_t)pending * elapsed / (elapsed + left));
++}
++
++static report_mouse_t mp_smooth(report_mouse_t r, int32_t x, int32_t y) {
++    static uint16_t last_call = 0, last_frame = 0, last_motion = 0;
++    static int32_t  frame_x16 = 8 * 16; // time between sensor reports (ms x16)
++    static int32_t  speed_x16 = 0;      // finger speed, sensor units per ms x16
++    static int32_t  pend_x = 0, pend_y = 0, rem_x = 0, rem_y = 0; // output units x256
++    static uint16_t pend_until = 0;
++    const uint16_t  now = timer_read();
++    uint16_t        elapsed = now - last_call;
++    if (elapsed > 50) elapsed = 50;
++    last_call = now;
++
++    const bool frame = x || y || r.h || r.v;
++    uint16_t   dt    = 0;
++    if (frame) {
++        dt         = now - last_frame;
++        last_frame = now;
++        if (dt >= 1 && dt <= 40) {
++            frame_x16 += ((int32_t)dt * 16 - frame_x16) / 4;
++            if (frame_x16 < 2 * 16) frame_x16 = 2 * 16;
++            if (frame_x16 > 20 * 16) frame_x16 = 20 * 16;
++        }
++    }
++    const bool smooth = mp_ext.smooth;
++
++    // ---- pointer
++    if (x || y) {
++        const int32_t ax = abs(x), ay = abs(y);
++        const int32_t distance = (ax > ay ? ax + ay / 2 : ay + ax / 2); // ~hypot
++        const int32_t span     = (dt >= 1 && dt <= 40) ? dt * 16 : frame_x16;
++        const int32_t instant  = distance * 256 / span; // units per ms x16
++        speed_x16 = timer_elapsed(last_motion) > 100 ? instant : speed_x16 + (instant - speed_x16) / 2;
++        if (timer_elapsed(last_motion) > 100) rem_x = rem_y = 0;
++        last_motion = now;
++        int32_t gain = 256;
++        if (mp_config.acceleration) {
++            // sensor units per mm = NATIVE_CPI / 25.4
++            gain = mp_accel_gain(speed_x16 * 25400 / 16 / MATRIX_POINTING_NATIVE_CPI);
++        }
++        const int64_t scale = (int64_t)mp_config.cpi * gain;
++        pend_x += (int32_t)(x * scale / MATRIX_POINTING_NATIVE_CPI);
++        pend_y += (int32_t)(y * scale / MATRIX_POINTING_NATIVE_CPI);
++        pend_until = now + (smooth ? (uint16_t)(frame_x16 / 16) : 0);
++    }
++    int32_t ex = mp_spread(pend_x, pend_until, now, elapsed);
++    int32_t ey = mp_spread(pend_y, pend_until, now, elapsed);
++    pend_x -= ex;
++    pend_y -= ey;
++    ex += rem_x;
++    ey += rem_y;
++    r.x   = mp_clamp_xy(ex / 256);
++    r.y   = mp_clamp_xy(ey / 256);
++    rem_x = ex % 256;
++    rem_y = ey % 256;
++
++    // ---- scroll
++    int32_t h = mp_config.horizontal_scroll ? r.h : 0;
++    int32_t v = r.v;
++    if (mp_config.natural_scroll) {
++        h = -h;
++        v = -v;
++    }
++    // MATRIX_POINTING_SCROLL_SCALE slows every speed setting down for
++    // sensors that report a lot of scroll per finger movement; divisor 8 is
++    // the base speed.
++    static int32_t acc_h = 0, acc_v = 0;
++    const int32_t  divisor = (int32_t)mp_config.scroll_divisor * MATRIX_POINTING_SCROLL_SCALE;
++    const int32_t notch = mp_notch();
++    acc_h += h * 8 * notch;
++    acc_v += v * 8 * notch;
++    const int32_t sh = acc_h / divisor, sv = acc_v / divisor;
++    acc_h %= divisor;
++    acc_v %= divisor;
++    static uint16_t last_scroll = 0;
++    static int32_t  vel_h = 0, vel_v = 0; // units per ms x65536
++    if (h || v) {
++        const uint16_t gap  = now - last_scroll;
++        const int32_t  span = (dt >= 1 && dt <= 40) ? dt : frame_x16 / 16;
++        if (gap > 100) vel_h = vel_v = 0;
++        // From the unrounded amount, so slow scrolling in whole notches
++        // still has a speed.
++        const int32_t fh = (int32_t)((int64_t)h * 8 * notch * 65536 / divisor / span);
++        const int32_t fv = (int32_t)((int64_t)v * 8 * notch * 65536 / divisor / span);
++        vel_h += (fh - vel_h) / 2;
++        vel_v += (fv - vel_v) / 2;
++        last_scroll   = now;
++        mp_momentum_h = mp_momentum_v = 0;
++        mp_scroll_queue(sh, sv, smooth ? (uint16_t)(frame_x16 / 16) : 0);
++    }
++#        ifdef MP_EDGES
++    // Momentum: two fingers lifted right after a scroll keep it going and
++    // slow it down (about like a trackpad); a touch stops it.
++    static uint8_t last_fingers = 0;
++    const uint8_t  fingers      = mp_fingers_now();
++    if (fingers != 0xFF) {
++        if (fingers > 0 || x || y) {
++            mp_momentum_h = mp_momentum_v = 0;
++        } else if (last_fingers > 0 && mp_config.glide && timer_elapsed(last_scroll) < 60 && (abs(vel_v) > notch * 65536 / 120 || abs(vel_h) > notch * 65536 / 120)) {
++            // faster than about 8 notches per second
++            mp_momentum_h = vel_h;
++            mp_momentum_v = vel_v;
++            vel_h = vel_v = 0;
++        }
++        last_fingers = fingers;
++    }
++#        endif
++    if (mp_momentum_h || mp_momentum_v) {
++        static int32_t mrem_h = 0, mrem_v = 0;
++        for (uint16_t i = 0; i < elapsed; i++) {
++            mrem_h += mp_momentum_h;
++            mrem_v += mp_momentum_v;
++            // time constant momentum_tau x 10 ms
++            const int32_t tau = (int32_t)mp_ext.momentum_tau * 10;
++            mp_momentum_h     = (int32_t)((int64_t)mp_momentum_h * (tau - 1) / tau);
++            mp_momentum_v     = (int32_t)((int64_t)mp_momentum_v * (tau - 1) / tau);
++        }
++        mp_scroll_pend_h += mrem_h / 65536;
++        mp_scroll_pend_v += mrem_v / 65536;
++        mrem_h %= 65536;
++        mrem_v %= 65536;
++        // below about 1 notch per second: stop
++        const int32_t stop = notch * 65536 / 1000;
++        if (abs(mp_momentum_h) < stop && abs(mp_momentum_v) < stop) mp_momentum_h = mp_momentum_v = 0;
++    }
++#    ifdef MP_HIRES
++    // Wheel keys held down: after 300 ms keep scrolling, faster over time
++    // (12 to 40 notches per second).
++    if ((mp_wheel_hold_h || mp_wheel_hold_v) && timer_elapsed(mp_wheel_hold_since) > 300) {
++        const int32_t held = timer_elapsed(mp_wheel_hold_since) - 300;
++        const int32_t rate = 12 + (held > 1500 ? 28 : held * 28 / 1500); // notches per s
++        mp_wheel_hold_acc += rate * notch * elapsed;
++        const int32_t units = mp_wheel_hold_acc / 1000;
++        mp_wheel_hold_acc %= 1000;
++        mp_scroll_queue(mp_wheel_hold_h * units, mp_wheel_hold_v * units, 0);
++    }
++#    endif
++    int32_t oh = mp_spread(mp_scroll_pend_h, mp_scroll_until, now, elapsed);
++    int32_t ov = mp_spread(mp_scroll_pend_v, mp_scroll_until, now, elapsed);
++    const int32_t hv_max = sizeof(mouse_hv_report_t) == 1 ? INT8_MAX : INT16_MAX;
++    if (oh > hv_max) oh = hv_max;
++    if (oh < -hv_max) oh = -hv_max;
++    if (ov > hv_max) ov = hv_max;
++    if (ov < -hv_max) ov = -hv_max;
++    mp_scroll_pend_h -= oh;
++    mp_scroll_pend_v -= ov;
++    r.h = oh;
++    r.v = ov;
++    mp_mod_wheel_task();
++    return r;
++}
++#endif // MP_SMOOTH
++
++report_mouse_t matrix_pointing_task(report_mouse_t r) {
++    mp_ensure_loaded();
++    mp_bootloader_check();
++    r         = mp_add_drained(r);
++    r.buttons = mp_filter_buttons(r.buttons);
++    int32_t x = r.x;
++    int32_t y = r.y;
++
++    // Same convention as QMK's POINTING_DEVICE_ROTATION_*.
++    switch (mp_config.rotation) {
++        case 1: { int32_t t = x; x = y;  y = -t; break; }
++        case 2: { x = -x; y = -y; break; }
++        case 3: { int32_t t = x; x = -y; y = t;  break; }
++        default: break;
++    }
++    if (mp_config.invert_x) x = -x;
++    if (mp_config.invert_y) y = -y;
++
++#ifdef MP_SMOOTH
++    return mp_smooth(r, x, y);
++#else
++    if (mp_config.acceleration) {
++        // Up to 3x for fast movement: factor = 1 + min(speed, 32) / 16.
++        int32_t speed = abs(x) + abs(y);
++        if (speed > 32) speed = 32;
++        x = x * (16 + speed) / 16;
++        y = y * (16 + speed) / 16;
++    }
++    r.x = mp_clamp_xy(x);
++    r.y = mp_clamp_xy(y);
++
++    // Scroll speed: divisor 8 keeps the original speed; 4 is 2x, 16 is 0.5x.
++    static int32_t acc_h = 0, acc_v = 0;
++    int32_t h = mp_config.horizontal_scroll ? r.h : 0;
++    int32_t v = r.v;
++    if (mp_config.natural_scroll) {
++        h = -h;
++        v = -v;
++    }
++    acc_h += h * 8;
++    acc_v += v * 8;
++    // MATRIX_POINTING_SCROLL_SCALE slows every speed setting down for
++    // sensors that report a lot of scroll per finger movement.
++    const int32_t divisor = (int32_t)mp_config.scroll_divisor * MATRIX_POINTING_SCROLL_SCALE;
++    r.h                   = mp_clamp_hv(acc_h / divisor);
++    r.v                   = mp_clamp_hv(acc_v / divisor);
++    acc_h %= divisor;
++    acc_v %= divisor;
++    return r;
++#endif
++}
++#else
++report_mouse_t matrix_pointing_task(report_mouse_t r) {
++    mp_bootloader_check();
++    return r;
++}
++#endif // POINTING_DEVICE_ENABLE
++
++// ---------------------------------------------------------------------------
++// Auto mouse layer: runtime threshold / delay / exit rules
++
++static uint16_t mp_last_key_time = 0;
++static bool     mp_key_pressed   = false;
++
++bool matrix_pointing_process_record(uint16_t keycode, keyrecord_t *record) {
++    if (record->event.pressed && !matrix_pointing_is_mouse_record(keycode, record)) {
++        mp_last_key_time = timer_read();
++        mp_key_pressed   = true;
++    }
++#ifdef MP_KNOBS
++    mp_ensure_loaded();
++    if (!mp_knob_process(keycode, record)) return false;
++#endif
++#ifdef MP_EDGES
++    mp_ensure_loaded();
++    if (!mp_precision_process(keycode, record)) return false;
++#endif
++#ifdef MP_SMOOTH
++    if (mp_is_mod_wheel(keycode)) {
++        if (record->event.pressed) mp_mod_wheel(keycode);
++        return false;
++    }
++#endif
++#ifdef MP_HIRES
++    if (mp_is_wheel_keycode(keycode)) {
++        mp_wheel_key(keycode, record->event.pressed);
++        return false;
++    }
++#endif
++    return true;
++}
++
++bool matrix_pointing_is_mouse_record(uint16_t keycode, keyrecord_t *record) {
++    // Keys reported as "mouse keys" do not end the auto mouse layer.
++    if (!mp_config.am_exit_on_other_key) return true;
++    if (mp_config.am_hold_with_modifiers && IS_MODIFIER_KEYCODE(keycode)) return true;
++    return false;
++}
++
++#if defined(POINTING_DEVICE_AUTO_MOUSE_ENABLE) && !defined(MATRIX_POINTING_NO_MOUSE_RECORD)
++bool is_mouse_record_user(uint16_t keycode, keyrecord_t *record) {
++    return matrix_pointing_is_mouse_record(keycode, record);
++}
++#endif
++
++#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
++// Overrides QMK's weak default to use the runtime threshold and delay.
++bool auto_mouse_activation(report_mouse_t mouse_report) {
++    static int32_t total_x = 0, total_y = 0, total_h = 0, total_v = 0, total_touch = 0;
++#    ifdef MP_EDGES
++    // Precision touchpad mode (revision 16): the host gets the fingers as a
++    // touchpad and QMK sees no mouse movement, so count the fingers'
++    // movement instead (converted to cursor counts).
++    int32_t touch = mp_take_touch_motion();
++#        ifdef MATRIX_POINTING_NATIVE_CPI
++    touch = touch * (int32_t)mp_config.cpi / MATRIX_POINTING_NATIVE_CPI;
++#        endif
++    if (!mp_config.precision_touchpad) touch = 0;
++#    else
++    const int32_t touch = 0;
++#    endif
++    if (mp_key_pressed && timer_elapsed(mp_last_key_time) < mp_config.am_activation_delay) {
++        total_x = total_y = total_h = total_v = total_touch = 0;
++        return false;
++    }
++    total_x += mouse_report.x;
++    total_y += mouse_report.y;
++    total_h += mouse_report.h;
++    total_v += mouse_report.v;
++    total_touch += touch;
++    const int32_t threshold = mp_config.am_threshold;
++    bool          activate  = abs(total_x) > threshold || abs(total_y) > threshold || abs(total_h) > threshold || abs(total_v) > threshold || total_touch > threshold || mouse_report.buttons;
++    // Start counting again after each activation.
++    if (activate) total_x = total_y = total_h = total_v = total_touch = 0;
++    return activate;
++}
++#endif // POINTING_DEVICE_AUTO_MOUSE_ENABLE
+diff --git a/keyboards/corne_procyon36/matrix_pointing.h b/keyboards/corne_procyon36/matrix_pointing.h
+new file mode 100644
+index 0000000..c03ba09
+--- /dev/null
++++ b/keyboards/corne_procyon36/matrix_pointing.h
+@@ -0,0 +1,94 @@
++// Matrix pointing settings for QMK (touchpad + auto mouse layer).
++//
++// Implements the protocol the Matrix editor uses on the VIA custom channel
++// (channel 0): see keyboards/matrix-split42/README.md in the Matrix repo.
++// Settings are stored in the user EEPROM datablock and applied at runtime.
++//
++// SPDX-License-Identifier: GPL-2.0-or-later
++#pragma once
++
++#include "quantum.h"
++
++// Size of the persisted settings. Add to config.h:
++//   #define EECONFIG_USER_DATA_SIZE MATRIX_POINTING_EEPROM_SIZE
++// (or a larger value if your keymap stores its own data after it; see
++// MATRIX_POINTING_EEPROM_OFFSET).
++#define MATRIX_POINTING_EEPROM_SIZE 64
++
++#ifndef MATRIX_POINTING_EEPROM_OFFSET
++#    define MATRIX_POINTING_EEPROM_OFFSET 0
++#endif
++
++// Call from keyboard_post_init_user().
++void matrix_pointing_init(void);
++
++// Current CPI setting, e.g. for digitizer_get_cpi_user().
++uint16_t matrix_pointing_get_cpi(void);
++
++// Software speed (optional): when the driver's own CPI also changes how
++// gestures are measured (multitouch fork), define in config.h
++//   #define MATRIX_POINTING_NATIVE_CPI 5080  // counts per inch the reports have
++//   #define MATRIX_POINTING_DRIVER_CPI 1200  // fixed driver CPI
++// The driver then keeps MATRIX_POINTING_DRIVER_CPI and the reports are
++// scaled to the CPI chosen in the editor. Return matrix_pointing_driver_cpi()
++// from digitizer_get_cpi_user() / pointing_device_init_user().
++uint16_t matrix_pointing_driver_cpi(void);
++
++// Current tap term (ms), e.g. for
++//   #define DIGITIZER_MOUSE_TAP_DETECTION_TIMEOUT matrix_pointing_tap_term()
++uint16_t matrix_pointing_tap_term(void);
++
++// Call from pointing_device_task_user(); returns the transformed report.
++report_mouse_t matrix_pointing_task(report_mouse_t mouse_report);
++
++// Call from process_record_user() (before your own handling) and return
++// false when it does: it tracks key presses for the "delay after typing"
++// setting and handles knob press-and-turn (MATRIX_POINTING_KNOB_KEYS).
++bool matrix_pointing_process_record(uint16_t keycode, keyrecord_t *record);
++
++#if defined(MATRIX_POINTING_EDGE_ZONES) && defined(POINTING_DEVICE_DRIVER_digitizer)
++#    include "digitizer.h"
++// Touchpad edge sliders / corner taps. This module defines
++// digitizer_task_user() to call it (define MATRIX_POINTING_NO_DIGITIZER_HOOK
++// to write your own and call this from it).
++bool matrix_pointing_digitizer(digitizer_t *const state);
++#endif
++
++// Call from is_mouse_record_user() if you define it yourself; otherwise this
++// module defines is_mouse_record_user() (see MATRIX_POINTING_NO_MOUSE_RECORD).
++bool matrix_pointing_is_mouse_record(uint16_t keycode, keyrecord_t *record);
++
++// Tapping term (ms) and hold mode (0: hold preferred, 1: balanced,
++// 2: tap preferred) for LT / MT keys. With TAPPING_TERM_PER_KEY,
++// PERMISSIVE_HOLD_PER_KEY and HOLD_ON_OTHER_KEY_PRESS_PER_KEY in config.h this
++// module defines get_tapping_term() / get_permissive_hold() /
++// get_hold_on_other_key_press() (define MATRIX_POINTING_NO_TAPPING_HOOKS to
++// write your own and call these instead).
++uint16_t matrix_pointing_tapping_term(void);
++uint8_t  matrix_pointing_hold_mode(void);
++
++// 3-finger swipe (0: left, 1: right, 2: up, 3: down) for the multitouch QMK
++// fork. config.h cannot include this header, so declare it there:
++//   #define MATRIX_POINTING_SWIPE_KC(dir) ({ extern uint8_t matrix_pointing_swipe(uint8_t); matrix_pointing_swipe(dir); })
++//   #define DIGITIZER_SWIPE_LEFT_KC  MATRIX_POINTING_SWIPE_KC(0)
++//   #define DIGITIZER_SWIPE_RIGHT_KC MATRIX_POINTING_SWIPE_KC(1)
++//   #define DIGITIZER_SWIPE_UP_KC    MATRIX_POINTING_SWIPE_KC(2)
++//   #define DIGITIZER_SWIPE_DOWN_KC  MATRIX_POINTING_SWIPE_KC(3)
++uint8_t matrix_pointing_swipe(uint8_t direction);
++
++// Call from housekeeping_task_user() if you define it yourself (then define
++// MATRIX_POINTING_NO_HOUSEKEEPING). Syncs settings to the other half of a
++// split keyboard (MATRIX_POINTING_SPLIT_SYNC) and collects its swipes.
++void matrix_pointing_housekeeping(void);
++
++#ifdef RGB_MATRIX_ENABLE
++// Paints the LED color of the active layer; returns false when it did.
++// Called from rgb_matrix_indicators_advanced_user() (this module defines it
++// unless MATRIX_POINTING_NO_LED_HOOK).
++bool matrix_pointing_rgb_indicators(uint8_t led_min, uint8_t led_max);
++#endif
++
++// Called from via_init_kb() (unless MATRIX_POINTING_NO_VIA_INIT_KB): keeps the
++// keymap over a firmware update when a Matrix build with the same storage
++// layout wrote the EEPROM. Returns true when it did.
++bool matrix_pointing_keep_keymap(void);
+diff --git a/keyboards/corne_procyon36/rules.mk b/keyboards/corne_procyon36/rules.mk
+index b8c04b6..48b3b70 100644
+--- a/keyboards/corne_procyon36/rules.mk
++++ b/keyboards/corne_procyon36/rules.mk
+@@ -10,9 +10,10 @@
+ SERIAL_DRIVER = vendor                    # ベンダー提供のシリアルドライバーを使用
+ I2C_DRIVER_REQUIRED = yes                 # I2Cドライバーの使用を必須化
+ 
+-# DIGITIZER_DRIVER = maxtouch               # 削除 (QMK標準にないため)
+-POINTING_DEVICE_DRIVER = digitizer        # ポインティングデバイスとしてデジタイザーを使用
+-SRC += maxtouch.c                         # ローカルのmaxtouchドライバーを使用
++DIGITIZER_DRIVER = maxtouch               # フォーク版 QMK の maXTouch ドライバ（procyon.h でセンサー寸法を設定）
++# ポインティングデバイスとしてデジタイザーを使用（フォーク版の比較は空白を除去しないため、値の後ろにコメントを書かない）
++POINTING_DEVICE_DRIVER = digitizer
++# SRC += maxtouch.c  (フォーク版ドライバを使うため不要。ローカルの maxtouch.c は旧版)
+ 
+ # ============================================================================
+ # デバッグ設定
+@@ -24,4 +25,6 @@ DEBUG_ENABLE = yes                        # dprintf/uprintf を有効化（デ
+ # ============================================================================
+ # ソースファイル
+ # ============================================================================
+-SRC += digitizer_user.c                   # カスタムデジタイザー処理を追加
+\ No newline at end of file
++SRC += digitizer_user.c                   # カスタムデジタイザー処理を追加
++COMBO_ENABLE = yes                        # Matrix で設定するコンボ
++SRC += matrix_pointing.c                   # Matrix エディタのタッチパッド/マウスレイヤー設定（VIA カスタム値）
+-- 
+2.43.0
+

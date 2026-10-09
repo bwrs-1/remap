@@ -322,6 +322,9 @@ export type RootState = {
       // remap candidates and show keydiff for clickable keys
       [pos: string]: IKeymap;
     }[];
+    // Incremented whenever remaps are re-initialised from the device
+    // (connect, flash, reset): undo history must not cross it.
+    remapsBaseline: number;
     encodersRemaps: {
       // remap candidates and show keydiff for encoders
       [id: number]: {
@@ -529,18 +532,25 @@ export type RootState = {
   };
 };
 
-let firebaseProvider;
-try {
-  firebaseProvider = new FirebaseProvider(firebaseConfiguration);
-} catch (cause) {
-  if (import.meta.env.NODE_ENV === 'production') {
-    throw cause;
-  } else {
-    console.warn(
-      `To work Remap locally, ignore the situation which Firebase cannot be initialized. ${cause}`
-    );
-    firebaseProvider = null;
+// A build without Firebase settings (e.g. a static Cloudflare Pages deploy,
+// or local development) still runs the keyboard editor; only Firebase-backed
+// features (sign in, catalog, shared keymaps, workbench) are unavailable.
+// Firebase must not even be initialized then: firebase.analytics() fails
+// asynchronously with "Missing App configuration value" and breaks the app.
+let firebaseProvider: FirebaseProvider | null = null;
+if (firebaseConfiguration.projectId) {
+  try {
+    firebaseProvider = new FirebaseProvider(firebaseConfiguration);
+  } catch (cause) {
+    if (import.meta.env.NODE_ENV === 'production') {
+      throw cause;
+    }
+    console.warn(`Firebase cannot be initialized. ${cause}`);
   }
+} else {
+  console.warn(
+    'Firebase is not configured. Firebase-backed features are disabled.'
+  );
 }
 
 const gitHub = new GitHub();
@@ -594,6 +604,7 @@ export const INIT_STATE: RootState = {
     buildNumber: buildInfo.buildNumber,
     setupPhase: SetupPhase.init,
     remaps: [],
+    remapsBaseline: 0,
     encodersRemaps: [],
     testedMatrix: [],
     currentTestMatrix: [],

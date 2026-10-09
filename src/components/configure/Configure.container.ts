@@ -23,6 +23,7 @@ const mapStateToProps = (state: RootState) => {
     testMatrix: state.configure.keymapToolbar.testMatrix,
     keyboard: state.entities.keyboard,
     buildNumber: state.app.buildNumber,
+    setupPhase: state.app.setupPhase,
   };
 };
 export type ConfigureStateType = ReturnType<typeof mapStateToProps>;

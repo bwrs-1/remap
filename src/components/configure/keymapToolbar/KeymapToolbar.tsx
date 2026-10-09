@@ -279,29 +279,31 @@ export default class KeymapMenu extends React.Component<
             </div>
           )}
 
-          <div className="keymap-menu-item">
-            <Tooltip
-              arrow={true}
-              placement="top"
-              title={t('Save/Restore a keymap')}
-            >
-              <IconButton
-                size="small"
-                onClick={(event) => {
-                  this.onClickOpenKeymapListPopover(event);
-                }}
+          {this.props.cloudAvailable && (
+            <div className="keymap-menu-item">
+              <Tooltip
+                arrow={true}
+                placement="top"
+                title={t('Save/Restore a keymap')}
               >
-                <SwapHorizRoundedIcon />
-              </IconButton>
-            </Tooltip>
-            <KeymapListPopover
-              open={Boolean(this.state.keymapListPopoverPosition)}
-              onClose={() => {
-                this.onCloseKeymapListPopover();
-              }}
-              position={this.state.keymapListPopoverPosition}
-            />
-          </div>
+                <IconButton
+                  size="small"
+                  onClick={(event) => {
+                    this.onClickOpenKeymapListPopover(event);
+                  }}
+                >
+                  <SwapHorizRoundedIcon />
+                </IconButton>
+              </Tooltip>
+              <KeymapListPopover
+                open={Boolean(this.state.keymapListPopoverPosition)}
+                onClose={() => {
+                  this.onCloseKeymapListPopover();
+                }}
+                position={this.state.keymapListPopoverPosition}
+              />
+            </div>
+          )}
 
           <div className="keymap-menu-item">
             <Tooltip

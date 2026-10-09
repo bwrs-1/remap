@@ -120,7 +120,7 @@ const id_switch_matrix_state = 0x03;
 // const id_firmware_version = 0x04;
 // const id_device_indication = 0x05;
 
-// const id_custom_channel = 0;
+const id_custom_channel = 0;
 const id_qmk_backlight_channel = 1;
 const id_qmk_rgblight_channel = 2;
 // const id_qmk_rgb_matrix_channel = 3;
@@ -914,6 +914,138 @@ export class DynamicKeymapSetEncoderCommand extends AbstractCommand<
       resultArray[3] === (req.clockwise ? 0x01 : 0x00) &&
       resultArray[4] === req.code >> 8 &&
       resultArray[5] === (req.code & 0xff)
+    );
+  }
+}
+
+// Keyboard-level custom values on the VIA custom channel (channel 0).
+// Used by Matrix for pointing device (touchpad) and auto mouse layer
+// settings. Values are 1 or 2 bytes (big endian).
+export interface ICustomGetValueRequest extends ICommandRequest {
+  valueId: number;
+  size: 1 | 2 | 4;
+  // Bytes sent after the value ID (e.g. a slot index). The reply must echo
+  // them to be matched.
+  args?: number[];
+  // VIA channel; default: the keyboard's custom channel (0).
+  channel?: number;
+}
+
+export interface ICustomGetValueResponse extends ICommandResponse {
+  value: number;
+  // Raw value data (after command / channel / value ID).
+  bytes: Uint8Array;
+  // The firmware has no handler for this value (VIA answers id_unhandled).
+  unhandled: boolean;
+}
+
+export class CustomGetValueCommand extends AbstractCommand<
+  ICustomGetValueRequest,
+  ICustomGetValueResponse
+> {
+  createReport(): Uint8Array {
+    return new Uint8Array([
+      id_custom_get_value,
+      this.getRequest().channel ?? id_custom_channel,
+      this.getRequest().valueId,
+      ...(this.getRequest().args || []),
+    ]);
+  }
+
+  createResponse(resultArray: Uint8Array): ICustomGetValueResponse {
+    const bytes = resultArray.slice(3);
+    if (resultArray[0] === id_unhandled) {
+      return { value: 0, bytes, unhandled: true };
+    }
+    const size = this.getRequest().size;
+    let value = 0;
+    for (let i = 0; i < size; i++) value = value * 256 + resultArray[3 + i];
+    return { value, bytes, unhandled: false };
+  }
+
+  // A VIA firmware without a custom value handler replies with the request
+  // whose first byte is replaced by id_unhandled; match that too so the
+  // command queue does not wait forever.
+  isSameRequest(resultArray: Uint8Array): boolean {
+    const args = this.getRequest().args || [];
+    return (
+      (resultArray[0] === id_custom_get_value ||
+        resultArray[0] === id_unhandled) &&
+      resultArray[1] === (this.getRequest().channel ?? id_custom_channel) &&
+      resultArray[2] === this.getRequest().valueId &&
+      args.every((b, i) => resultArray[3 + i] === b)
+    );
+  }
+}
+
+export interface ICustomSetValueRequest extends ICommandRequest {
+  valueId: number;
+  value: number;
+  size: 1 | 2;
+  // Raw value data; when given, `value` / `size` are ignored.
+  bytes?: number[];
+  // VIA channel; default: the keyboard's custom channel (0).
+  channel?: number;
+}
+
+export class CustomSetValueCommand extends AbstractCommand<
+  ICustomSetValueRequest,
+  ICommandResponse
+> {
+  createReport(): Uint8Array {
+    const req = this.getRequest();
+    const data = req.bytes
+      ? req.bytes.map((b) => b & 0xff)
+      : req.size === 2
+        ? [(req.value >> 8) & 0xff, req.value & 0xff]
+        : [req.value & 0xff];
+    return new Uint8Array([
+      id_custom_set_value,
+      req.channel ?? id_custom_channel,
+      req.valueId,
+      ...data,
+    ]);
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  createResponse(_resultArray: Uint8Array): ICommandResponse {
+    return {};
+  }
+
+  isSameRequest(resultArray: Uint8Array): boolean {
+    return (
+      resultArray[0] === id_custom_set_value &&
+      resultArray[1] === (this.getRequest().channel ?? id_custom_channel) &&
+      resultArray[2] === this.getRequest().valueId
+    );
+  }
+}
+
+export interface ICustomSaveRequest extends ICommandRequest {
+  // VIA channel; default: the keyboard's custom channel (0).
+  channel?: number;
+}
+
+export class CustomSaveCommand extends AbstractCommand<
+  ICustomSaveRequest,
+  ICommandResponse
+> {
+  createReport(): Uint8Array {
+    return new Uint8Array([
+      id_custom_save,
+      this.getRequest().channel ?? id_custom_channel,
+    ]);
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  createResponse(_resultArray: Uint8Array): ICommandResponse {
+    return {};
+  }
+
+  isSameRequest(resultArray: Uint8Array): boolean {
+    return (
+      resultArray[0] === id_custom_save &&
+      resultArray[1] === (this.getRequest().channel ?? id_custom_channel)
     );
   }
 }

@@ -1,0 +1,154 @@
+// Key Config in the new layout (UI rebuild P4): restyles the shared keyboard,
+// key inspector and keycode palette inside .mx-shell only, so the classic
+// layout keeps its look. Keycap faces keep the keyboard definition's colors.
+
+.mx-shell {
+  // Keyboard: a flat tray instead of Remap's raised frame. The frame's
+  // borders stay (the keyboard size includes them) but take the tray color.
+  .keymap .keyboard-root {
+    border-color: var(--mx-selected);
+    border-radius: 18px;
+    background-color: var(--mx-selected);
+    filter: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 1px 2px rgba(0, 0, 0, 0.08);
+  }
+
+  // Selected key and drop target: mint with a dark edge (mint alone is too
+  // close to the grey panels to tell apart).
+  .keycap-base.keycap-selected,
+  .keycap-base.drag-over {
+    .keycap {
+      background: var(--mx-accent) !important;
+      border-color: var(--mx-ink) !important;
+    }
+    .keyroof-base {
+      border-color: rgba(255, 255, 255, 0.7) !important;
+      background-color: var(--mx-accent) !important;
+    }
+    .keyroof {
+      background-color: var(--mx-accent) !important;
+    }
+  }
+
+  // Pending changes of a layer in the side panel: mint, like the count on
+  // "Write to keyboard".
+  .editor-sidebar .layer-changed {
+    background-color: var(--mx-accent);
+    color: var(--mx-text);
+  }
+
+  // Selected key
+  .key-inspector {
+    gap: 14px;
+    .key-inspector-cap {
+      flex-basis: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background-color: var(--mx-ink);
+      color: var(--mx-on-ink);
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .key-inspector-codes .strong {
+      font-size: 15px;
+    }
+    // Before → after reads as a "changed" chip.
+    .key-inspector-diff {
+      align-self: flex-start;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background-color: var(--mx-accent);
+      color: var(--mx-text);
+      .dim {
+        color: var(--mx-text);
+        opacity: 0.75;
+      }
+    }
+    .MuiButton-outlined {
+      border-radius: 999px;
+      border-color: var(--mx-border);
+      color: var(--mx-text);
+    }
+  }
+  .key-inspector-presets {
+    .key-inspector-os {
+      border-radius: 999px;
+      background: var(--mx-field);
+      button {
+        border-radius: 999px;
+        color: var(--mx-text);
+        &[aria-pressed='true'] {
+          background: var(--mx-selected);
+        }
+      }
+    }
+    .key-inspector-preset {
+      border-color: var(--mx-border);
+      border-radius: 14px;
+      background: transparent;
+      color: var(--mx-text);
+      &:hover {
+        border-color: var(--mx-ink);
+      }
+      &[aria-pressed='true'] {
+        background: var(--mx-ink);
+        border-color: var(--mx-ink);
+        color: var(--mx-on-ink);
+      }
+    }
+  }
+
+  // Keycode palette: pill categories and search, grey keys.
+  .key-categories {
+    border-bottom: 0;
+    .key-category {
+      background-color: var(--mx-field);
+      &:first-child {
+        border-radius: 999px 0 0 999px;
+      }
+      &:nth-last-child(2) {
+        border-radius: 0 999px 999px 0;
+      }
+      &:last-child {
+        background-color: transparent;
+      }
+      button {
+        border-radius: 999px;
+        color: var(--mx-text);
+        &:disabled {
+          background-color: var(--mx-ink);
+          color: var(--mx-on-ink);
+        }
+        &:hover:not(:disabled) {
+          background-color: rgba(0, 0, 0, 0.06);
+        }
+      }
+      .keycodes-search .MuiOutlinedInput-root {
+        border-radius: 999px;
+        background-color: var(--mx-field);
+        fieldset {
+          border-color: var(--mx-border);
+        }
+      }
+    }
+  }
+  .keycodes .sub-category span {
+    color: var(--mx-text-2);
+  }
+  .keycodekey {
+    border-color: transparent;
+    border-radius: 10px;
+    background-color: var(--mx-key);
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+    &:hover {
+      border-color: var(--mx-ink);
+      background-color: var(--mx-selected) !important;
+    }
+    &.addkey {
+      border: 1px dashed var(--mx-text-2);
+      background-color: transparent;
+    }
+  }
+}

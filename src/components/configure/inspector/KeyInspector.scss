@@ -1,0 +1,204 @@
+@use '../../../variables';
+
+.key-inspector {
+  flex: 0 0 240px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  background-color: variables.$cfg-panel-bg;
+  border-left: 1px solid variables.$cfg-panel-border;
+  font-family: variables.$cfg-font;
+  color: variables.$cfg-text;
+  overflow-y: auto;
+
+  .mono {
+    font-family: variables.$cfg-font-mono;
+  }
+  .strong {
+    font-weight: 600;
+  }
+  .dim {
+    color: variables.$cfg-text-dim;
+  }
+
+  .key-inspector-heading {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: variables.$cfg-text-dim;
+  }
+
+  .key-inspector-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .key-inspector-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .key-inspector-cap {
+    flex: 0 0 64px;
+    height: 64px;
+    border-radius: 10px;
+    background-color: variables.$cfg-accent;
+    color: variables.$cfg-accent-text;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .key-inspector-codes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    font-size: 12px;
+    span {
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .key-inspector-desc {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: variables.$cfg-text-dim;
+  }
+
+  .key-inspector-diff {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: variables.$cfg-radius-m;
+    background-color: variables.$cfg-canvas-bg;
+    font-size: 12px;
+  }
+
+  .key-inspector-empty {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: variables.$cfg-text-dim;
+  }
+
+  .key-inspector-meta {
+    margin: auto 0 0;
+    padding-top: 16px;
+    border-top: 1px solid variables.$cfg-panel-border;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    div {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    dt {
+      color: variables.$cfg-text-dim;
+    }
+    dd {
+      margin: 0;
+    }
+  }
+}
+
+.key-inspector-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid variables.$cfg-panel-border;
+
+  .key-inspector-presets-toggle {
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: variables.$cfg-text-dim;
+    cursor: pointer;
+  }
+
+  .key-inspector-os {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 2px;
+    border-radius: 8px;
+    background: #ececee;
+    button {
+      padding: 3px 10px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      &[aria-pressed='true'] {
+        background: #fff;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+      }
+    }
+  }
+
+  .key-inspector-preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .key-inspector-preset {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 8px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 8px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 11px;
+    text-align: left;
+    cursor: pointer;
+    .mono {
+      font-family: variables.$cfg-font-mono;
+      font-weight: 600;
+    }
+    .dim {
+      color: variables.$cfg-text-dim;
+    }
+    &:hover {
+      border-color: variables.$cfg-accent;
+    }
+    &[aria-pressed='true'] {
+      background: variables.$cfg-accent;
+      border-color: variables.$cfg-accent;
+      color: variables.$cfg-accent-text;
+      .dim {
+        color: inherit;
+        opacity: 0.7;
+      }
+    }
+  }
+}

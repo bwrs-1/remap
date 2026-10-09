@@ -107,6 +107,7 @@ export default class InfoDialog extends React.Component<
     return (
       <Dialog
         open={this.props.open}
+        onClose={this.props.onClose}
         maxWidth={'sm'}
         PaperComponent={PaperComponent}
         className="info-dialog"
@@ -222,7 +223,7 @@ function KeyboardDefinitionSection(props: IKeyboardDefinitionSectionProps) {
                       'The keyboard definition is currently applied for only you. Please submit a review request of this keyboard definition for all users from'
                     )}{' '}
                     <a
-                      href={`/keyboards/${props.keyboardDefinitionDocument.id}`}
+                      href={`https://remap-keys.app/keyboards/${props.keyboardDefinitionDocument.id}`}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -249,18 +250,7 @@ function KeyboardDefinitionSection(props: IKeyboardDefinitionSectionProps) {
               </Grid>
             )}
           </React.Fragment>
-        ) : (
-          <Grid item xs={12} className="option-info-label">
-            <div className="info-dialog-information-message">
-              Are you a designer of this keyboard? If yes, please register your
-              keyboard to Remap from{' '}
-              <a href={'/keyboards'} target="_blank" rel="noreferrer">
-                here
-              </a>
-              .
-            </div>
-          </Grid>
-        )}
+        ) : null}
       </React.Fragment>
     );
   } else {

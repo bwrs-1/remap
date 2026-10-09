@@ -7,6 +7,8 @@ import KeyboardDefinitionForm from '../keyboarddefform/KeyboardDefinitionForm.co
 import Remap from '../remap/Remap.container';
 import { CircularProgress } from '@mui/material';
 import { isApprovedKeyboard } from '../../../services/storage/Storage';
+import { useUiLayout } from '../../../services/ui/UiLayout';
+import EditorShell from '../shell/EditorShell';
 
 type ContentState = {};
 
@@ -54,6 +56,7 @@ type ContentsProps = {
   setupPhase: ISetupPhase;
 };
 function Contents(props: ContentsProps) {
+  const layout = useUiLayout();
   switch (props.setupPhase) {
     case SetupPhase.keyboardNotSelected:
       return <KeyboardList />;
@@ -65,7 +68,7 @@ function Contents(props: ContentsProps) {
     case SetupPhase.waitingKeyboardDefinitionUpload:
       return <KeyboardDefinitionForm />;
     case SetupPhase.openedKeyboard:
-      return <Remap />;
+      return layout === 'shell' ? <EditorShell /> : <Remap />;
     default:
       throw new Error(
         `Unknown state.app.setupPhase value: ${props.setupPhase}`

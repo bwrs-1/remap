@@ -3,7 +3,7 @@ import KeyModel from '../../../models/KeyModel';
 import { IKeymap } from '../../../services/hid/Hid';
 import { KeycapActionsType, KeycapStateType } from './Keycap.container';
 import { Badge, IconButton } from '@mui/material';
-import { withStyles } from '@mui/styles';
+import { styled } from '@mui/material/styles';
 import './Keycap.scss';
 import { buildModLabel } from '../customkey/Modifiers';
 import { buildHoldKeyLabel } from '../customkey/TabHoldTapKey';
@@ -660,15 +660,13 @@ function TopRightKeyLabel(props: TopRightKeyLabelType) {
   );
 }
 
-// eslint-disable-next-line no-unused-vars
-const StyledBadge = withStyles((_) => ({
-  badge: {
+const StyledBadge = styled(Badge)({
+  '& .MuiBadge-badge': {
     right: -2,
     top: -2,
     height: 4,
     padding: 0,
     minWidth: 4,
     borderRadius: 2,
-    backgroundColor: '#f5821f',
   },
-}))(Badge);
+});

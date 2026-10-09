@@ -20,6 +20,7 @@ const mapStateToProps = (state: RootState) => {
     vendorId: info?.vendorId || 0,
     showKeyboardList: !!kbd,
     remaps: state.app.remaps,
+    keymaps: state.entities.device.keymaps,
     encoderRemaps: state.app.encodersRemaps,
     auth: state.auth.instance,
     signedIn: state.app.signedIn,

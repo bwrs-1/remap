@@ -1,0 +1,48 @@
+// Lighting card on the Layer LED colors tab.
+.rgb-matrix-card {
+  .pointing-card-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    .pointing-save-state {
+      font-weight: 400;
+    }
+  }
+  // Slider, swatch and value on one line.
+  .pointing-range {
+    flex-wrap: nowrap;
+    .MuiSlider-root {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .pointing-value {
+      min-width: 44px;
+      &:empty {
+        display: none;
+      }
+    }
+  }
+  .rgb-hue .MuiSlider-rail {
+    opacity: 1;
+    background: linear-gradient(
+      to right,
+      #f00,
+      #ff0 17%,
+      #0f0 33%,
+      #0ff 50%,
+      #00f 67%,
+      #f0f 83%,
+      #f00
+    );
+  }
+  .rgb-hue .MuiSlider-track {
+    display: none;
+  }
+  .rgb-swatch {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+  }
+}

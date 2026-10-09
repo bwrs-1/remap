@@ -24,6 +24,7 @@ import { SwapHandsComposition } from '../../../services/hid/compositions/SwapHan
 import { ModTapComposition } from '../../../services/hid/compositions/ModTapComposition';
 import { MOD_LEFT } from '../../../services/hid/Constraints';
 import { t } from 'i18next';
+import { localizedKeycodeDesc } from '../../../services/hid/KeycodeDescJa';
 
 export const CUSTOMKEY_POPOVER_WIDTH = 400;
 export const CUSTOMKEY_POPOVER_HEIGHT = 240;
@@ -280,7 +281,7 @@ export default class CustomKey extends React.Component<OwnProps, OwnState> {
   }
 
   render() {
-    let desc = this.state.value?.desc || '';
+    let desc = localizedKeycodeDesc(this.state.value?.desc || '');
     if (this.state.value && this.state.value.modifiers.length) {
       const mods = mods2Number(
         this.state.value.modifiers,

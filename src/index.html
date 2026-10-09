@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head prefix="og: http://ogp.me/ns#">
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js"></script>
+    <!-- No Google Analytics property is configured for Matrix, so gtag.js is
+         not loaded; the stub keeps the app's gtag() calls harmless. -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
@@ -23,32 +23,40 @@
     />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
     />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#333438" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Remap" />
+    <meta property="og:site_name" content="Matrix" />
 
     <meta name="twitter:card" content="summary" />
 
-    <title>Remap</title>
+    <title>Matrix</title>
 
-    <meta property="og:title" content="Remap" data-rh="true" />
+    <meta property="og:title" content="Matrix" data-rh="true" />
     <meta
       name="description"
-      content="Remap allows you to find, build, set up and customize your keyboard quickly and easily in Web Browser."
+      content="Matrix is a keymap, touchpad and lighting editor for QMK keyboards that works in your web browser. Based on Remap."
       data-rh="true"
     />
     <meta
       property="og:description"
-      content="Remap allows you to find, build, set up and customize your keyboard quickly and easily in Web Browser."
+      content="Matrix is a keymap, touchpad and lighting editor for QMK keyboards that works in your web browser. Based on Remap."
       data-rh="true"
     />
-    <meta property="og:url" content="https://remap-keys.app" data-rh="true" />
-    <meta property="og:image" content="/ogp_image.png" data-rh="true" />
+    <meta
+      property="og:url"
+      content="https://matrix-bw6.pages.dev/"
+      data-rh="true"
+    />
+    <meta
+      property="og:image"
+      content="https://matrix-bw6.pages.dev/ogp_image.png"
+      data-rh="true"
+    />
 
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
@@ -56,10 +64,10 @@
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "Remap",
-        "description": "Remap allows you to find, build, set up and customize your keyboard quickly and easily in Web Browser.",
-        "url": "https://remap-keys.app",
-        "image": "https://remap-keys.app/ogp_image.png",
+        "name": "Matrix",
+        "description": "Matrix is a keymap, touchpad and lighting editor for QMK keyboards that works in your web browser. Based on Remap.",
+        "url": "https://matrix-bw6.pages.dev/",
+        "image": "https://matrix-bw6.pages.dev/ogp_image.png",
         "applicationCategory": "UtilitiesApplication",
         "operatingSystem": "Chromium-based Web Browsers",
         "offers": {
@@ -67,9 +75,7 @@
           "price": "0"
         },
         "browserRequirements": "requires Chrome or Edge 89 or higher",
-        "featureList": "Customize a key mapping of your keyboard, Save/restore/share your key mappings with other users, Test key switch matrix, Control LEDs",
-        "releaseNotes": "https://github.com/remap-keys/remap/wiki/Release-notes",
-        "keywords": "remap,keyboard,keymap,qmk,via,customize,led,diy,webhid"
+        "keywords": "matrix,keyboard,keymap,qmk,touchpad,split keyboard,webhid"
       }
     </script>
     <script type="module" src="./index.tsx"></script>

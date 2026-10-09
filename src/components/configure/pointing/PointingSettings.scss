@@ -1,0 +1,411 @@
+@use '../../../variables';
+
+.pointing-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: variables.$cfg-font;
+  color: variables.$cfg-text;
+
+  h1,
+  h2 {
+    margin: 0;
+  }
+
+  .pointing-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    .pointing-title-text {
+      flex: 1 1 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      h1 {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      span {
+        font-size: 13px;
+        color: variables.$cfg-text-dim;
+      }
+    }
+    .pointing-actions {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .pointing-card {
+    background-color: variables.$cfg-panel-bg;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: variables.$cfg-radius-l;
+  }
+
+  .pointing-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 18px;
+    border-bottom: 1px solid variables.$cfg-panel-border;
+    h2 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    span {
+      font-size: 12px;
+      color: variables.$cfg-text-dim;
+    }
+  }
+
+  .pointing-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .pointing-sections {
+    flex: 999 1 480px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pointing-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    & + .pointing-row {
+      border-top: 1px solid #f0f0f2;
+    }
+  }
+
+  .pointing-row-label {
+    flex: 1 1 220px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    .label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .help {
+      font-size: 12px;
+      color: variables.$cfg-text-dim;
+    }
+  }
+
+  .pointing-row-control {
+    flex: 0 1 auto;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .pointing-range {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 16px;
+    width: 300px;
+    max-width: 100%;
+  }
+
+  .pointing-value {
+    min-width: 72px;
+    text-align: right;
+    font-family: variables.$cfg-font-mono;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .pointing-preview {
+    flex: 1 1 260px;
+    max-width: 340px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pointing-caption {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: variables.$cfg-text-dim;
+  }
+
+  .pointing-pad {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background-color: variables.$cfg-sidebar-bg;
+    border: 1px solid variables.$cfg-panel-border;
+    color: variables.$cfg-accent;
+  }
+
+  .pointing-pad-ring {
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    border: 6px solid #d4d4d8;
+  }
+
+  .pointing-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+    div {
+      padding: 10px;
+      border-radius: variables.$cfg-radius-m;
+      background-color: variables.$cfg-canvas-bg;
+    }
+    dt {
+      font-size: 11px;
+      color: variables.$cfg-text-dim;
+    }
+    dd {
+      margin: 0;
+      font-family: variables.$cfg-font-mono;
+      font-weight: 600;
+    }
+  }
+
+  .pointing-enable {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+  }
+
+  .pointing-flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 14px 18px;
+    li {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      border-radius: 10px;
+      background-color: variables.$cfg-canvas-bg;
+      border: 1px solid variables.$cfg-panel-border;
+      font-size: 12px;
+      color: variables.$cfg-text-dim;
+      strong {
+        font-size: 13px;
+        color: variables.$cfg-text;
+      }
+      &.active {
+        background-color: variables.$cfg-accent;
+        border-color: variables.$cfg-accent;
+        color: #d4d4d8;
+        strong {
+          color: variables.$cfg-accent-text;
+        }
+      }
+    }
+    .step {
+      font-family: variables.$cfg-font-mono;
+      font-size: 11px;
+    }
+  }
+
+  .pointing-layers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+  }
+
+  .pointing-preview-banner {
+    padding: 10px 14px;
+    border-radius: variables.$cfg-radius-m;
+    border: 1px dashed #c4c4c8;
+    background-color: variables.$cfg-muted;
+    font-size: 12px;
+    color: variables.$cfg-accent;
+  }
+
+  .pointing-checking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pointing-unsupported {
+    .pointing-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    p {
+      margin: 0;
+      font-size: 13px;
+      color: variables.$cfg-text-dim;
+    }
+    code {
+      align-self: flex-start;
+      padding: 4px 8px;
+      border-radius: variables.$cfg-radius-s;
+      background-color: variables.$cfg-muted;
+      font-family: variables.$cfg-font-mono;
+      font-size: 12px;
+    }
+  }
+}
+
+.pointing-settings {
+  .pointing-presets {
+    display: flex;
+    margin-left: auto;
+    gap: 4px;
+    button {
+      padding: 2px 8px;
+      border: 1px solid variables.$cfg-panel-border;
+      border-radius: 999px;
+      background: #fff;
+      font-family: variables.$cfg-font-mono;
+      font-size: 11px;
+      cursor: pointer;
+      &[aria-pressed='true'] {
+        background: variables.$cfg-accent;
+        border-color: variables.$cfg-accent;
+        color: variables.$cfg-accent-text;
+      }
+    }
+  }
+  .pointing-select {
+    min-width: 200px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 8px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+  }
+}
+
+.pointing-settings {
+  .pointing-info {
+    padding: 16px 20px;
+    h2 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    p {
+      margin: 0 0 4px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: variables.$cfg-text-dim;
+    }
+  }
+  .pointing-row.not-applied {
+    .pointing-row-control {
+      opacity: 0.45;
+    }
+  }
+  .pointing-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #ececee;
+    font-size: 10px;
+    font-weight: 500;
+    color: variables.$cfg-text-dim;
+    vertical-align: middle;
+  }
+  .pointing-swatches {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pointing-swatch {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 50%;
+    cursor: pointer;
+    &.effect {
+      background: conic-gradient(
+        #e5484d,
+        #f5d90a,
+        #30a46c,
+        #05a2c2,
+        #3e63dd,
+        #d6409f,
+        #e5484d
+      ) !important;
+    }
+    &[aria-pressed='true'] {
+      box-shadow:
+        0 0 0 2px #fff,
+        0 0 0 4px variables.$cfg-accent;
+    }
+  }
+  .pointing-swatch-name {
+    width: 110px;
+    margin-left: 6px;
+    font-size: 12px;
+    color: variables.$cfg-text-dim;
+  }
+}
+
+.pointing-settings {
+  .pointing-save-state {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e8f5ee;
+    color: #1d7a46;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    &.busy {
+      background: #ececee;
+      color: variables.$cfg-text-dim;
+    }
+    &.error {
+      background: #fdecec;
+      color: #b42318;
+    }
+  }
+  .pointing-outdated {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+    background: #fff4e5;
+    border-color: #f3c27a;
+  }
+}

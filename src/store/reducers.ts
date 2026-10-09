@@ -641,6 +641,7 @@ const appReducer = (action: Action, draft: WritableDraft<RootState>) => {
     }
     case APP_REMAPS_INIT: {
       draft.app.remaps = action.value;
+      draft.app.remapsBaseline += 1;
       break;
     }
     case APP_REMAPS_SET_KEY: {

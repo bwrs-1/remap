@@ -52,46 +52,70 @@
 }
 .key-categories {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: row;
   justify-content: center;
-  align-items: flex-end;
-  padding: variables.$space-m 0;
+  align-items: center;
+  row-gap: 8px;
+  padding: 12px 16px;
   border-bottom: 1px solid variables.$cfg-panel-border;
   font-family: variables.$cfg-font;
-  .blank-category {
-    width: var(--switch-width);
-  }
+  // Category buttons render as one segmented control (reference design).
   .key-category {
-    margin: 0 variables.$space-m;
+    margin: 0;
+    padding: 3px 1px;
+    background-color: variables.$cfg-muted;
+    &:first-child {
+      padding-left: 3px;
+      border-radius: 10px 0 0 10px;
+    }
+    &:nth-last-child(2) {
+      padding-right: 3px;
+      border-radius: 0 10px 10px 0;
+    }
+    &:last-child {
+      margin-left: 16px;
+      padding: 0;
+      background-color: transparent;
+    }
     &.key-category-empty-keys {
       button:disabled {
         color: variables.$color-gray-400;
-        background-color: #ffffff00;
-        border-bottom-color: transparent;
+        background-color: transparent;
+        box-shadow: none;
       }
     }
     button {
-      font-weight: 500;
+      height: 32px;
+      min-width: 0;
+      padding: 0 12px;
+      border-radius: 7px;
       font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
       color: variables.$cfg-text-dim;
-      background-color: #ffffff00;
-      border-radius: 0;
-      border-bottom: 2px solid transparent;
-      padding-bottom: 6px;
+      background-color: transparent;
       &:disabled {
         color: variables.$cfg-text;
-        border-bottom-color: variables.$cfg-text;
-        background-color: #ffffff00;
+        background-color: variables.$cfg-panel-bg;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
       }
       &:hover:not(:disabled) {
-        background-color: #ececee;
-        transition: background-color 0.2s;
+        background-color: #e2e2e5;
       }
     }
     .keycodes-search {
-      margin-top: -14px;
+      width: 220px;
+      .MuiOutlinedInput-root {
+        height: 36px;
+        border-radius: variables.$cfg-radius-m;
+        background-color: variables.$cfg-canvas-bg;
+        font-family: variables.$cfg-font-mono;
+        font-size: 12px;
+      }
       svg {
-        color: rgba(0, 0, 0, 0.7);
+        color: variables.$cfg-text-dim;
       }
     }
   }

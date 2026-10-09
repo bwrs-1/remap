@@ -158,6 +158,13 @@ export interface IFetchViaProtocolVersionResult extends IResult {
   viaProtocolVersion?: number;
 }
 
+export interface IFetchCustomValueResult extends IResult {
+  value?: number;
+  // Raw value data of the reply.
+  bytes?: Uint8Array;
+  unhandled?: boolean;
+}
+
 export interface IKeyboard {
   getDevice(): HIDDevice;
   getHid(): IHid;
@@ -218,6 +225,26 @@ export interface IKeyboard {
   fetchMacroBuffer(bufferSize: number): Promise<IFetchMacroBufferResult>;
   updateMacroBuffer(offset: number, buffer: Uint8Array): Promise<IResult>;
   fetchViaProtocolVersion(): Promise<IFetchViaProtocolVersionResult>;
+  // `channel`: VIA value channel (default 0, the keyboard's custom values;
+  // 3 = QMK RGB Matrix).
+  fetchCustomValue(
+    valueId: number,
+    size: 1 | 2 | 4,
+    args?: number[],
+    channel?: number
+  ): Promise<IFetchCustomValueResult>;
+  updateCustomValue(
+    valueId: number,
+    value: number,
+    size: 1 | 2
+  ): Promise<IResult>;
+  // Sends raw value data (e.g. a combo slot).
+  updateCustomBytes(
+    valueId: number,
+    bytes: number[],
+    channel?: number
+  ): Promise<IResult>;
+  saveCustomValues(channel?: number): Promise<IResult>;
 }
 
 export interface ICommand {

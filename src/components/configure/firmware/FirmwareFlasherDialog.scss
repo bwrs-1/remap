@@ -1,0 +1,114 @@
+@use '../../../variables';
+
+.firmware-flasher {
+  font-family: variables.$cfg-font;
+  color: variables.$cfg-text;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  p {
+    margin: 0;
+  }
+
+  .firmware-flasher-steps {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    li {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
+
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .firmware-flasher-info {
+    font-family: variables.$cfg-font-mono;
+    font-size: 12px;
+    color: variables.$cfg-text-dim;
+  }
+
+  .firmware-flasher-note {
+    font-size: 12px;
+    line-height: 1.6;
+    color: variables.$cfg-text-dim;
+  }
+
+  .firmware-flasher-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .firmware-flasher-success {
+    padding: 10px 12px;
+    border-radius: variables.$cfg-radius-m;
+    background-color: #ecfdf3;
+    color: #166534;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .firmware-flasher-error {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: variables.$cfg-radius-m;
+    background-color: #fef2f2;
+    color: #991b1b;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+
+.firmware-flasher-note {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fff7e6;
+  border: 1px solid #f3d9a4;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.firmware-flasher-dragdrop {
+  margin: 4px 0 12px;
+  padding: 8px 12px;
+  border: 1px solid #d9d9dd;
+  border-radius: 8px;
+  font-size: 13px;
+  summary {
+    font-weight: 600;
+    cursor: pointer;
+  }
+  ol {
+    margin: 8px 0 4px;
+    padding-left: 20px;
+    line-height: 1.7;
+    list-style: decimal;
+    li {
+      display: list-item;
+    }
+  }
+  a {
+    font-weight: 600;
+  }
+}
+
+.firmware-flasher-method {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 10px;
+}

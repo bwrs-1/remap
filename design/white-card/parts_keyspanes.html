@@ -1,0 +1,65 @@
+<sc-if value="{{isMacros}}" hint-placeholder-val="{{false}}">
+<div role="radiogroup" aria-label="マクロ" style="display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 4px; flex: none">
+<sc-for list="{{mList}}" as="m" hint-placeholder-count="16"><button class="mx-press" role="radio" aria-checked="{{m.on}}" title="{{m.preview}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.name}}<sc-if value="{{m.dirty}}" hint-placeholder-val="{{false}}"><span aria-label="未反映" style="position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 3px; background: #3d6fd6"></span></sc-if></button></sc-for>
+</div>
+<div style="flex: 1; min-height: 112px; display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; overflow: auto; padding: 10px; border-radius: 18px; background: rgba(255, 255, 255, 0.6)">
+<sc-if value="{{mEmpty}}" hint-placeholder-val="{{false}}"><span class="mx-sub" style="margin: auto; font-size: 12px">下のキーを押すか、テキストを追加してください。</span></sc-if>
+<sc-for list="{{mSteps}}" as="s" hint-placeholder-count="6">
+<div style="{{s.box}}">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 2px"><button class="mx-press" title="待ち時間（押すたびに増えます）" onClick="{{s.bump}}" style="height: 22px; border: none; border-radius: 11px; background: #eef0f3; padding: 0 7px; font-size: 10px; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums">⧗ {{s.delay}}</button><button aria-label="このステップを削除" onClick="{{s.remove}}" style="width: 22px; height: 22px; border: none; border-radius: 11px; background: transparent; cursor: pointer; color: #6b6e75">×</button></div>
+<button onClick="{{s.target}}" title="{{s.targetTitle}}" style="border: none; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 34px; padding: 0"><sc-for list="{{s.keys}}" as="k" hint-placeholder-count="1"><b style="font-size: 13px; white-space: pre-line; text-align: center">{{k}}</b></sc-for></button>
+<div style="display: flex; justify-content: space-between; align-items: center"><button aria-label="前へ" onClick="{{s.left}}" style="width: 20px; height: 20px; border: none; background: transparent; cursor: pointer; color: #6b6e75">‹</button><button disabled="{{s.noFlip}}" title="{{s.flipTitle}}" onClick="{{s.flip}}" style="{{s.tag}}">{{s.kind}}</button><button aria-label="後ろへ" onClick="{{s.right}}" style="width: 20px; height: 20px; border: none; background: transparent; cursor: pointer; color: #6b6e75">›</button></div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; gap: 6px; flex: none">
+<input class="mx-input" placeholder="テキストを入力（例：Hello）" aria-label="追加するテキスト" value="{{mText}}" onChange="{{onMText}}" style="height: 36px; flex: 1; width: auto; border-radius: 18px">
+<button class="mx-pill mx-press" disabled="{{mNoText}}" onClick="{{mAddText}}">Add text</button>
+<button class="mx-pill mx-press" disabled="{{mEmpty}}" onClick="{{mClear}}" title="このマクロを空にする">Clear</button>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: none"><span class="mx-grph">{{mPickTitle}}</span><input class="mx-input" placeholder="Search keycodes" aria-label="キーコードを検索" value="{{mKq}}" onChange="{{onMKq}}" style="height: 32px; width: 200px; border-radius: 16px; font-size: 13px"></div>
+<div class="mx-pick" style="display: flex; flex-wrap: wrap; gap: 5px; max-height: 80px; overflow: auto; flex: none">
+<sc-for list="{{mPick}}" as="p" hint-placeholder-count="20"><button class="mx-tile mx-key" onClick="{{p.add}}" title="{{p.code}}" style="height: 36px; min-width: 38px; padding: 0 8px">{{p.label}}</button></sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isCombos}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{cNotEditing}}" hint-placeholder-val="{{true}}">
+<div class="mx-row" style="flex: none; background: rgba(255, 255, 255, 0.7)"><span class="mx-sub" style="font-size: 12px">2〜4 個のキーを同時に押すと、別のキーを送ったりレイヤーを切り替えたりできます。保存した時点でキーボードに書き込まれます。</span><b style="font-size: 18px; flex: none">{{cUsed}}</b></div>
+<sc-if value="{{cNone}}" hint-placeholder-val="{{false}}"><span class="mx-sub">まだコンボはありません。Add combo か、3D キーボードのキーを押して追加できます。</span></sc-if>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow: auto">
+<sc-for list="{{cList}}" as="c" hint-placeholder-count="2">
+<div class="mx-row" onMouseEnter="{{c.hover}}" onMouseLeave="{{c.unhover}}" style="{{c.style}}"><span style="{{c.dot}}"></span><div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0"><b style="font-size: 14px">{{c.title}}</b><span class="mx-sub" style="font-size: 12px">{{c.meta}}</span></div><button class="mx-pill sm mx-press" onClick="{{c.edit}}">Edit</button><button class="mx-pill sm mx-press" onClick="{{c.remove}}" style="color: #a33a2c">Delete</button></div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{cEditing}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">1. Trigger keys <span class="mx-sub" style="font-weight: 500">3D キーボードのキーを 2〜4 個押す（レイヤー 0）</span></b>
+<div class="mx-seg" style="min-height: 28px; align-items: center"><sc-for list="{{cTrig}}" as="t" hint-placeholder-count="2"><button class="mx-pill sm mx-press on" onClick="{{t.remove}}" title="外す" style="animation: mx-pop-a 0.35s ease">{{t.label}} ×</button></sc-for><sc-if value="{{cTrigEmpty}}" hint-placeholder-val="{{false}}"><span class="mx-sub" style="font-size: 12px">まだ選ばれていません</span></sc-if></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">2. Output</b>
+<div style="display: flex; gap: 8px; align-items: center"><select class="mx-sel" aria-label="出力するキー" value="{{cOutSel}}" onChange="{{onCOut}}" style="height: 36px; flex: 1; min-width: 0"><option value="">Choose...</option><sc-for list="{{cGroups}}" as="g" hint-placeholder-count="8"><optgroup label="{{g.label}}"><sc-for list="{{g.opts}}" as="o" hint-placeholder-count="3"><option value="{{o}}">{{o}}</option></sc-for></optgroup></sc-for></select><label style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: #6b6e75; flex: none">0x<input class="mx-input" maxlength="4" aria-label="keycode (hex)" value="{{cHex}}" onChange="{{onCHex}}" style="width: 70px; height: 36px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase"></label></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">3. Combo term <span class="mx-sub" style="font-weight: 500">同時押しとみなす時間（ms）</span></b><div class="mx-seg"><sc-for list="{{cTerms}}" as="t" hint-placeholder-count="7"><button class="mx-pill sm mx-press {{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: none"><b style="font-size: 13px">4. Active layers <span class="mx-sub" style="font-weight: 500">選ばなければ全レイヤー</span></b><div class="mx-seg"><sc-for list="{{cLayerOpts}}" as="t" hint-placeholder-count="4"><button class="mx-pill sm mx-press {{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div></div>
+<div style="flex: 1"></div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: none"><sc-if value="{{cHasOut}}" hint-placeholder-val="{{false}}"><span style="height: 32px; border-radius: 12px; background: #0e0e10; color: #ffffff; padding: 0 12px; display: flex; align-items: center; font-size: 12px; font-weight: 600; animation: mx-pop-a 0.35s ease">{{cPreview}}</span></sc-if><span style="flex: 1"></span><button class="mx-btn mx-press" disabled="{{cBusy}}" onClick="{{cCancel}}" style="height: 38px">Cancel</button><button class="mx-btn dark mx-press" disabled="{{cSaveOff}}" onClick="{{cSave}}" style="height: 38px; display: flex; align-items: center; gap: 8px"><sc-if value="{{cBusy}}" hint-placeholder-val="{{false}}"><span class="mx-spin"></span></sc-if>Save to keyboard</button></div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{isLayersSub}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: none"><span class="mx-sub" style="font-size: 12px">{{lCount}}</span><button class="mx-tool mx-press" disabled="{{lAddOff}}" onClick="{{lAdd}}" title="{{lAddTitle}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add layer</button></div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow: auto">
+<sc-for list="{{lRows}}" as="r" hint-placeholder-count="4">
+<div class="mx-row" onClick="{{r.pick}}" style="{{r.style}}">
+<button class="mx-press" aria-label="{{r.colorLabel}}" aria-expanded="{{r.palOpen}}" onClick="{{r.togglePal}}" style="{{r.dot}}"></button>
+<sc-if value="{{r.renaming}}" hint-placeholder-val="{{false}}"><input class="mx-input" aria-label="レイヤー名" maxlength="24" value="{{r.draft}}" onChange="{{r.onDraft}}" onKeyDown="{{r.onKey}}" onClick="{{r.stop}}" style="height: 32px; flex: 1; width: auto"><button class="mx-pill sm mx-press on" onClick="{{r.saveName}}">Save</button></sc-if>
+<sc-if value="{{r.notRenaming}}" hint-placeholder-val="{{true}}"><b onDoubleClick="{{r.startRename}}" title="ダブルクリックで名前を変更" style="font-size: 14px">{{r.name}}</b><span class="mx-sub" style="font-family: 'JetBrains Mono', monospace; font-size: 12px">L{{r.index}}</span><button class="mx-press" aria-label="名前を変更" onClick="{{r.startRename}}" style="width: 28px; height: 28px; border: none; border-radius: 14px; background: transparent; cursor: pointer; color: #6b6e75"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"></path></svg></button><span style="flex: 1"></span></sc-if>
+<sc-if value="{{r.hasLed}}" hint-placeholder-val="{{false}}"><button onClick="{{r.toLed}}" title="Lighting › Layer colors を開く" style="height: 24px; border-radius: 12px; background: #ffffff; border: 1px solid #e1e3e8; display: flex; align-items: center; gap: 5px; padding: 0 8px; font-size: 10px; font-weight: 700; cursor: pointer">LED<span style="{{r.ledDot}}"></span></button></sc-if>
+<sc-if value="{{r.hasChanges}}" hint-placeholder-val="{{false}}"><span title="未反映の変更" style="min-width: 22px; height: 22px; border-radius: 11px; background: #fdebd6; color: #9a5310; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px; box-sizing: border-box">{{r.changes}}</span></sc-if>
+<button class="mx-pill sm mx-press" onClick="{{r.edit}}">Edit keys</button>
+<sc-if value="{{r.removable}}" hint-placeholder-val="{{false}}"><button class="mx-press" aria-label="レイヤーを削除" onClick="{{r.remove}}" style="width: 30px; height: 30px; border: none; border-radius: 15px; background: transparent; cursor: pointer; color: #a33a2c"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"></path></svg></button></sc-if>
+</div>
+<sc-if value="{{r.palOpen}}" hint-placeholder-val="{{false}}"><div role="radiogroup" aria-label="{{r.colorLabel}}" style="display: flex; gap: 6px; padding: 2px 12px 4px; animation: mx-menu 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)"><sc-for list="{{r.colors}}" as="c" hint-placeholder-count="9"><button class="mx-press" role="radio" aria-checked="{{c.on}}" aria-label="{{c.label}}" onClick="{{c.pick}}" style="{{c.style}}"></button></sc-for></div></sc-if>
+</sc-for>
+</div>
+<span class="mx-sub mx-hide-short" style="font-size: 12px; flex: none">行を押すと 3D キーボードがそのレイヤーに切り替わります。▽（透過）は下のレイヤーと同じ動作です。削除できるのは一番上のレイヤーだけです。</span>
+</sc-if>

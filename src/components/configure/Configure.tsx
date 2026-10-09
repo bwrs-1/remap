@@ -15,11 +15,14 @@ import {
 } from './Configure.container';
 import { NotificationItem } from '../../actions/actions';
 import { IKeyboard } from '../../services/hid/Hid';
-import Footer from '../common/footer/Footer.container';
+import LicenseLink from '../common/license/LicenseLink';
+import './Responsive.scss';
 import { Button, CssBaseline } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-
-const APPLICATION_NAME = 'Remap';
+import { APPLICATION_NAME } from '../../utils/Brand';
+import FirmwareFlasherDialog from './firmware/FirmwareFlasherDialog';
+import { useUiLayout } from '../../services/ui/UiLayout';
+import { SetupPhase } from '../../store/state';
 
 type OwnProps = {};
 type ConfigureProps = OwnProps &
@@ -32,6 +35,9 @@ function Configure(props: ConfigureProps) {
     string[]
   >([]);
   const [supportedBrowser, setSupportedBrowser] = useState<boolean>(true);
+  // The new layout draws its own header (see Content).
+  const shell =
+    useUiLayout() === 'shell' && props.setupPhase === SetupPhase.openedKeyboard;
 
   const storeDisplayedNotification = (key: string) => {
     setDisplayedNotificationIds([...displayedNotificationIds, key]);
@@ -147,7 +153,8 @@ function Configure(props: ConfigureProps) {
         <main>
           <UnsupportedBrowser />
         </main>
-        <Footer />
+        <LicenseLink className="license-link-corner" />
+        <FirmwareFlasherDialog />
       </React.Fragment>
     );
   }
@@ -155,14 +162,15 @@ function Configure(props: ConfigureProps) {
     <React.Fragment>
       <div className="configure-root">
         <CssBaseline />
-        <Header />
+        {!shell && <Header />}
         <main>
           <Content />
         </main>
         {(props.draggingKey || props.testMatrix) && (
           <div className="dragMask fill-blank"></div>
         )}
-        <Footer />
+        {!props.keyboard && <LicenseLink className="license-link-corner" />}
+        <FirmwareFlasherDialog />
       </div>
     </React.Fragment>
   );
@@ -176,50 +184,10 @@ function UnsupportedBrowser() {
       <div className="message-box">
         <h1>Unsupported Web Browser</h1>
         <p>
-          <a href="https://remap-keys.app">Remap</a> works on Web Browsers which
-          the <a href="https://wicg.github.io/webhid/">WebHID API</a> is
-          supported.
-          <br />
-          For example, <a href="https://www.google.com/chrome">
-            Google Chrome
-          </a>{' '}
-          version 89 or later supports the WebHID API.
-        </p>
-        <p style={{ color: 'red' }}>
-          *
-          <a
-            href="https://developer.chrome.com/origintrials/#/view_trial/1074108511127863297"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Trial for WebHID on Google Chrome (ver. 86-88)
-          </a>{' '}
-          has been completed. Please use the version 89 of Google Chrome stable
-          which will be{' '}
-          <a
-            href="https://www.chromestatus.com/features/schedule"
-            target="_blank"
-            rel="noreferrer"
-          >
-            released on March 2nd
-          </a>
-          , or use the version 89 or higher of
-          <a
-            href="https://www.google.com/chrome/beta/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Google Chrome beta
-          </a>{' '}
-          or{' '}
-          <a
-            href="https://www.google.com/chrome/canary/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Google Chrome Canary
-          </a>
-          .
+          {APPLICATION_NAME} works on web browsers that support the{' '}
+          <a href="https://wicg.github.io/webhid/">WebHID API</a>, such as{' '}
+          <a href="https://www.google.com/chrome">Google Chrome</a> or Microsoft
+          Edge version 89 or later on a desktop computer.
         </p>
       </div>
     </div>

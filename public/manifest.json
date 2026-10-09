@@ -1,6 +1,6 @@
 {
-  "short_name": "Remap",
-  "name": "Remap",
+  "short_name": "Matrix",
+  "name": "Matrix",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#333438",
   "background_color": "#ffffff"
 }

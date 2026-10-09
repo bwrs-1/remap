@@ -1,5 +1,6 @@
 import {
   ICommand,
+  IFetchCustomValueResult,
   IConnectParams,
   IKeyboard,
   IHid,
@@ -32,6 +33,9 @@ import {
   BacklightSetValueCommand,
   BacklightValueId,
   BleMicroProStoreKeymapPersistentlyCommand,
+  CustomGetValueCommand,
+  CustomSaveCommand,
+  CustomSetValueCommand,
   DynamicKeymapGetEncoderCommand,
   DynamicKeymapGetLayerCountCommand,
   DynamicKeymapMacroGetBufferCommand,
@@ -431,6 +435,101 @@ export class Keyboard implements IKeyboard {
           }
         }
       );
+      return this.enqueue(command);
+    });
+  }
+
+  fetchCustomValue(
+    valueId: number,
+    size: 1 | 2 | 4,
+    args?: number[],
+    channel?: number
+  ): Promise<IFetchCustomValueResult> {
+    return new Promise<IFetchCustomValueResult>((resolve) => {
+      const command = new CustomGetValueCommand(
+        { valueId, size, args, channel },
+        async (result) => {
+          if (result.success) {
+            resolve({
+              success: true,
+              value: result.response!.value,
+              bytes: result.response!.bytes,
+              unhandled: result.response!.unhandled,
+            });
+          } else {
+            resolve({
+              success: false,
+              error: result.error,
+              cause: result.cause,
+            });
+          }
+        }
+      );
+      return this.enqueue(command);
+    });
+  }
+
+  updateCustomValue(
+    valueId: number,
+    value: number,
+    size: 1 | 2
+  ): Promise<IResult> {
+    return new Promise<IResult>((resolve) => {
+      const command = new CustomSetValueCommand(
+        { valueId, value, size },
+        async (result) => {
+          if (result.success) {
+            resolve({ success: true });
+          } else {
+            resolve({
+              success: false,
+              error: result.error,
+              cause: result.cause,
+            });
+          }
+        }
+      );
+      return this.enqueue(command);
+    });
+  }
+
+  updateCustomBytes(
+    valueId: number,
+    bytes: number[],
+    channel?: number
+  ): Promise<IResult> {
+    return new Promise<IResult>((resolve) => {
+      const command = new CustomSetValueCommand(
+        { valueId, value: 0, size: 1, bytes, channel },
+        async (result) => {
+          if (result.success) {
+            resolve({ success: true });
+          } else {
+            resolve({
+              success: false,
+              error: result.error,
+              cause: result.cause,
+            });
+          }
+        }
+      );
+      return this.enqueue(command);
+    });
+  }
+
+  saveCustomValues(channel?: number): Promise<IResult> {
+    return new Promise<IResult>((resolve) => {
+      const command = new CustomSaveCommand({ channel }, async (result) => {
+        if (result.success) {
+          resolve({ success: true });
+        } else {
+          resolve({
+            success: false,
+            error: result.error,
+            cause: result.cause,
+          });
+        }
+      });
       return this.enqueue(command);
     });
   }

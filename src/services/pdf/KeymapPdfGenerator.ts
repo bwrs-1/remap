@@ -1,3 +1,4 @@
+import { APPLICATION_NAME, APPLICATION_URL } from '../../utils/Brand';
 /* eslint-disable no-undef */
 import {
   PDFDocument,
@@ -88,7 +89,7 @@ export class KeymapPdfGenerator {
       this.labelLang
     )})`;
     this.doc = await PDFDocument.create();
-    this.doc.setAuthor('Remap');
+    this.doc.setAuthor(APPLICATION_NAME);
     this.doc.setCreationDate(new Date());
     this.doc.setKeywords(['keyboard', 'keymap', 'remap', 'cheatsheet']);
     this.doc.setSubject(title);
@@ -125,7 +126,7 @@ export class KeymapPdfGenerator {
     }
 
     // footer
-    this.drawFooter(page, 'https://remap-keys.app');
+    this.drawFooter(page, APPLICATION_URL);
 
     const pdfBytes = await this.doc.save();
     download(

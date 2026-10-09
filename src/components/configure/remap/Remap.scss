@@ -3,7 +3,7 @@
 .keyboard-wrapper {
   position: relative;
   width: 100%;
-  margin-top: calc(var(--key-height));
+  flex: 0 0 auto;
   z-index: 1;
   overflow-y: hidden;
   .controller {
@@ -19,8 +19,11 @@
   .keymap {
     display: flex;
     flex-direction: column;
-    padding-bottom: 32px;
-    background-color: variables.$cfg-canvas-bg;
+    margin: 12px;
+    padding-bottom: 24px;
+    background-color: variables.$cfg-panel-bg;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: variables.$cfg-radius-l;
   }
   .macro {
     display: flex;
@@ -29,14 +32,31 @@
     background-color: variables.$cfg-canvas-bg;
   }
 }
+.editor-layout {
+  display: flex;
+  margin-top: calc(var(--key-height));
+  // the header (key-height) is outside this area
+  height: calc(100vh - var(--key-height));
+  min-height: 0;
+}
+.editor-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
 .keycode {
+  flex: 1 0 240px;
+  margin: 0 16px 16px;
+  border: 1px solid variables.$cfg-panel-border;
+  border-radius: variables.$cfg-radius-l;
   display: flex;
   position: relative;
   flex-direction: column;
   padding: variables.$space-m variables.$space-m variables.$space-xl
     variables.$space-m;
   background-color: variables.$cfg-panel-bg;
-  border-top: 1px solid variables.$cfg-panel-border;
   overflow-y: auto;
 
   .disable {

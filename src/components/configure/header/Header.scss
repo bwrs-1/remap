@@ -1,14 +1,15 @@
 @use '../../../_variables.scss';
 
 .header {
-  display: grid;
+  display: flex;
   position: fixed;
   height: calc(var(--key-height));
   width: 100%;
-  grid-template-columns: 1fr 1fr 1fr;
+  box-sizing: border-box;
   align-items: center;
+  gap: 12px;
   margin: 0;
-  padding: 0 variables.$space-m;
+  padding: 0 20px;
   background: variables.$cfg-header-bg;
   color: variables.$cfg-header-text;
   font-family: variables.$cfg-font;
@@ -17,6 +18,27 @@
   .kbd-device {
     display: flex;
     flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    .connection-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background-color: variables.$cfg-muted;
+      color: variables.$cfg-accent;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .connection-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #16a34a;
+    }
     .kbd-select {
       display: flex;
       flex-direction: row;
@@ -64,9 +86,39 @@
   }
 
   .header-logo {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     height: 100%;
-    padding-top: 16px;
+    &::after {
+      content: '/';
+      color: #c4c4c8;
+    }
+    a {
+      display: flex;
+      align-items: center;
+      gap: variables.$space-m;
+      color: variables.$cfg-header-text;
+      text-decoration: none;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: variables.$cfg-radius-m;
+      background-color: variables.$cfg-accent;
+      color: variables.$cfg-accent-text;
+      font-family: variables.$cfg-font-mono;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
   }
 
   .header-height {
@@ -76,9 +128,8 @@
   .buttons {
     display: flex;
     margin-left: auto;
-    width: 120px;
     justify-content: center;
-    height: 40px;
+    height: 36px;
     .flash-btn {
       min-width: 80px !important;
     }
@@ -96,6 +147,8 @@
   }
 
   &-right {
+    margin-left: auto;
+    gap: 8px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -148,7 +201,7 @@
 }
 
 /*==== FLASH BUTTON ====*/
-@keyframes button-disable-intro {
+@keyframes hdr-button-disable-intro {
   0% {
     opacity: 0.5;
   }
@@ -156,7 +209,7 @@
     opacity: 1;
   }
 }
-@keyframes button-enable-intro {
+@keyframes hdr-button-enable-intro {
   0% {
     opacity: 0.5;
   }
@@ -166,7 +219,7 @@
     opacity: 1;
   }
 }
-@keyframes button-flashing {
+@keyframes hdr-button-flashing {
   0% {
   }
 
@@ -204,7 +257,7 @@
   }
 }
 
-@keyframes button-dot-intro {
+@keyframes hdr-button-dot-intro {
   0% {
     opacity: 0;
   }
@@ -219,7 +272,7 @@
   }
 }
 
-@keyframes button-dot-pulse {
+@keyframes hdr-button-dot-pulse {
   0% {
     opacity: 0.6;
     transform: scale(0.75, 0.75);
@@ -243,7 +296,7 @@
   }
 }
 
-@keyframes button-success {
+@keyframes hdr-button-success {
   0% {
     margin-left: 1.25rem;
     width: 2.5rem;
@@ -273,7 +326,7 @@
   }
 }
 
-@keyframes button-success-label {
+@keyframes hdr-hdr-button-success-label {
   0% {
     opacity: 0;
   }
@@ -283,19 +336,20 @@
   }
 }
 
-.flash-button {
+.header-flash-button {
   position: relative;
   overflow: hidden;
-  width: 7rem;
+  min-width: 7rem;
+  height: 36px;
   color: variables.$cfg-header-text-dim;
-  border: 2px solid variables.$cfg-header-border;
+  border: 1px solid variables.$cfg-header-border;
   background-color: variables.$cfg-header-bg-raised;
   cursor: pointer;
-  line-height: 2;
+  line-height: 34px;
   margin: 0;
-  padding: 0;
-  border-radius: 1.5rem;
-  font-size: 0.9rem;
+  padding: 0 16px;
+  border-radius: variables.$cfg-radius-m;
+  font-size: 0.85rem;
   font-family: variables.$cfg-font;
   font-weight: 600;
   outline: none;
@@ -304,9 +358,9 @@
     background-color 0.15s;
 
   &.enable {
-    color: #19191c;
+    color: variables.$cfg-accent-text;
     border-color: variables.$cfg-accent;
-    animation: button-enable-intro 0.4s forwards;
+    animation: hdr-button-enable-intro 0.4s forwards;
     &:hover {
       background-color: variables.$cfg-accent-dark;
     }
@@ -314,7 +368,7 @@
 
   &.disable {
     cursor: not-allowed;
-    animation: button-disable-intro 0.5s forwards;
+    animation: hdr-button-disable-intro 0.5s forwards;
   }
 
   &:before,
@@ -335,7 +389,7 @@
 
   &.flashing {
     height: 40px;
-    animation: button-flashing 0.5s forwards;
+    animation: hdr-button-flashing 0.5s forwards;
   }
 
   &.flashing:before,
@@ -345,19 +399,19 @@
 
   &.flashing:before {
     opacity: 1;
-    animation: button-dot-intro 2.5s forwards;
+    animation: hdr-button-dot-intro 2.5s forwards;
   }
 
   &.flashing:after {
     opacity: 0;
-    animation: button-dot-pulse 2.5s infinite;
+    animation: hdr-button-dot-pulse 2.5s infinite;
   }
 
   &.success {
     text-indent: 0;
     color: transparent;
     background-color: white;
-    animation: button-success 2.5s forwards;
+    animation: hdr-button-success 2.5s forwards;
   }
 
   &.success:before {
@@ -374,6 +428,97 @@
     content: 'success';
     opacity: 0;
     z-index: 2;
-    animation: button-success-label 0.3s forwards 0.275s;
+    animation: hdr-hdr-button-success-label 0.3s forwards 0.275s;
+  }
+}
+
+// Conductor Studio style header actions (US/JIS, Undo/Redo, Import/Export).
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+  font-family: variables.$cfg-font;
+
+  .header-segment {
+    display: flex;
+    padding: 2px;
+    border-radius: 999px;
+    background-color: variables.$cfg-muted;
+    button {
+      border: none;
+      background: transparent;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      color: variables.$cfg-text-dim;
+      cursor: pointer;
+      &[aria-pressed='true'] {
+        background-color: variables.$cfg-accent-dark;
+        color: variables.$cfg-accent-text;
+      }
+    }
+  }
+
+  .header-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: variables.$cfg-radius-m;
+    background: transparent;
+    color: variables.$cfg-accent;
+    cursor: pointer;
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    &:hover:not(:disabled) {
+      background-color: variables.$cfg-muted;
+    }
+    &:disabled {
+      color: #c4c4c8;
+      cursor: default;
+    }
+  }
+
+  .header-text-button {
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 999px;
+    background: variables.$cfg-panel-bg;
+    color: variables.$cfg-accent;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .header-pill-button {
+    height: 30px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 999px;
+    background-color: variables.$cfg-accent-dark;
+    color: variables.$cfg-accent-text;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button:focus-visible {
+    outline: 2px solid variables.$cfg-accent;
+    outline-offset: 2px;
   }
 }

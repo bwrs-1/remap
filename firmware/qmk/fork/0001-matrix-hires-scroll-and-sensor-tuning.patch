@@ -1,0 +1,146 @@
+diff --git a/drivers/sensors/maxtouch.c b/drivers/sensors/maxtouch.c
+index 0b3efdd..12cf223 100644
+--- a/drivers/sensors/maxtouch.c
++++ b/drivers/sensors/maxtouch.c
+@@ -199,6 +199,24 @@ static uint16_t              t100_subsequent_report_ids[DIGITIZER_CONTACT_COUNT]
+ static uint16_t              t100_num_reports                                    = 0;
+ static mxt_information_block information                                         = {0};
+ 
++// Runtime tuning (Matrix editor): rewrites single T100 fields in the
++// controller's RAM configuration; maxtouch_init() writes the defaults again
++// after a reset. 0xFF / 0xFFFF leave a field unchanged.
++void maxtouch_tune(uint8_t touch_threshold, uint16_t move_hysteresis_initial, uint16_t move_hysteresis_next) {
++    if (!t100_multiple_touch_touchscreen_address) return;
++    if (touch_threshold != 0xFF) {
++        i2c_write_register16(MXT336UD_ADDRESS, t100_multiple_touch_touchscreen_address + offsetof(mxt_touch_multiscreen_t100, tchthr), &touch_threshold, 1, MXT_I2C_TIMEOUT_MS);
++    }
++    if (move_hysteresis_initial != 0xFFFF) {
++        uint8_t v[2] = {move_hysteresis_initial & 0xFF, move_hysteresis_initial >> 8}; // little endian
++        i2c_write_register16(MXT336UD_ADDRESS, t100_multiple_touch_touchscreen_address + offsetof(mxt_touch_multiscreen_t100, movhysti), v, 2, MXT_I2C_TIMEOUT_MS);
++    }
++    if (move_hysteresis_next != 0xFFFF) {
++        uint8_t v[2] = {move_hysteresis_next & 0xFF, move_hysteresis_next >> 8};
++        i2c_write_register16(MXT336UD_ADDRESS, t100_multiple_touch_touchscreen_address + offsetof(mxt_touch_multiscreen_t100, movhystn), v, 2, MXT_I2C_TIMEOUT_MS);
++    }
++}
++
+ void maxtouch_print_info(void) {
+     // Pavonis: Found MXT 164:75, fw 16.170 with 32 objects. Matrix size 41x26
+     uprintf("Found MXT %d:%d, fw %d.%d with %d objects. Matrix size %dx%d\n", information.family_id, information.variant_id, information.version, information.build, information.num_objects, information.matrix_x_size, information.matrix_y_size);
+diff --git a/tmk_core/protocol/chibios/usb_main.c b/tmk_core/protocol/chibios/usb_main.c
+index e469e48..de13343 100644
+--- a/tmk_core/protocol/chibios/usb_main.c
++++ b/tmk_core/protocol/chibios/usb_main.c
+@@ -28,6 +28,32 @@
+ #include "usb_driver.h"
+ #include "usb_types.h"
+ 
++#ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
++// Resolution Multiplier feature of the mouse (the host writes 1 to read the
++// wheel in 1/POINTING_DEVICE_HIRES_SCROLL_MULTIPLIER notches). Until it does,
++// wheel values are whole notches, so the sender must check this.
++static volatile uint8_t hires_scroll_feature = 0;
++static uint8_t _Alignas(4) hires_scroll_buf[2];
++
++bool usb_hires_scroll_enabled(void) {
++    return (hires_scroll_feature & 0x03) != 0;
++}
++
++uint8_t usb_hires_scroll_feature_value(void) {
++    return hires_scroll_feature;
++}
++
++static void set_hires_scroll_transfer_cb(USBDriver *usbp) {
++    usb_control_request_t *setup = (usb_control_request_t *)usbp->setup;
++#    ifdef MOUSE_SHARED_EP
++    // [report ID, value]
++    if (setup->wLength >= 2 && hires_scroll_buf[0] == REPORT_ID_MOUSE) hires_scroll_feature = hires_scroll_buf[1];
++#    else
++    if (setup->wLength >= 1) hires_scroll_feature = hires_scroll_buf[0];
++#    endif
++}
++#endif
++
+ #ifdef RAW_ENABLE
+ #    include "raw_hid.h"
+ #endif
+@@ -198,6 +224,9 @@ static void usb_event_cb(USBDriver *usbp, usbevent_t event) {
+         case USB_EVENT_UNCONFIGURED:
+             /* Falls into.*/
+         case USB_EVENT_RESET:
++#ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
++            hires_scroll_feature = 0; // the host sets it again after enumerating
++#endif
+             usb_event_queue_enqueue(event);
+             chSysLockFromISR();
+             for (int i = 0; i < USB_ENDPOINT_IN_COUNT; i++) {
+@@ -241,6 +270,7 @@ static void usb_event_cb(USBDriver *usbp, usbevent_t event) {
+ 
+ static uint8_t _Alignas(4) set_report_buf[2];
+ 
++
+ static void set_led_transfer_cb(USBDriver *usbp) {
+     usb_control_request_t *setup = (usb_control_request_t *)usbp->setup;
+ 
+@@ -280,6 +310,17 @@ static bool usb_requests_hook_cb(USBDriver *usbp) {
+             case USB_RTYPE_DIR_HOST2DEV:
+                 switch (setup->bRequest) {
+                     case HID_REQ_SetReport:
++#ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
++                        // Feature report 0x03: the mouse's Resolution Multiplier.
++#    ifdef MOUSE_SHARED_EP
++                        if (setup->wIndex == SHARED_INTERFACE && setup->wValue.hbyte == 0x03 && setup->wValue.lbyte == REPORT_ID_MOUSE) {
++#    else
++                        if (setup->wIndex == MOUSE_INTERFACE && setup->wValue.hbyte == 0x03) {
++#    endif
++                            usbSetupTransfer(usbp, hires_scroll_buf, setup->wLength < sizeof(hires_scroll_buf) ? setup->wLength : sizeof(hires_scroll_buf), set_hires_scroll_transfer_cb);
++                            return true;
++                        }
++#endif
+                         switch (setup->wIndex) {
+                             case KEYBOARD_INTERFACE:
+ #if defined(SHARED_EP_ENABLE) && !defined(KEYBOARD_SHARED_EP)
+diff --git a/tmk_core/protocol/chibios/usb_main.h b/tmk_core/protocol/chibios/usb_main.h
+index 5ba6fb1..1c18315 100644
+--- a/tmk_core/protocol/chibios/usb_main.h
++++ b/tmk_core/protocol/chibios/usb_main.h
+@@ -67,3 +67,10 @@ int8_t sendchar(uint8_t c);
+ bool virtser_usb_request_cb(USBDriver *usbp);
+ 
+ #endif
++
++#ifdef POINTING_DEVICE_HIRES_SCROLL_ENABLE
++/* Whether the host turned on the mouse's high-resolution wheel (Resolution
++ * Multiplier feature report), and the raw feature value. */
++bool    usb_hires_scroll_enabled(void);
++uint8_t usb_hires_scroll_feature_value(void);
++#endif
+diff --git a/tmk_core/protocol/chibios/usb_report_handling.c b/tmk_core/protocol/chibios/usb_report_handling.c
+index af8169a..14ed153 100644
+--- a/tmk_core/protocol/chibios/usb_report_handling.c
++++ b/tmk_core/protocol/chibios/usb_report_handling.c
+@@ -133,6 +133,24 @@ bool usb_get_report_cb(USBDriver *driver) {
+             usbSetupTransfer(driver, (uint8_t *)cert, sizeof(cert), NULL);
+             return true;
+         }
++#endif
++#if defined(POINTING_DEVICE_HIRES_SCROLL_ENABLE) && defined(MOUSE_ENABLE)
++#    ifdef MOUSE_SHARED_EP
++        if (interface == SHARED_INTERFACE && report_id == REPORT_ID_MOUSE) {
++            static uint8_t feature[2];
++            feature[0] = REPORT_ID_MOUSE;
++            feature[1] = usb_hires_scroll_feature_value();
++            usbSetupTransfer(driver, feature, 2, NULL);
++            return true;
++        }
++#    else
++        if (interface == MOUSE_INTERFACE) {
++            static uint8_t feature[1];
++            feature[0] = usb_hires_scroll_feature_value();
++            usbSetupTransfer(driver, feature, 1, NULL);
++            return true;
++        }
++#    endif
+ #endif
+         return false;
+     } else {

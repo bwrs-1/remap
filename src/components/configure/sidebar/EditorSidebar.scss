@@ -1,0 +1,399 @@
+@use '../../../variables';
+
+.editor-sidebar {
+  flex: 0 0 200px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px 14px;
+  background-color: variables.$cfg-sidebar-bg;
+  border-right: 1px solid variables.$cfg-panel-border;
+  font-family: variables.$cfg-font;
+  overflow-y: auto;
+
+  .editor-sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .editor-sidebar-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px 4px;
+    h2 {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: variables.$cfg-text-dim;
+    }
+  }
+
+  .editor-sidebar-count {
+    font-family: variables.$cfg-font-mono;
+    font-size: 11px;
+    color: variables.$cfg-text-dim;
+  }
+
+  .editor-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: variables.$cfg-radius-m;
+    background: transparent;
+    color: variables.$cfg-accent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    &:hover {
+      background-color: #e9e9eb;
+    }
+    &.selected {
+      background-color: variables.$cfg-panel-bg;
+      border-color: variables.$cfg-panel-border;
+      color: variables.$cfg-text;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    &:focus-visible {
+      outline: 2px solid variables.$cfg-accent;
+      outline-offset: 1px;
+    }
+  }
+
+  .layer-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid variables.$cfg-panel-border;
+    background-color: variables.$cfg-panel-bg;
+    font-family: variables.$cfg-font-mono;
+    font-size: 12px;
+  }
+
+  .layer-name {
+    flex: 1 1 auto;
+  }
+
+  .layer-changed {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border-radius: 9px;
+    background-color: variables.$cfg-accent;
+    color: variables.$cfg-accent-text;
+    font-family: variables.$cfg-font-mono;
+    font-size: 10px;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .editor-sidebar-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid variables.$cfg-panel-border;
+  }
+
+  .editor-sidebar-note {
+    padding: 0 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: variables.$cfg-text-dim;
+  }
+}
+
+.editor-sidebar {
+  .editor-sidebar-layer {
+    border: 1px solid transparent;
+    border-radius: variables.$cfg-radius-m;
+    &:hover {
+      background-color: #e9e9eb;
+    }
+    &.selected {
+      background-color: variables.$cfg-panel-bg;
+      border-color: variables.$cfg-panel-border;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      .layer-name {
+        font-weight: 600;
+        color: variables.$cfg-text;
+      }
+    }
+    &:hover .layer-rename,
+    &.selected .layer-rename {
+      opacity: 1;
+    }
+  }
+
+  .editor-sidebar-layer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 6px 0 10px;
+  }
+
+  .layer-dot {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+  }
+
+  .layer-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    line-height: 1;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: variables.$cfg-accent;
+    text-align: left;
+    cursor: pointer;
+    .layer-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .layer-index {
+    font-family: variables.$cfg-font-mono;
+    font-size: 10px;
+    color: variables.$cfg-text-dim;
+  }
+
+  .layer-name-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid variables.$cfg-accent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+  }
+
+  .layer-rename {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    opacity: 0;
+    cursor: pointer;
+    svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: variables.$cfg-text-dim;
+      stroke-width: 1.4;
+      stroke-linejoin: round;
+    }
+    &:hover {
+      background-color: #dcdcdf;
+    }
+    &:focus-visible {
+      opacity: 1;
+      outline: 2px solid variables.$cfg-accent;
+    }
+  }
+
+  .layer-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 10px 10px 30px;
+  }
+
+  .layer-palette-swatch {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    &[aria-pressed='true'] {
+      box-shadow:
+        0 0 0 2px #fff,
+        0 0 0 3px variables.$cfg-accent;
+    }
+  }
+}
+
+.editor-sidebar .editor-sidebar-license {
+  margin-top: auto;
+  padding: 8px 8px 0;
+}
+.editor-sidebar .editor-sidebar-footer + .editor-sidebar-license {
+  margin-top: 0;
+}
+@media (max-width: 768px) {
+  .editor-sidebar .editor-sidebar-license {
+    margin: 0;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+}
+
+.editor-sidebar .editor-sidebar-add-layer {
+  height: 34px;
+  margin-top: 4px;
+  padding: 0 10px;
+  border: 1px dashed variables.$cfg-panel-border;
+  border-radius: variables.$cfg-radius-m;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: variables.$cfg-text-dim;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  &:hover:not(:disabled) {
+    border-color: variables.$cfg-accent;
+    color: variables.$cfg-accent;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.editor-sidebar {
+  .editor-sidebar-add {
+    width: 22px;
+    height: 22px;
+    margin-left: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 16px;
+    line-height: 1;
+    color: variables.$cfg-text-dim;
+    cursor: pointer;
+    &:hover:not(:disabled) {
+      background: #e4e4e7;
+      color: variables.$cfg-text;
+    }
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+  .editor-sidebar-heading {
+    .editor-sidebar-count {
+      margin-left: auto;
+    }
+  }
+
+  // Connection panel at the bottom (Conductor Studio style).
+  .editor-sidebar-connection {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 8px 0;
+    border-top: 1px solid variables.$cfg-panel-border;
+    .editor-sidebar-footer {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+  }
+  .editor-sidebar-connection-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: variables.$cfg-text-dim;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    .connection-dot {
+      flex: none;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #16a34a;
+    }
+  }
+  .editor-sidebar-primary {
+    height: 38px;
+    padding: 0 8px;
+    white-space: nowrap;
+    border: 0;
+    border-radius: variables.$cfg-radius-m;
+    background-color: variables.$cfg-accent;
+    color: variables.$cfg-accent-text;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
+
+.editor-sidebar {
+  .layer-led-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    padding: 2px 6px;
+    border: 1px solid variables.$cfg-panel-border;
+    border-radius: 999px;
+    background: #fff;
+    font-family: variables.$cfg-font-mono;
+    font-size: 9px;
+    color: variables.$cfg-text-dim;
+    cursor: pointer;
+    &:hover {
+      border-color: variables.$cfg-accent;
+    }
+  }
+  .layer-led-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    &.effect {
+      background: conic-gradient(
+        #e5484d,
+        #f5d90a,
+        #30a46c,
+        #05a2c2,
+        #3e63dd,
+        #d6409f,
+        #e5484d
+      ) !important;
+    }
+  }
+}
