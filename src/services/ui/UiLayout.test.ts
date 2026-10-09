@@ -12,7 +12,12 @@ describe('UiLayout', () => {
     resetUiLayoutForTest();
   });
 
-  test('classic by default', () => {
+  test('new layout by default', () => {
+    expect(getUiLayout()).toBe('shell');
+  });
+
+  test('keeps the classic layout for someone who chose it', () => {
+    window.localStorage.setItem('matrix.uiLayout', 'classic');
     expect(getUiLayout()).toBe('classic');
   });
 
@@ -28,7 +33,7 @@ describe('UiLayout', () => {
 
   test('ignores unknown stored values', () => {
     window.localStorage.setItem('matrix.uiLayout', 'other');
-    expect(getUiLayout()).toBe('classic');
+    expect(getUiLayout()).toBe('shell');
   });
 
   test('reads ?ui= from the URL', () => {
